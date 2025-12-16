@@ -118,7 +118,7 @@ const Inscription = () => {
         {
           first_name: formData.prenom.trim(),
           last_name: formData.nom.trim(),
-          phone: formData.telephone.trim() || null,
+          phone: formData.telephone.trim() || undefined,
         }
       );
       

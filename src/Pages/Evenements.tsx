@@ -1,15 +1,9 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { FiMapPin, FiClock } from 'react-icons/fi';
-import { Elements } from '@stripe/react-stripe-js';
-import { loadStripe } from '@stripe/stripe-js';
-import UniversalBookingForm from '../components/UniversalBookingForm';
-import AuthGuard from '../components/AuthGuard';
 import { supabase } from '../lib/supabase';
 import toast from 'react-hot-toast';
 import LoadingSpinner from '../components/LoadingSpinner';
-
-const stripePromise = loadStripe(import.meta.env['VITE_STRIPE_PUBLIC_KEY'] || 'pk_test_51QKxxx');
 
 interface Event {
   id: string;
@@ -105,43 +99,11 @@ const staticEvents: Event[] = [
 const Evenements = () => {
   const [events, setEvents] = useState<Event[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
-  const [showBookingForm, setShowBookingForm] = useState(false);
   const [email, setEmail] = useState('');
   const [isSubscribing, setIsSubscribing] = useState(false);
 
   useEffect(() => {
     loadEvents();
-
-    // Vérifier s'il y a une réservation en attente pour cette page
-    const pending = sessionStorage.getItem('pendingReservation');
-    if (pending) {
-      try {
-        const data = JSON.parse(pending);
-        if (data.from === window.location.pathname) {
-          // Restaurer l'événement sélectionné (minimale : id et titre suffisent pour le formulaire)
-          setSelectedEvent({
-            id: data.service.id,
-            title: data.service.title,
-            event_date: undefined,
-            date: undefined,
-            location: '',
-            event_time: undefined,
-            time: undefined,
-            description: '',
-            image: data.service.image || '',
-            category: '',
-            price: data.service.price_per_person || data.service.price || 0,
-            available_seats: data.service.max_participants || 100,
-          });
-          setShowBookingForm(true);
-        }
-      } catch (e) {
-        console.error('Erreur lors de la lecture de pendingReservation:', e);
-      } finally {
-        sessionStorage.removeItem('pendingReservation');
-      }
-    }
   }, []);
 
   const loadEvents = async () => {
@@ -167,16 +129,6 @@ const Evenements = () => {
     } finally {
       setIsLoading(false);
     }
-  };
-
-  const handleBookEvent = (event: Event) => {
-    setSelectedEvent(event);
-    setShowBookingForm(true);
-  };
-
-  const handleCloseBookingForm = () => {
-    setShowBookingForm(false);
-    setSelectedEvent(null);
   };
 
   const handleNewsletterSubmit = async (e: React.FormEvent) => {
@@ -271,18 +223,15 @@ const Evenements = () => {
                   <FiClock className="mr-2" />
                   <span>{event.event_time || event.time}</span>
                 </div>
-                <div className="flex items-center justify-between mb-4">
-                  <span className="text-2xl font-bold text-emerald-600">{event.price} MAD</span>
-                  <span className="text-sm text-gray-500">/personne</span>
-                </div>
-                <AuthGuard>
-                  <button 
-                    onClick={() => handleBookEvent(event)}
-                    className="w-full bg-primary text-black py-2 rounded-lg font-medium hover:bg-primary/90 transition-colors"
+                {/* Appel à l'action : en savoir plus → page Contact */}
+                <div className="pt-2">
+                  <a
+                    href="/contact"
+                    className="w-full inline-flex items-center justify-center bg-primary text-black py-2 rounded-lg font-medium hover:bg-primary/90 transition-colors"
                   >
-                    Réserver maintenant
-                  </button>
-                </AuthGuard>
+                    En savoir plus
+                  </a>
+                </div>
               </div>
             </motion.div>
           ))}
@@ -316,21 +265,6 @@ const Evenements = () => {
         </div>
       </div>
 
-      {/* Booking Form Modal */}
-      {showBookingForm && selectedEvent && (
-        <Elements stripe={stripePromise}>
-          <UniversalBookingForm
-            serviceType="circuit"
-            service={{
-              id: selectedEvent.id,
-              title: selectedEvent.title,
-              price_per_person: selectedEvent.price,
-              max_participants: selectedEvent.available_seats || 100
-            }}
-            onClose={handleCloseBookingForm}
-          />
-        </Elements>
-      )}
     </div>
   );
 };

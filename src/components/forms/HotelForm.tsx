@@ -49,7 +49,7 @@ const HotelForm: React.FC<HotelFormProps> = ({ hotel, onClose, onSuccess }) => {
   const handleDeleteImage = async (imageUrl: string, index: number) => {
     try {
       await deleteImage(imageUrl);
-      setImages(images.filter((_, i) => i !== index));
+      setImages(images.filter((_: string, i: number) => i !== index));
       toast.success('Photo supprimée');
     } catch (error) {
       toast.error('Erreur lors de la suppression');
@@ -69,7 +69,7 @@ const HotelForm: React.FC<HotelFormProps> = ({ hotel, onClose, onSuccess }) => {
   const handleRemoveAmenity = (index: number) => {
     setFormData({
       ...formData,
-      amenities: formData.amenities.filter((_, i) => i !== index)
+      amenities: formData.amenities.filter((_: string, i: number) => i !== index)
     });
   };
 
@@ -292,7 +292,7 @@ const HotelForm: React.FC<HotelFormProps> = ({ hotel, onClose, onSuccess }) => {
               </button>
             </div>
             <div className="flex flex-wrap gap-2">
-              {formData.amenities.map((amenity, index) => (
+            {formData.amenities.map((amenity: string, index: number) => (
                 <span
                   key={index}
                   className="px-3 py-1 bg-emerald-100 text-emerald-700 rounded-full text-sm flex items-center gap-2"
