@@ -25,7 +25,7 @@ const staticEvents: Event[] = [
   {
     id: '1',
     title: "Festival des Roses à Kelaa M'Gouna",
-    date: "15-17 Mai 2024",
+    date: "15-17 Mai 2026",
     location: "Vallée des Roses, Maroc",
     time: "Toute la journée",
     description: "Célébrez la récolte des roses dans la magnifique vallée du Dadès avec des défilés, des danses traditionnelles et des expositions d'artisanat local.",
@@ -37,7 +37,7 @@ const staticEvents: Event[] = [
   {
     id: '2',
     title: "Marathon des Sables",
-    date: "12-22 Avril 2024",
+    date: "12-22 Avril 2026",
     location: "Désert du Sahara, Maroc",
     time: "06:00 - 18:00",
     description: "Participez à l'une des courses à pied les plus difficiles au monde à travers les paysages époustouflants du désert marocain.",
@@ -49,7 +49,7 @@ const staticEvents: Event[] = [
   {
     id: '3',
     title: "Festival des Arts Populaires de Marrakech",
-    date: "22-30 Juin 2024",
+    date: "22-30 Juin 2026",
     location: "Marrakech, Maroc",
     time: "18:00 - Minuit",
     description: "Découvrez la richesse du patrimoine culturel marocain à travers des spectacles de musique, de danse et d'art traditionnels.",
@@ -61,7 +61,7 @@ const staticEvents: Event[] = [
   {
     id: '4',
     title: "Festival Gnaoua et Musiques du Monde",
-    date: "20-23 Juin 2024",
+    date: "20-23 Juin 2026",
     location: "Essaouira, Maroc",
     time: "20:00 - 02:00",
     description: "Le plus grand festival de musique Gnaoua au monde, avec des artistes internationaux et locaux.",
@@ -73,7 +73,7 @@ const staticEvents: Event[] = [
   {
     id: '5',
     title: "Festival International du Film de Marrakech",
-    date: "1-9 Décembre 2024",
+    date: "1-9 Décembre 2026",
     location: "Marrakech, Maroc",
     time: "18:00 - 23:00",
     description: "Découvrez les meilleurs films du monde entier dans la ville rouge.",
@@ -85,7 +85,7 @@ const staticEvents: Event[] = [
   {
     id: '6',
     title: "Moussem de Tan-Tan",
-    date: "15-20 Mai 2024",
+    date: "15-20 Mai 2026",
     location: "Tan-Tan, Maroc",
     time: "Toute la journée",
     description: "Patrimoine culturel immatériel de l'UNESCO, célébrant les traditions nomades.",
