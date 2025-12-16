@@ -100,16 +100,16 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onClose, onSuccess }
       const fileExt = file.name.split('.').pop();
       const fileName = `${user?.id}/${Date.now()}.${fileExt}`;
 
-      // Upload vers Supabase Storage
+      // Upload vers Supabase Storage (bucket services)
       const { data, error } = await supabase.storage
-        .from('product-images')
+        .from('services')
         .upload(fileName, file);
 
       if (error) throw error;
 
       // Obtenir l'URL publique
       const { data: { publicUrl } } = supabase.storage
-        .from('product-images')
+        .from('services')
         .getPublicUrl(fileName);
 
       if (isMain) {

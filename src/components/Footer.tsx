@@ -103,7 +103,7 @@ const Footer = () => {
                 <a href="https://www.facebook.com/share/1D4DDndpRA/?mibextid=wwXIfr" target="_blank" rel="noopener noreferrer" className="text-gray-300 hover:text-primary transition-colors" aria-label="Facebook">
                   <FaFacebook size={20} />
                 </a>
-                <a href="https://www.instagram.com/_2030maroc?igsh=MWdhZzJ5aXFhaTN3eQ%3D%3D&utm_source=qr" target="_blank" rel="noopener noreferrer" className="text-gray-300 hover:text-primary transition-colors" aria-label="Instagram">
+                <a href="https://www.instagram.com/marocsoleil" target="_blank" rel="noopener noreferrer" className="text-gray-300 hover:text-primary transition-colors" aria-label="Instagram">
                   <FaInstagram size={20} />
                 </a>
                 <a href="https://tripadvisor.com" target="_blank" rel="noopener noreferrer" className="text-gray-300 hover:text-primary transition-colors" aria-label="TripAdvisor">
@@ -178,15 +178,15 @@ const Footer = () => {
             <div className="flex flex-col md:flex-row justify-between items-center gap-4">
               <div className="text-center md:text-left">
                 <p className="text-gray-400 text-sm mb-2">
-                  © {currentYear} Maroc 2030. Tous droits réservés.
+                  © {currentYear} MarocSoleil. Tous droits réservés.
                 </p>
-                <p className="text-gray-500 text-xs">
+                <p className="text-gray-500 text-sm">
                   Réalisé par{' '}
                   <a 
                     href="https://marocgestionentreprendre.com" 
                     target="_blank" 
                     rel="noopener noreferrer"
-                    className="text-primary hover:text-primary/80 transition-colors font-medium"
+                    className="text-primary hover:text-primary/80 transition-colors font-semibold text-base"
                   >
                     Maroc Gestion Entreprendre
                   </a>

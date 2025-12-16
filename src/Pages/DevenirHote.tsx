@@ -130,7 +130,7 @@ const DevenirHote: React.FC = () => {
         <div className="bg-white rounded-xl shadow-2xl overflow-hidden">
           <div className="p-8">
             <div className="text-center mb-8">
-              <h1 className="text-3xl font-bold text-gray-900 mb-2">Devenir Hôte sur Maroc 2030</h1>
+              <h1 className="text-3xl font-bold text-gray-900 mb-2">Devenir Hôte sur MarocSoleil</h1>
               <p className="text-gray-600">Rejoignez notre communauté de partenaires et commencez à gagner de l'argent avec vos biens ou services.</p>
             </div>
 
@@ -339,7 +339,7 @@ const DevenirHote: React.FC = () => {
               <h3 className="text-lg font-medium text-gray-900 mb-2">Vous avez des questions ?</h3>
               <p className="text-gray-600 mb-4">Notre équipe est là pour vous aider.</p>
               <a
-                href="mailto:partenaires@maroc2030.ma"
+                href="mailto:imam@orange.fr"
                 className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg shadow-sm text-emerald-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500"
               >
                 <Mail className="-ml-1 mr-2 h-5 w-5 text-emerald-500" />

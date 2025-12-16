@@ -26,18 +26,18 @@ const LegalModal: React.FC<LegalModalProps> = ({ isOpen, onClose, type }) => {
               <section>
                 <h3 className="text-lg font-semibold text-gray-900 mb-3">Éditeur du site</h3>
                 <p className="text-gray-700 leading-relaxed">
-                  <strong>Maroc 2030</strong><br />
+                  <strong>MarocSoleil</strong><br />
                   Avenue Mohammed VI<br />
                   Meknès 50000, Maroc<br />
-                  Téléphone : +212 6 12 34 56 78<br />
-                  Email : contact@maroc2030.ma
+                  Téléphone : +212 669-742780<br />
+                  Email : imam@orange.fr
                 </p>
               </section>
 
               <section>
                 <h3 className="text-lg font-semibold text-gray-900 mb-3">Directeur de publication</h3>
                 <p className="text-gray-700 leading-relaxed">
-                  Le directeur de la publication du site est le représentant légal de Maroc 2030.
+                  Le directeur de la publication du site est le représentant légal de MarocSoleil.
                 </p>
               </section>
 
@@ -55,7 +55,7 @@ const LegalModal: React.FC<LegalModalProps> = ({ isOpen, onClose, type }) => {
                 <h3 className="text-lg font-semibold text-gray-900 mb-3">Propriété intellectuelle</h3>
                 <p className="text-gray-700 leading-relaxed">
                   L'ensemble du contenu de ce site (textes, images, vidéos, etc.) est protégé par le droit d'auteur. 
-                  Toute reproduction, même partielle, est interdite sans autorisation préalable de Maroc 2030.
+                  Toute reproduction, même partielle, est interdite sans autorisation préalable de MarocSoleil.
                 </p>
               </section>
 
@@ -64,7 +64,7 @@ const LegalModal: React.FC<LegalModalProps> = ({ isOpen, onClose, type }) => {
                 <p className="text-gray-700 leading-relaxed">
                   Conformément à la loi marocaine relative à la protection des données personnelles, 
                   vous disposez d'un droit d'accès, de rectification et de suppression des données vous concernant. 
-                  Pour exercer ce droit, contactez-nous à : contact@maroc2030.ma
+                  Pour exercer ce droit, contactez-nous à : imam@orange.fr
                 </p>
               </section>
 
@@ -103,7 +103,7 @@ const LegalModal: React.FC<LegalModalProps> = ({ isOpen, onClose, type }) => {
               <section>
                 <h3 className="text-lg font-semibold text-gray-900 mb-3">Collecte des données</h3>
                 <p className="text-gray-700 leading-relaxed mb-3">
-                  Maroc 2030 collecte les données personnelles suivantes :
+                  MarocSoleil collecte les données personnelles suivantes :
                 </p>
                 <ul className="list-disc list-inside text-gray-700 space-y-2 ml-4">
                   <li>Nom et prénom</li>
@@ -161,7 +161,7 @@ const LegalModal: React.FC<LegalModalProps> = ({ isOpen, onClose, type }) => {
                   <li>Droit à la portabilité des données</li>
                 </ul>
                 <p className="text-gray-700 leading-relaxed mt-3">
-                  Pour exercer ces droits, contactez-nous à : contact@maroc2030.ma
+                  Pour exercer ces droits, contactez-nous à : imam@orange.fr
                 </p>
               </section>
 
@@ -185,8 +185,8 @@ const LegalModal: React.FC<LegalModalProps> = ({ isOpen, onClose, type }) => {
                 <h3 className="text-lg font-semibold text-gray-900 mb-3">Contact</h3>
                 <p className="text-gray-700 leading-relaxed">
                   Pour toute question concernant cette politique de confidentialité, contactez-nous :<br />
-                  Email : contact@maroc2030.ma<br />
-                  Téléphone : +212 6 12 34 56 78
+                  Email : imam@orange.fr<br />
+                  Téléphone : +212 669-742780
                 </p>
               </section>
             </div>
@@ -203,7 +203,7 @@ const LegalModal: React.FC<LegalModalProps> = ({ isOpen, onClose, type }) => {
                 <h3 className="text-lg font-semibold text-gray-900 mb-3">Article 1 - Objet</h3>
                 <p className="text-gray-700 leading-relaxed">
                   Les présentes conditions générales de vente régissent les relations contractuelles entre 
-                  Maroc 2030 et ses clients concernant la vente de services touristiques.
+                  MarocSoleil et ses clients concernant la vente de services touristiques.
                 </p>
               </section>
 
@@ -247,7 +247,7 @@ const LegalModal: React.FC<LegalModalProps> = ({ isOpen, onClose, type }) => {
               <section>
                 <h3 className="text-lg font-semibold text-gray-900 mb-3">Article 6 - Responsabilité</h3>
                 <p className="text-gray-700 leading-relaxed">
-                  Maroc 2030 s'engage à fournir les services réservés dans les meilleures conditions. 
+                  MarocSoleil s'engage à fournir les services réservés dans les meilleures conditions. 
                   Notre responsabilité ne peut être engagée en cas de force majeure ou d'événements indépendants de notre volonté.
                 </p>
               </section>
@@ -255,7 +255,7 @@ const LegalModal: React.FC<LegalModalProps> = ({ isOpen, onClose, type }) => {
               <section>
                 <h3 className="text-lg font-semibold text-gray-900 mb-3">Article 7 - Réclamations</h3>
                 <p className="text-gray-700 leading-relaxed">
-                  Toute réclamation doit être adressée par écrit à contact@maroc2030.ma dans un délai de 30 jours 
+                  Toute réclamation doit être adressée par écrit à imam@orange.fr dans un délai de 30 jours 
                   suivant la fin de la prestation.
                 </p>
               </section>

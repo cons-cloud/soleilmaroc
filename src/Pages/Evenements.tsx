@@ -112,6 +112,36 @@ const Evenements = () => {
 
   useEffect(() => {
     loadEvents();
+
+    // Vérifier s'il y a une réservation en attente pour cette page
+    const pending = sessionStorage.getItem('pendingReservation');
+    if (pending) {
+      try {
+        const data = JSON.parse(pending);
+        if (data.from === window.location.pathname) {
+          // Restaurer l'événement sélectionné (minimale : id et titre suffisent pour le formulaire)
+          setSelectedEvent({
+            id: data.service.id,
+            title: data.service.title,
+            event_date: undefined,
+            date: undefined,
+            location: '',
+            event_time: undefined,
+            time: undefined,
+            description: '',
+            image: data.service.image || '',
+            category: '',
+            price: data.service.price_per_person || data.service.price || 0,
+            available_seats: data.service.max_participants || 100,
+          });
+          setShowBookingForm(true);
+        }
+      } catch (e) {
+        console.error('Erreur lors de la lecture de pendingReservation:', e);
+      } finally {
+        sessionStorage.removeItem('pendingReservation');
+      }
+    }
   }, []);
 
   const loadEvents = async () => {

@@ -6,7 +6,7 @@
 
   <!-- Page d'accueil -->
   <url>
-    <loc>https://maroc2030.ma/</loc>
+    <loc>https://marocsoleil.com/</loc>
     <lastmod>2024-11-11</lastmod>
     <changefreq>daily</changefreq>
     <priority>1.0</priority>
@@ -14,42 +14,42 @@
 
   <!-- Services principaux -->
   <url>
-    <loc>https://maroc2030.ma/services</loc>
+    <loc>https://marocsoleil.com/services</loc>
     <lastmod>2024-11-11</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
 
   <url>
-    <loc>https://maroc2030.ma/services/hotels</loc>
+    <loc>https://marocsoleil.com/services/hotels</loc>
     <lastmod>2024-11-11</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.9</priority>
   </url>
 
   <url>
-    <loc>https://maroc2030.ma/services/appartements</loc>
+    <loc>https://marocsoleil.com/services/appartements</loc>
     <lastmod>2024-11-11</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.9</priority>
   </url>
 
   <url>
-    <loc>https://maroc2030.ma/services/villas</loc>
+    <loc>https://marocsoleil.com/services/villas</loc>
     <lastmod>2024-11-11</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.9</priority>
   </url>
 
   <url>
-    <loc>https://maroc2030.ma/services/voitures</loc>
+    <loc>https://marocsoleil.com/services/voitures</loc>
     <lastmod>2024-11-11</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.9</priority>
   </url>
 
   <url>
-    <loc>https://maroc2030.ma/services/tourisme</loc>
+    <loc>https://marocsoleil.com/services/tourisme</loc>
     <lastmod>2024-11-11</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.9</priority>
@@ -57,35 +57,35 @@
 
   <!-- Services secondaires -->
   <url>
-    <loc>https://maroc2030.ma/services/guides</loc>
+    <loc>https://marocsoleil.com/services/guides</loc>
     <lastmod>2024-11-11</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
 
   <url>
-    <loc>https://maroc2030.ma/services/activites</loc>
+    <loc>https://marocsoleil.com/services/activites</loc>
     <lastmod>2024-11-11</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
 
   <url>
-    <loc>https://maroc2030.ma/services/evenements</loc>
+    <loc>https://marocsoleil.com/services/evenements</loc>
     <lastmod>2024-11-11</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
 
   <url>
-    <loc>https://maroc2030.ma/annonces</loc>
+    <loc>https://marocsoleil.com/annonces</loc>
     <lastmod>2024-11-11</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
   </url>
 
   <url>
-    <loc>https://maroc2030.ma/immobilier</loc>
+    <loc>https://marocsoleil.com/immobilier</loc>
     <lastmod>2024-11-11</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
@@ -93,21 +93,21 @@
 
   <!-- Pages institutionnelles -->
   <url>
-    <loc>https://maroc2030.ma/apropos</loc>
+    <loc>https://marocsoleil.com/apropos</loc>
     <lastmod>2024-11-11</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
 
   <url>
-    <loc>https://maroc2030.ma/contact</loc>
+    <loc>https://marocsoleil.com/contact</loc>
     <lastmod>2024-11-11</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
 
   <url>
-    <loc>https://maroc2030.ma/evenements</loc>
+    <loc>https://marocsoleil.com/evenements</loc>
     <lastmod>2024-11-11</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>

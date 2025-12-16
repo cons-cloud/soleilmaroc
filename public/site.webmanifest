@@ -1,6 +1,6 @@
 {
-  "name": "Maroc 2030",
-  "short_name": "Maroc2030",
+  "name": "MarocSoleil",
+  "short_name": "MarocSoleil",
   "description": "Plateforme de tourisme et services au Maroc",
   "start_url": "/",
   "display": "standalone",

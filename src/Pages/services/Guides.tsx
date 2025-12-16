@@ -34,6 +34,22 @@ const Guides = () => {
 
   useEffect(() => {
     loadGuides();
+
+    // Vérifier s'il y a une réservation en attente pour cette page
+    const pending = sessionStorage.getItem('pendingReservation');
+    if (pending) {
+      try {
+        const data = JSON.parse(pending);
+        if (data.from === window.location.pathname) {
+          setSelectedGuide(data.service);
+          setShowBookingForm(true);
+        }
+      } catch (e) {
+        console.error('Erreur lors de la lecture de pendingReservation:', e);
+      } finally {
+        sessionStorage.removeItem('pendingReservation');
+      }
+    }
   }, []);
 
   const loadGuides = async () => {

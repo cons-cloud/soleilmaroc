@@ -20,10 +20,10 @@ const SettingsManagement: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [settings, setSettings] = useState<SiteSettings>({
-    site_name: 'Maroc 2030',
+    site_name: 'MarocSoleil',
     site_description: 'Plateforme de services touristiques au Maroc',
-    contact_email: 'contact@maroc2030.ma',
-    contact_phone: '+212 5XX-XXXXXX',
+    contact_email: 'imam@orange.fr',
+    contact_phone: '+212 669-742780',
     contact_address: 'Casablanca, Maroc',
     facebook_url: '',
     instagram_url: '',
@@ -230,7 +230,7 @@ const SettingsManagement: React.FC = () => {
                 value={settings.facebook_url}
                 onChange={(e) => setSettings({ ...settings, facebook_url: e.target.value })}
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
-                placeholder="https://facebook.com/maroc2030"
+                placeholder="https://facebook.com/marocsoleil"
               />
             </div>
             <div>
@@ -243,7 +243,7 @@ const SettingsManagement: React.FC = () => {
                 value={settings.instagram_url}
                 onChange={(e) => setSettings({ ...settings, instagram_url: e.target.value })}
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
-                placeholder="https://instagram.com/maroc2030"
+                placeholder="https://instagram.com/marocsoleil"
               />
             </div>
             <div>
@@ -256,7 +256,7 @@ const SettingsManagement: React.FC = () => {
                 value={settings.twitter_url}
                 onChange={(e) => setSettings({ ...settings, twitter_url: e.target.value })}
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
-                placeholder="https://twitter.com/maroc2030"
+                placeholder="https://twitter.com/marocsoleil"
               />
             </div>
           </div>

@@ -3,8 +3,6 @@ import { motion } from 'framer-motion';
 import { supabase } from '../../lib/supabase';
 import Navbar from '../../components/Navbar';
 import Footer from '../../components/Footer';
-import AuthGuard from '../../components/AuthGuard';
-import UniversalBookingForm from '../../components/UniversalBookingForm';
 import { MapPin, Calendar, Clock, Users, Tag, Ticket } from 'lucide-react';
 import toast from 'react-hot-toast';
 
@@ -28,8 +26,6 @@ interface Evenement {
 const Evenements = () => {
   const [evenements, setEvenements] = useState<Evenement[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [selectedEvenement, setSelectedEvenement] = useState<Evenement | null>(null);
-  const [showBookingForm, setShowBookingForm] = useState(false);
   const [selectedCity, setSelectedCity] = useState<string>('all');
   const [selectedType, setSelectedType] = useState<string>('all');
 
@@ -60,11 +56,8 @@ const Evenements = () => {
         const { eventId, timestamp } = JSON.parse(pendingReservation);
         // Vérifier que la réservation a moins de 5 minutes
         if (new Date().getTime() - timestamp < 5 * 60 * 1000) {
-          const event = evenements.find(e => e.id === eventId);
-          if (event) {
-            setSelectedEvenement(event);
-            setShowBookingForm(true);
-          }
+          // Ancienne logique de réservation désactivée pour les événements
+          // On ne fait plus rien ici car les événements renvoient maintenant vers la page Contact
         }
         // Nettoyer
         sessionStorage.removeItem('pendingReservation');
@@ -80,13 +73,6 @@ const Evenements = () => {
     const typeMatch = selectedType === 'all' || e.type === selectedType;
     return cityMatch && typeMatch;
   });
-
-  const handleBookEvenement = (evenement: Evenement) => {
-    // Cette fonction ne sera appelée que si l'utilisateur est connecté
-    // grâce au AuthGuard qui entoure le bouton
-    setSelectedEvenement(evenement);
-    setShowBookingForm(true);
-  };
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('fr-FR', {
@@ -236,21 +222,15 @@ const Evenements = () => {
                       </div>
                     )}
 
-                    {/* Prix et bouton */}
-                    <div className="flex items-center justify-between pt-4 border-t">
-                      <div>
-                        <span className="text-2xl font-bold text-purple-600">
-                          {evenement.price} MAD
-                        </span>
-                        <span className="text-gray-500 text-sm"> / billet</span>
-                      </div>
-                      <button
-                        onClick={() => handleBookEvenement(evenement)}
-                        className="px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors font-medium flex items-center gap-2"
+                    {/* Appel à l'action : en savoir plus → page Contact */}
+                    <div className="pt-4 border-t">
+                      <a
+                        href="/contact"
+                        className="w-full inline-flex items-center justify-center px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors font-medium gap-2"
                       >
                         <Ticket className="w-4 h-4" />
-                        Réserver
-                      </button>
+                        En savoir plus
+                      </a>
                     </div>
                   </div>
                 </motion.div>
@@ -259,24 +239,6 @@ const Evenements = () => {
           )}
         </div>
       </div>
-
-      {/* Formulaire de réservation avec AuthGuard */}
-      <AuthGuard>
-        {showBookingForm && selectedEvenement && (
-          <UniversalBookingForm
-            service={{
-              id: selectedEvenement.id,
-              title: selectedEvenement.title,
-              price: selectedEvenement.price,
-            }}
-            serviceType="circuit"
-            onClose={() => {
-              setShowBookingForm(false);
-              setSelectedEvenement(null);
-            }}
-          />
-        )}
-      </AuthGuard>
 
       <Footer />
     </>

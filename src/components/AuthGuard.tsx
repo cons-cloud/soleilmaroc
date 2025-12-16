@@ -18,7 +18,7 @@ const AuthGuard: React.FC<AuthGuardProps> = ({ children, onAuthRequired }) => {
   // Vérifier si l'utilisateur s'est connecté pendant que la modale était ouverte
   useEffect(() => {
     if (user && pendingAction) {
-      // Exécuter l'action en attente
+      // Exécuter l'action en attente (par exemple recharger la page)
       pendingAction();
       setPendingAction(null);
       setShowAuthModal(false);
@@ -89,15 +89,11 @@ const AuthGuard: React.FC<AuthGuardProps> = ({ children, onAuthRequired }) => {
                 onClick={() => {
                   // Enregistrer l'action à effectuer après la connexion
                   setPendingAction(() => {
-                    const pendingReservation = sessionStorage.getItem('pendingReservation');
-                    if (pendingReservation) {
-                      const { eventId } = JSON.parse(pendingReservation);
-                      return () => {
-                        // Recharger la page pour forcer la réinitialisation du formulaire
-                        window.location.reload();
-                      };
-                    }
-                    return () => {};
+                    return () => {
+                      // Après connexion : recharger la page pour permettre
+                      // aux pages concernées de rouvrir le formulaire via pendingReservation
+                      window.location.reload();
+                    };
                   });
                   
                   // Rediriger vers la page de connexion avec l'état actuel

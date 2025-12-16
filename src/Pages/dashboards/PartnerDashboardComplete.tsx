@@ -293,7 +293,7 @@ const PartnerDashboardComplete: React.FC = () => {
                   {stats?.pending_earnings?.toFixed(2) || '0.00'} MAD
                 </p>
                 <p className="text-xs text-gray-500 mt-1">
-                  À recevoir de Maroc2030
+                  À recevoir de MarocSoleil
                 </p>
               </div>
               <div className="bg-yellow-100 p-3 rounded-lg">
@@ -328,7 +328,7 @@ const PartnerDashboardComplete: React.FC = () => {
             <div>
               <h3 className="font-semibold text-emerald-900">Information importante</h3>
               <p className="text-sm text-emerald-800 mt-1">
-                Les montants affichés sont après déduction de la commission de 10% de Maroc2030.
+                Les montants affichés sont après déduction de la commission de 10% de MarocSoleil.
                 Vous recevez 90% du montant total payé par les clients.
               </p>
             </div>

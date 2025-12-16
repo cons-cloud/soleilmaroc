@@ -1,10 +1,10 @@
-// Configuration SEO optimisée pour Google - Maroc 2030
+// Configuration SEO optimisée pour Google - MarocSoleil
 export const SEO_CONFIG = {
   // Informations principales
-  siteName: 'Maroc 2030 - Plateforme Touristique N°1 au Maroc',
-  siteUrl: 'https://maroc2030.ma', // Remplacer par votre domaine
-  defaultTitle: 'Maroc 2030 | Réservation Hôtels, Circuits, Voitures & Immobilier au Maroc',
-  defaultDescription: 'Découvrez le Maroc avec Maroc 2030 : Réservation d\'hôtels, appartements, villas, circuits touristiques, location de voitures, guides professionnels. Meilleurs prix garantis. Paiement sécurisé.',
+  siteName: 'MarocSoleil - Plateforme Touristique N°1 au Maroc',
+  siteUrl: 'https://marocsoleil.com',
+  defaultTitle: 'MarocSoleil | Réservation Hôtels, Circuits, Voitures & Immobilier au Maroc',
+  defaultDescription: 'Découvrez le Maroc avec MarocSoleil : Réservation d\'hôtels, appartements, villas, circuits touristiques, location de voitures, guides professionnels. Meilleurs prix garantis. Paiement sécurisé.',
   defaultKeywords: [
     // Mots-clés principaux (high volume)
     'maroc tourisme',
@@ -61,22 +61,22 @@ export const SEO_CONFIG = {
   
   // Twitter Card
   twitterCard: 'summary_large_image',
-  twitterSite: '@Maroc2030',
-  twitterCreator: '@Maroc2030',
+  twitterSite: '@MarocSoleil',
+  twitterCreator: '@MarocSoleil',
   
   // Informations de contact
   contact: {
-    email: 'contact@maroc2030.ma',
-    phone: '+212 XXX XXX XXX',
+    email: 'imam@orange.fr',
+    phone: '+212 669-742780',
     address: 'Maroc',
   },
   
   // Réseaux sociaux
   social: {
-    facebook: 'https://facebook.com/maroc2030',
-    instagram: 'https://instagram.com/maroc2030',
-    twitter: 'https://twitter.com/maroc2030',
-    linkedin: 'https://linkedin.com/company/maroc2030',
+    facebook: 'https://facebook.com/marocsoleil',
+    instagram: 'https://instagram.com/marocsoleil',
+    twitter: 'https://twitter.com/marocsoleil',
+    linkedin: 'https://linkedin.com/company/marocsoleil',
   },
   
   // Langues disponibles
@@ -86,10 +86,10 @@ export const SEO_CONFIG = {
   // Données structurées
   organization: {
     '@type': 'TravelAgency',
-    name: 'Maroc 2030',
-    description: 'Plateforme de réservation touristique au Maroc',
-    url: 'https://maroc2030.ma',
-    logo: 'https://maroc2030.ma/logo.png',
+    name: 'MarocSoleil',
+    description: 'MarocSoleil est une plateforme de réservation touristique au Maroc : hébergements, circuits, activités et location de voitures.',
+    url: 'https://marocsoleil.com',
+    logo: 'https://marocsoleil.com/logo.png',
     contactPoint: {
       '@type': 'ContactPoint',
       telephone: '+212-XXX-XXX-XXX',
@@ -98,9 +98,9 @@ export const SEO_CONFIG = {
       availableLanguage: ['French', 'Arabic', 'English']
     },
     sameAs: [
-      'https://facebook.com/maroc2030',
-      'https://instagram.com/maroc2030',
-      'https://twitter.com/maroc2030',
+      'https://facebook.com/marocsoleil',
+      'https://instagram.com/marocsoleil',
+      'https://twitter.com/marocsoleil',
     ]
   }
 };
@@ -108,9 +108,9 @@ export const SEO_CONFIG = {
 // Mots-clés par page
 export const PAGE_SEO = {
   home: {
-    title: 'Maroc 2030 | Réservation Hôtels, Circuits & Voitures au Maroc',
-    description: 'Plateforme N°1 de réservation touristique au Maroc. Hôtels, circuits, location voitures, appartements, villas. Meilleurs prix garantis. Réservation en ligne sécurisée.',
-    keywords: 'maroc tourisme, voyage maroc, hotel maroc, réservation maroc, circuit maroc, location voiture maroc',
+    title: 'MarocSoleil | Réservation Hôtels, Circuits & Voitures au Maroc',
+    description: 'MarocSoleil est la plateforme N°1 de réservation touristique au Maroc. Hôtels, circuits, location voitures, appartements, villas. Meilleurs prix garantis. Réservation en ligne sécurisée.',
+    keywords: 'marocsoleil, maroc soleil, maroc tourisme, voyage maroc, hotel maroc, réservation maroc, circuit maroc, location voiture maroc',
   },
   
   hotels: {
@@ -168,9 +168,9 @@ export const PAGE_SEO = {
   },
   
   contact: {
-    title: 'Contact Maroc 2030 | Service Client & Réservations',
-    description: 'Contactez Maroc 2030 pour vos réservations et questions. Service client disponible 7j/7. Email, téléphone, formulaire de contact.',
-    keywords: 'contact maroc 2030, service client maroc, réservation maroc, assistance tourisme maroc',
+    title: 'Contact MarocSoleil | Service Client & Réservations',
+    description: 'Contactez MarocSoleil pour vos réservations et questions. Service client disponible 7j/7. Email, téléphone, formulaire de contact.',
+    keywords: 'contact marocsoleil, service client maroc, réservation maroc, assistance tourisme maroc',
   },
 };
 

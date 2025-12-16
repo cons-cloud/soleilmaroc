@@ -60,14 +60,15 @@ const UniversalBookingForm: React.FC<UniversalBookingFormProps> = ({ serviceType
   // Vérifier l'authentification et pré-remplir les données
   useEffect(() => {
     if (!user) {
-      // Si l'utilisateur n'est pas connecté, on enregistre les données de réservation dans l'état de navigation
+      // Sauvegarder l'état de réservation pour après connexion
       const reservationData = {
         serviceType,
         service,
         formData,
-        from: window.location.pathname
+        from: window.location.pathname,
+        timestamp: Date.now(),
       };
-      // On ne fait rien d'autre ici, AuthGuard va gérer l'affichage du formulaire
+      sessionStorage.setItem('pendingReservation', JSON.stringify(reservationData));
       return;
     }
 

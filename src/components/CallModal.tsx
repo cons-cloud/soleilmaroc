@@ -44,7 +44,7 @@ const CallModal: React.FC<CallModalProps> = ({ isOpen, onClose }) => {
         <div className="p-6 space-y-4">
           {/* Téléphone */}
           <a
-            href="tel:+212612345678"
+            href="tel:+21266974280"
             className="flex items-center gap-4 p-4 bg-gray-50 hover:bg-primary/5 rounded-xl transition-all group border border-gray-200 hover:border-primary"
           >
             <div className="bg-primary/10 group-hover:bg-primary p-3 rounded-full transition-colors">
@@ -53,14 +53,14 @@ const CallModal: React.FC<CallModalProps> = ({ isOpen, onClose }) => {
             <div className="flex-1">
               <p className="text-sm text-gray-600 font-medium">Téléphone</p>
               <p className="text-lg font-bold text-gray-900 group-hover:text-primary transition-colors">
-                +212 6 12 34 56 78
+                +212 669-742780
               </p>
             </div>
           </a>
 
           {/* Email */}
           <a
-            href="mailto:contact@maroc2030.ma"
+            href="mailto:imam@orange.fr"
             className="flex items-center gap-4 p-4 bg-gray-50 hover:bg-primary/5 rounded-xl transition-all group border border-gray-200 hover:border-primary"
           >
             <div className="bg-primary/10 group-hover:bg-primary p-3 rounded-full transition-colors">
@@ -69,7 +69,7 @@ const CallModal: React.FC<CallModalProps> = ({ isOpen, onClose }) => {
             <div className="flex-1">
               <p className="text-sm text-gray-600 font-medium">Email</p>
               <p className="text-base font-semibold text-gray-900 group-hover:text-primary transition-colors">
-                contact@maroc2030.ma
+                imam@orange.fr
               </p>
             </div>
           </a>

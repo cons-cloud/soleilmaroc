@@ -109,7 +109,7 @@ const Navbar: React.FC<NavbarProps> = () => {
           {/* Conteneur pour la navigation et le sélecteur de langue */}
           <div className="flex items-center">
             {/* Navigation */}
-            <div className="hidden md:flex md:items-center md:space-x-4">
+            <div className="hidden lg:flex md:items-center md:space-x-4">
             {navLinks.map((item) => (
               <div key={item.name} className="relative">
                 {item.submenu ? (
@@ -184,8 +184,8 @@ const Navbar: React.FC<NavbarProps> = () => {
             {/* Espace pour d'éventuels éléments supplémentaires */}
           </div>
 
-          {/* Bouton menu mobile */}
-          <div className="flex items-center md:hidden">
+          {/* Bouton menu mobile (téléphone + tablette uniquement) */}
+          <div className="flex items-center lg:hidden">
             {!profile ? (
               <Link
                 to={ROUTES.BECOME_HOST}
@@ -211,26 +211,9 @@ const Navbar: React.FC<NavbarProps> = () => {
         </div>
       </div>
 
-      {/* Menu mobile */}
+      {/* Menu mobile (téléphone + tablette uniquement) */}
       {isOpen && (
-        <div className="md:hidden bg-white border-t border-gray-200">
-          {/* Section connexion - seulement si non connecté */}
-          {!profile && (
-            <div className="px-4 py-3 border-b border-gray-100">
-              <div className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-2">
-                Connexion
-              </div>
-              <div className="flex items-center space-x-4">
-                <Link
-                  to="/login"
-                  className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors"
-                >
-                  Connexion
-                </Link>
-              </div>
-            </div>
-          )}
-          
+        <div className="lg:hidden bg-white border-t border-gray-200">
           {/* Section menu utilisateur pour les hôtes */}
           {profile && profile.role !== 'client' && (
             <div className="px-4 py-3 border-b border-gray-100">

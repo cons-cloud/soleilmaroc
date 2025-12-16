@@ -237,13 +237,13 @@ const ProductForm: React.FC = () => {
         const filePath = `products/${fileName}`;
         
         const { error: uploadError } = await supabase.storage
-          .from('maroc2030')
+          .from('services')
           .upload(filePath, file);
           
         if (uploadError) throw uploadError;
         
         const { data: { publicUrl } } = await supabase.storage
-          .from('maroc2030')
+          .from('services')
           .getPublicUrl(filePath);
         
         if (publicUrl) {
@@ -273,7 +273,7 @@ const ProductForm: React.FC = () => {
         if (path) {
           const filePath = `products/${path}`;
           const { error } = await supabase.storage
-            .from('maroc2030')
+            .from('services')
             .remove([filePath]);
             
           if (error) console.error(`Erreur lors de la suppression de l'image ${path}:`, error);

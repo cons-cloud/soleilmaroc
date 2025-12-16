@@ -1,4 +1,4 @@
-const CACHE_NAME = 'maroc2030-cache-v1';
+const CACHE_NAME = 'marocsoleil-cache-v1';
 const urlsToCache = [
   '/',
   '/index.html',
