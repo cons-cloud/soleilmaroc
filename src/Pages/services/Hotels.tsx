@@ -2,7 +2,8 @@ import { useState } from 'react';
 import ServiceHero from '../../components/ServiceHero';
 import LoadingState from '../../components/LoadingState';
 import BookingModal from '../../components/BookingModal';
-import useServices, {  Service} from '../../hooks/useServices';
+import useServices from '../../hooks/useServices';
+import type { Service } from '../../hooks/useServices';
 import HotelCard from '../../components/HotelCard';
 
 // Type personnalisé pour le service de réservation

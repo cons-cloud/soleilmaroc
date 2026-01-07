@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link, Outlet } from "react-router-dom";
-import { motion, Variants } from "framer-motion";
+import { motion } from "framer-motion";
+import type { Variants } from "framer-motion";
 import { FaCar, FaHome, FaUmbrellaBeach, FaHotel, FaRoute } from 'react-icons/fa';
 import ServiceCard from "../components/ServiceCard";
 import CallModal from "../components/CallModal";

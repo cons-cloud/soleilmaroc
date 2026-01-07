@@ -21,7 +21,8 @@
     "noFallthroughCasesInSwitch": true
   },
   "include": [
-    "src"
+    "src",
+    "supabaseClient.ts"
   ],
   "exclude": [
     "node_modules"
