@@ -100,43 +100,134 @@ const PartnerDashboard: React.FC = () => {
       try {
         setLoading(true);
         
-        // Charger les statistiques
-        const { data: statsData, error: statsError } = await supabase
-          .rpc('get_partner_dashboard_stats', { partner_id: user?.id });
+        // Charger les statistiques manuellement si la fonction RPC n'existe pas
+        let statsData: any = null;
+        try {
+          const { data, error: statsError } = await supabase
+            .rpc('get_partner_dashboard_stats', { partner_id: user?.id });
           
-        if (statsError) throw statsError;
+          if (statsError) {
+            console.warn('Fonction RPC non disponible, calcul manuel des stats:', statsError);
+            // Calculer manuellement les statistiques
+            const [productsRes, bookingsRes, paymentsRes] = await Promise.all([
+              supabase.from('partner_products').select('*', { count: 'exact' }).eq('partner_id', user?.id),
+              supabase.from('bookings').select('*', { count: 'exact' }).eq('partner_id', user?.id),
+              supabase.from('payments').select('amount, status').eq('partner_id', user?.id)
+            ]);
+            
+            const totalProducts = productsRes.count || 0;
+            const activeProducts = (productsRes.data || []).filter((p: any) => p.available).length;
+            const totalBookings = bookingsRes.count || 0;
+            const confirmedBookings = (bookingsRes.data || []).filter((b: any) => b.status === 'confirmed').length;
+            const completedBookings = (bookingsRes.data || []).filter((b: any) => b.status === 'completed').length;
+            const cancelledBookings = (bookingsRes.data || []).filter((b: any) => b.status === 'cancelled').length;
+            
+            const paidPayments = (paymentsRes.data || []).filter((p: any) => p.status === 'paid');
+            const totalRevenue = paidPayments.reduce((sum: number, p: any) => sum + (p.amount || 0), 0);
+            const totalCommission = totalRevenue * 0.1;
+            const totalEarnings = totalRevenue - totalCommission;
+            const totalPaid = paidPayments.reduce((sum: number, p: any) => sum + (p.amount || 0), 0);
+            const pendingPayment = totalEarnings - totalPaid;
+            
+            statsData = [{
+              total_products: totalProducts,
+              active_products: activeProducts,
+              total_bookings: totalBookings,
+              confirmed_bookings: confirmedBookings,
+              completed_bookings: completedBookings,
+              cancelled_bookings: cancelledBookings,
+              total_revenue: totalRevenue,
+              total_commission: totalCommission,
+              total_earnings: totalEarnings,
+              total_paid: totalPaid,
+              pending_payment: pendingPayment
+            }];
+          } else {
+            statsData = data;
+          }
+        } catch (rpcError) {
+          console.error('Erreur RPC:', rpcError);
+          // Calculer manuellement en cas d'erreur
+          statsData = [{
+            total_products: 0,
+            active_products: 0,
+            total_bookings: 0,
+            confirmed_bookings: 0,
+            completed_bookings: 0,
+            cancelled_bookings: 0,
+            total_revenue: 0,
+            total_commission: 0,
+            total_earnings: 0,
+            total_paid: 0,
+            pending_payment: 0
+          }];
+        }
         
         // Charger les réservations récentes
         const { data: bookingsData, error: bookingsError } = await supabase
           .from('bookings')
-          .select(`
-            id,
-            booking_number,
-            client_name,
-            product:service_id (title),
-            check_in_date,
-            check_out_date,
-            total_amount,
-            commission_amount,
-            partner_amount,
-            status,
-            created_at
-          `)
+          .select('*')
           .eq('partner_id', user?.id)
           .order('created_at', { ascending: false })
           .limit(5);
           
-        if (bookingsError) throw bookingsError;
+        if (bookingsError) {
+          console.error('Erreur réservations:', bookingsError);
+          setRecentBookings([]);
+        } else {
+          // Mettre à jour l'état avec les données formatées
+          setRecentBookings((bookingsData || []).map((booking: any) => ({
+            id: booking.id,
+            booking_number: booking.booking_number || booking.reference || booking.id.substring(0, 8),
+            client_name: booking.client_name || booking.user_name || 'Client inconnu',
+            product_title: booking.service_title || booking.service_name || 'Produit inconnu',
+            check_in_date: booking.start_date || booking.check_in_date || '',
+            check_out_date: booking.end_date || booking.check_out_date || '',
+            total_amount: booking.total_price || booking.total_amount || 0,
+            commission_amount: (booking.total_price || booking.total_amount || 0) * 0.1,
+            partner_amount: (booking.total_price || booking.total_amount || 0) * 0.9,
+            status: booking.status || 'pending',
+            created_at: booking.created_at || ''
+          })));
+        }
         
-        // Mettre à jour l'état avec les données formatées
-        setStats(statsData[0]);
-        setRecentBookings(bookingsData.map(booking => ({
-          ...booking,
-          product_title: (booking as any).product?.title || 'Produit inconnu'
-        })));
+        // Mettre à jour les statistiques
+        if (statsData && statsData.length > 0) {
+          setStats(statsData[0]);
+        } else {
+          // Valeurs par défaut si pas de données
+          setStats({
+            total_products: 0,
+            active_products: 0,
+            total_bookings: 0,
+            confirmed_bookings: 0,
+            completed_bookings: 0,
+            cancelled_bookings: 0,
+            total_revenue: 0,
+            total_commission: 0,
+            total_earnings: 0,
+            total_paid: 0,
+            pending_payment: 0
+          });
+        }
         
-      } catch (error) {
+      } catch (error: any) {
         console.error('Erreur lors du chargement du tableau de bord:', error);
+        // Définir des valeurs par défaut en cas d'erreur
+        setStats({
+          total_products: 0,
+          active_products: 0,
+          total_bookings: 0,
+          confirmed_bookings: 0,
+          completed_bookings: 0,
+          cancelled_bookings: 0,
+          total_revenue: 0,
+          total_commission: 0,
+          total_earnings: 0,
+          total_paid: 0,
+          pending_payment: 0
+        });
+        setRecentBookings([]);
       } finally {
         setLoading(false);
       }
@@ -144,6 +235,8 @@ const PartnerDashboard: React.FC = () => {
     
     if (user?.id) {
       loadDashboardData();
+    } else {
+      setLoading(false);
     }
   }, [user?.id]);
 

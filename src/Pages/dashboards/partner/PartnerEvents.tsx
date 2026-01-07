@@ -71,14 +71,28 @@ const PartnerEvents = () => {
         .from('evenements')
         .select('*')
         .eq('partner_id', user?.id)
-        .eq('is_partner_event', true)
         .order('event_date', { ascending: false });
 
-      if (error) throw error;
-      setEvents(data || []);
+      if (error) {
+        console.error('Erreur événements:', error);
+        // Essayer sans le filtre is_partner_event si la colonne n'existe pas
+        const { data: fallbackData, error: fallbackError } = await supabase
+          .from('evenements')
+          .select('*')
+          .eq('partner_id', user?.id)
+          .order('event_date', { ascending: false });
+        
+        if (fallbackError) {
+          throw fallbackError;
+        }
+        setEvents(fallbackData || []);
+      } else {
+        setEvents(data || []);
+      }
     } catch (error: any) {
       console.error('Erreur:', error);
       toast.error('Erreur lors du chargement des événements');
+      setEvents([]);
     } finally {
       setLoading(false);
     }

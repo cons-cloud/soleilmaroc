@@ -35,7 +35,7 @@ const CarCard: React.FC<CarCardProps> = ({
   type_carburant,
   boite_vitesse,
   nb_places,
-  nb_portes,
+ 
   climatisation,
   en_vedette,
   partner,

@@ -117,13 +117,13 @@ const UsersManagement: React.FC = () => {
       if (userError) {
         console.warn('Could not fetch user emails:', userError);
         // Si on ne peut pas récupérer les emails, on utilise les profils sans les emails
-        setUsers(profiles.map(profile => ({
+        setUsers(profiles.map((profile: any) => ({
           ...profile,
           email: 'Email non disponible'
         })));
       } else {
         // Fusionner les données des profils avec les emails
-        const usersWithEmails = profiles.map(profile => ({
+        const usersWithEmails = profiles.map((profile: any) => ({
           ...profile,
           email: userData?.find((u: any) => u.id === profile.id)?.email || 'Email non disponible'
         }));

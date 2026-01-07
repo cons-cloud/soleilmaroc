@@ -202,6 +202,32 @@ const PartnerProductBookingForm: React.FC<PartnerProductBookingFormProps> = ({
 
       if (bookingError) throw bookingError;
 
+      // Envoyer l'email de confirmation
+      try {
+        const { error: emailError } = await supabase.functions.invoke('send-booking-confirmation', {
+          body: {
+            bookingId: booking.id,
+            paymentId: paymentMethod?.id,
+            customerEmail: formData.email,
+            customerName: formData.fullName,
+            serviceTitle: product.title || product.name,
+            totalPrice: totalPrice,
+            serviceType: product.product_type,
+            startDate: formData.startDate || formData.pickupDate,
+            endDate: formData.endDate || formData.returnDate,
+            transactionId: paymentMethod?.id
+          }
+        });
+
+        if (emailError) {
+          console.error('Erreur envoi email:', emailError);
+          // Ne pas bloquer le processus si l'email échoue
+        }
+      } catch (emailErr) {
+        console.error('Erreur lors de l\'envoi de l\'email:', emailErr);
+        // Ne pas bloquer le processus si l'email échoue
+      }
+
       toast.success('Réservation confirmée ! Un email de confirmation vous a été envoyé.');
       
       if (onSuccess) onSuccess();

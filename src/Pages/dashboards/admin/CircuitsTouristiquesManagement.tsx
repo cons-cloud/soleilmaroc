@@ -117,7 +117,15 @@ const CircuitsTouristiquesManagement: React.FC = () => {
               )}
             </div>
             <div className="p-4">
-              <h3 className="font-semibold text-gray-900">{item.title}</h3>
+              <div className="flex items-start justify-between mb-2">
+                <h3 className="font-semibold text-gray-900">{item.title}</h3>
+                {item.available === false && (
+                  <span className="px-2 py-1 bg-red-100 text-red-700 text-xs font-semibold rounded">Non disponible</span>
+                )}
+                {item.available === true && (
+                  <span className="px-2 py-1 bg-green-100 text-green-700 text-xs font-semibold rounded">Disponible</span>
+                )}
+              </div>
               <p className="text-sm text-gray-600 line-clamp-2 mb-3">{item.description}</p>
               <div className="flex items-center gap-3 text-sm text-gray-600 mb-3">
                 <span>📅 {item.duration_days} jours</span>
@@ -125,7 +133,7 @@ const CircuitsTouristiquesManagement: React.FC = () => {
               </div>
               <div className="flex items-center justify-between pt-3 border-t">
                 <div>
-                  <span className="text-lg font-bold text-emerald-600">{item.price_per_person || '0'} MAD</span>
+                  <span className="text-lg font-bold text-emerald-600">{item.price_per_person || item.price || '0'} MAD</span>
                   <span className="text-sm text-gray-500">/pers</span>
                 </div>
                 <div className="flex gap-2">

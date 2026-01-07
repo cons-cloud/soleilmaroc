@@ -33,14 +33,25 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, allowedRoles 
   }
 
   // Pour les non-admins, vérifier le profil
-  if (allowedRoles && profile && !allowedRoles.includes(profile.role)) {
-    // Rediriger vers le dashboard approprié selon le rôle
-    if (isAdmin) {
-      return <Navigate to="/dashboard/admin" replace />;
-    } else if (profile.role?.startsWith('partner')) {
-      return <Navigate to="/dashboard/partner" replace />;
-    } else {
-      return <Navigate to="/dashboard/client" replace />;
+  if (allowedRoles && profile) {
+    const profileRole = profile.role as UserRole;
+    // Vérifier si le rôle correspond (incluant les variantes de partner)
+    const hasAccess = allowedRoles.some(role => {
+      if (role === 'partner_tourism' || role === 'partner_car' || role === 'partner_realestate') {
+        return profileRole === 'partner_tourism' || profileRole === 'partner_car' || profileRole === 'partner_realestate';
+      }
+      return role === profileRole;
+    });
+    
+    if (!hasAccess) {
+      // Rediriger vers le dashboard approprié selon le rôle
+      if (isAdmin) {
+        return <Navigate to="/dashboard/admin" replace />;
+      } else if (profileRole === 'partner_tourism' || profileRole === 'partner_car' || profileRole === 'partner_realestate') {
+        return <Navigate to="/dashboard/partner" replace />;
+      } else {
+        return <Navigate to="/dashboard/client" replace />;
+      }
     }
   }
 

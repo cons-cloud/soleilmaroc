@@ -7,7 +7,7 @@ if (!supabaseUrl || !supabaseAnonKey) {
   console.warn('Missing VITE_SUPABASE_* env variables — supabase client not initialized');
 }
 
-let _supabase: SupabaseClient | any = null;
+let _supabase: SupabaseClient | null = null;
 
 if (supabaseUrl && supabaseAnonKey) {
   _supabase = createClient(supabaseUrl, supabaseAnonKey, {

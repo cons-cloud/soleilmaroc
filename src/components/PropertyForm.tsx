@@ -1,9 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { X, Upload, Trash2, Loader, Plus } from 'lucide-react';
+import { X, Loader, Plus } from 'lucide-react';
 import { supabase } from '../lib/supabase';
-import { uploadMultipleImages, deleteImage } from '../lib/storage';
 import toast from 'react-hot-toast';
-import { useNavigate } from 'react-router-dom';
 
 type PropertyType = 'hotel' | 'apartment' | 'villa' | 'car' | 'tour';
 
@@ -101,7 +99,6 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ property, type, onClose, on
   const [newAmenity, setNewAmenity] = useState('');
   const [files, setFiles] = useState<FileList | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const navigate = useNavigate();
 
   useEffect(() => {
     if (property) {
@@ -172,7 +169,7 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ property, type, onClose, on
   };
 
   const handleRemoveAmenity = (amenity: string) => {
-    const updatedAmenities = (formData.amenities || []).filter(a => a !== amenity);
+    const updatedAmenities = (formData.amenities || []).filter((a: string) => a !== amenity);
     setFormData(prev => ({ ...prev, amenities: updatedAmenities }));
   };
 
@@ -210,7 +207,7 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ property, type, onClose, on
         if (error) throw error;
         toast.success('Propriété mise à jour avec succès');
       } else {
-        const { data, error } = await supabase
+        const { error } = await supabase
           .from('properties')
           .insert([{ 
             ...dataToSave, 
@@ -308,7 +305,7 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ property, type, onClose, on
               </div>
               {formData.amenities && formData.amenities.length > 0 && (
                 <div className="mt-2 flex flex-wrap gap-2">
-                  {formData.amenities.map((amenity, index) => (
+                  {formData.amenities.map((amenity: string, index: number) => (
                     <span 
                       key={index}
                       className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800"

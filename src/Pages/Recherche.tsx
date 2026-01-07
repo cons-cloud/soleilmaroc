@@ -51,7 +51,7 @@ const Recherche = () => {
           .limit(20);
 
         if (circuits) {
-          allResults.push(...circuits.map(c => ({
+          allResults.push(...circuits.map((c: any) => ({
             id: c.id,
             type: 'tourism' as const,
             title: c.title,
@@ -71,7 +71,7 @@ const Recherche = () => {
           .limit(20);
 
         if (activities) {
-          allResults.push(...activities.map(a => ({
+          allResults.push(...activities.map((a: any) => ({
             id: a.id,
             type: 'tourism' as const,
             title: a.title,
@@ -93,7 +93,7 @@ const Recherche = () => {
           .limit(20);
 
         if (cars) {
-          allResults.push(...cars.map(c => ({
+          allResults.push(...cars.map((c: any) => ({
             id: c.id,
             type: 'car' as const,
             title: `${c.brand} ${c.model}`,
@@ -116,7 +116,7 @@ const Recherche = () => {
           .limit(20);
 
         if (apartments) {
-          allResults.push(...apartments.map(a => ({
+          allResults.push(...apartments.map((a: any) => ({
             id: a.id,
             type: 'property' as const,
             title: a.title,
@@ -136,7 +136,7 @@ const Recherche = () => {
           .limit(20);
 
         if (villas) {
-          allResults.push(...villas.map(v => ({
+          allResults.push(...villas.map((v: any) => ({
             id: v.id,
             type: 'property' as const,
             title: v.title,
@@ -156,7 +156,7 @@ const Recherche = () => {
           .limit(20);
 
         if (hotels) {
-          allResults.push(...hotels.map(h => ({
+          allResults.push(...hotels.map((h: any) => ({
             id: h.id,
             type: 'property' as const,
             title: h.name,

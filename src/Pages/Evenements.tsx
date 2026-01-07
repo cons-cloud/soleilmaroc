@@ -109,18 +109,62 @@ const Evenements = () => {
   const loadEvents = async () => {
     try {
       setIsLoading(true);
-      const { data, error } = await supabase
+      
+      // 1. Charger les événements principaux
+      const { data: mainEvents, error: mainError } = await supabase
         .from('evenements')
         .select('*')
         .eq('available', true)
         .order('event_date', { ascending: true });
 
-      if (error) {
-        // Si la table n'existe pas encore, utiliser des données statiques
-        console.warn('Table evenements non trouvée, utilisation des données statiques');
+      if (mainError) {
+        console.warn('Erreur événements principaux:', mainError);
+      }
+
+      // 2. Charger les événements des partenaires
+      const { data: partnerEvents, error: partnerError } = await supabase
+        .from('partner_products')
+        .select('*, partner:profiles(company_name)')
+        .eq('available', true)
+        .eq('product_type', 'evenement')
+        .order('created_at', { ascending: false });
+
+      if (partnerError) {
+        console.warn('Erreur événements partenaires (non bloquant):', partnerError);
+      }
+
+      // 3. Formater les événements partenaires
+      const formattedPartnerEvents: Event[] = (partnerEvents || []).map((product: any) => ({
+        id: product.id,
+        title: product.title || product.name || 'Événement partenaire',
+        event_date: product.event_date || product.date || '',
+        date: product.event_date || product.date || '',
+        location: product.location || product.city || '',
+        event_time: product.event_time || product.time || '',
+        time: product.event_time || product.time || '',
+        description: product.description || '',
+        image: Array.isArray(product.images) && product.images.length > 0 
+          ? product.images[0] 
+          : (product.main_image || './assets/events/T0.jpeg'),
+        category: product.category || 'Culture',
+        price: product.price || 0,
+        available_seats: product.available_seats || 0
+      }));
+
+      // 4. Combiner tous les événements
+      const allEvents = [...(mainEvents || []), ...formattedPartnerEvents]
+        .sort((a, b) => {
+          const dateA = a.event_date || a.date || '';
+          const dateB = b.event_date || b.date || '';
+          return dateA.localeCompare(dateB);
+        });
+
+      if (allEvents.length === 0 && mainError) {
+        // Si aucune donnée et erreur, utiliser les données statiques
+        console.warn('Aucun événement trouvé, utilisation des données statiques');
         setEvents(staticEvents);
       } else {
-        setEvents(data || []);
+        setEvents(allEvents);
       }
     } catch (error: any) {
       console.error('Erreur lors du chargement des événements:', error);

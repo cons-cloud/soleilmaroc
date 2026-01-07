@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { CardElement, useStripe, useElements } from '@stripe/react-stripe-js';
 import { supabase } from '../lib/supabase';
-import { cmiPayment } from '../services/cmiPayment';
+// import { cmiPayment } from '../services/cmiPayment'; // Non utilisé pour l'instant
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
@@ -28,7 +28,7 @@ const CircuitBookingForm: React.FC<CircuitBookingFormProps> = ({ circuit, onClos
   
   const [loading, setLoading] = useState(false);
   const [step, setStep] = useState(1); // 1: Info, 2: Choix paiement, 3: Paiement, 4: Confirmation
-  const [paymentMethod, setPaymentMethod] = useState<'stripe' | 'cmi'>('stripe');
+  // const [paymentMethod, setPaymentMethod] = useState<'stripe' | 'cmi'>('stripe'); // Non utilisé pour l'instant
   
   // Informations de réservation
   const [formData, setFormData] = useState({
@@ -184,7 +184,7 @@ const CircuitBookingForm: React.FC<CircuitBookingFormProps> = ({ circuit, onClos
           .eq('id', booking.id);
 
         // 5. Créer l'enregistrement de paiement
-        await supabase
+        const { data: paymentData } = await supabase
           .from('payments')
           .insert({
             booking_id: booking.id,
@@ -198,10 +198,38 @@ const CircuitBookingForm: React.FC<CircuitBookingFormProps> = ({ circuit, onClos
             client_email: formData.email,
             service_type: 'circuit',
             service_title: circuit.title
+          })
+          .select()
+          .single();
+
+        // 6. Envoyer l'email de confirmation
+        try {
+          const { error: emailError } = await supabase.functions.invoke('send-booking-confirmation', {
+            body: {
+              bookingId: booking.id,
+              paymentId: paymentData?.id || paymentIntent.id,
+              customerEmail: formData.email,
+              customerName: formData.fullName,
+              serviceTitle: circuit.title,
+              totalPrice: totalPrice,
+              serviceType: 'circuit',
+              startDate: formData.startDate,
+              endDate: formData.startDate, // Pour les circuits, on utilise la même date
+              transactionId: paymentIntent.id
+            }
           });
 
+          if (emailError) {
+            console.error('Erreur envoi email:', emailError);
+            // Ne pas bloquer le processus si l'email échoue
+          }
+        } catch (emailErr) {
+          console.error('Erreur lors de l\'envoi de l\'email:', emailErr);
+          // Ne pas bloquer le processus si l'email échoue
+        }
+
         setStep(3);
-        toast.success('Réservation confirmée !');
+        toast.success('Réservation confirmée ! Un email de confirmation vous a été envoyé.');
       }
     } catch (error: any) {
       console.error('Erreur:', error);

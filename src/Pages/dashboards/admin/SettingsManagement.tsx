@@ -48,7 +48,7 @@ const SettingsManagement: React.FC = () => {
       
       if (data && data.length > 0) {
         const settingsMap: any = {};
-        data.forEach(item => {
+        data.forEach((item: any) => {
           settingsMap[item.key] = item.value;
         });
         

@@ -74,13 +74,14 @@ const ClientBookings = () => {
       if (!bookingsData || bookingsData.length === 0) {
         console.log('Aucune réservation trouvée pour cet utilisateur');
         setBookings([]);
+        setError(null);
         setLoading(false);
         return;
       }
 
       // 2. Grouper les réservations par type de service
       const bookingsByType: { [key: string]: any[] } = {};
-      bookingsData.forEach(booking => {
+      bookingsData.forEach((booking: any) => {
         const serviceType = booking.service_type || 'service';
         if (!bookingsByType[serviceType]) {
           bookingsByType[serviceType] = [];
@@ -139,7 +140,7 @@ const ClientBookings = () => {
           }
 
           if (services) {
-            services.forEach(service => {
+            services.forEach((service: any) => {
               servicesMap.set(service.id, {
                 ...service,
                 title: service.title || service.name || 'Sans titre',
@@ -154,7 +155,7 @@ const ClientBookings = () => {
       }
 
       // 4. Combiner les données
-      const formattedBookings = bookingsData.map(booking => {
+      const formattedBookings = bookingsData.map((booking: any) => {
         const service = booking.service_id ? servicesMap.get(booking.service_id) : null;
         return {
           ...booking,
@@ -171,7 +172,7 @@ const ClientBookings = () => {
       // 5. Appliquer le filtre
       const filteredBookings = filter === 'all' 
         ? formattedBookings 
-        : formattedBookings.filter(booking => booking.status === filter);
+        : formattedBookings.filter((booking: any) => booking.status === filter);
 
       setBookings(filteredBookings);
       

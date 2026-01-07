@@ -1,15 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
-import { Loader, Plus, UserPlus, Users, Bell, Search, Megaphone, Calendar } from 'lucide-react';
-import { supabase } from '../../../supabaseClient';
-
-// Déclaration du type pour la fonction toast
-declare const toast: {
-  success: (message: string) => void;
-  error: (message: string) => void;
-  info: (message: string) => void;
-  warning: (message: string) => void;
-};
+import { Loader, Plus, UserPlus, Users, Bell, Search, Megaphone, Calendar, DollarSign } from 'lucide-react';
+import { supabase } from '../../lib/supabase';
+import toast from 'react-hot-toast';
 
 // Alias pour l'icône d'événement
 const EventIcon = Calendar;
@@ -26,18 +19,18 @@ interface BookingItem {
   service?: { title: string };
 }
 
-// Composant pour les onglets de navigation
-const Tab = ({ to, icon: Icon, label, active }: { to: string; icon: React.ElementType; label: string; active: boolean }) => (
-  <Link
-    to={to}
-    className={`flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-colors ${
-      active ? 'bg-blue-50 text-blue-700' : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
-    }`}
-  >
-    <Icon className="h-5 w-5 mr-3" />
-    {label}
-  </Link>
-);
+// Composant pour les onglets de navigation (non utilisé actuellement)
+// const Tab = ({ to, icon: Icon, label, active }: { to: string; icon: React.ElementType; label: string; active: boolean }) => (
+//   <Link
+//     to={to}
+//     className={`flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-colors ${
+//       active ? 'bg-blue-50 text-blue-700' : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+//     }`}
+//   >
+//     <Icon className="h-5 w-5 mr-3" />
+//     {label}
+//   </Link>
+// );
 
 // Composant principal AdminDashboard
 const AdminDashboard: React.FC = () => {
@@ -64,32 +57,68 @@ const AdminDashboard: React.FC = () => {
       setLoading(true);
       
       // Récupérer le nombre d'utilisateurs
-      const { count: usersCount } = await supabase
+      const { count: usersCount, error: usersError } = await supabase
         .from('profiles')
         .select('*', { count: 'exact', head: true });
       
+      if (usersError) console.error('Erreur utilisateurs:', usersError);
+      
       // Récupérer les statistiques des réservations
-      const { count: bookingsCount } = await supabase
+      const { count: bookingsCount, error: bookingsError } = await supabase
         .from('bookings')
         .select('*', { count: 'exact', head: true });
       
+      if (bookingsError) console.error('Erreur réservations:', bookingsError);
+      
+      // Récupérer les réservations en attente
+      const { count: pendingCount, error: pendingError } = await supabase
+        .from('bookings')
+        .select('*', { count: 'exact', head: true })
+        .eq('status', 'pending');
+      
+      if (pendingError) console.error('Erreur réservations en attente:', pendingError);
+      
       // Récupérer le chiffre d'affaires total
-      const { data: paymentsData } = await supabase
+      const { data: paymentsData, error: paymentsError } = await supabase
         .from('payments')
         .select('amount')
         .eq('status', 'paid');
       
-      const totalRevenue = paymentsData?.reduce((sum, payment) => sum + (payment.amount || 0), 0) || 0;
+      if (paymentsError) console.error('Erreur paiements:', paymentsError);
+      
+      const totalRevenue = paymentsData?.reduce((sum: number, payment: any) => sum + (payment.amount || 0), 0) || 0;
+      
+      // Récupérer le nombre de services actifs
+      const { count: servicesCount, error: servicesError } = await supabase
+        .from('services')
+        .select('*', { count: 'exact', head: true })
+        .eq('available', true);
+      
+      if (servicesError) console.error('Erreur services:', servicesError);
+      
+      // Récupérer le nombre d'événements
+      const { count: eventsCount, error: eventsError } = await supabase
+        .from('events')
+        .select('*', { count: 'exact', head: true });
+      
+      if (eventsError) console.error('Erreur événements:', eventsError);
+      
+      // Récupérer le nombre d'annonces
+      const { count: announcementsCount, error: announcementsError } = await supabase
+        .from('announcements')
+        .select('*', { count: 'exact', head: true });
+      
+      if (announcementsError) console.error('Erreur annonces:', announcementsError);
       
       // Mettre à jour l'état avec les données récupérées
       setStats({
         totalUsers: usersCount || 0,
         totalBookings: bookingsCount || 0,
         totalRevenue,
-        activeServices: 0, // À implémenter
-        pendingBookings: 0, // À implémenter
-        totalEvents: 0, // À implémenter
-        totalAnnouncements: 0, // À implémenter
+        activeServices: servicesCount || 0,
+        pendingBookings: pendingCount || 0,
+        totalEvents: eventsCount || 0,
+        totalAnnouncements: announcementsCount || 0,
       });
       
     } catch (error) {
@@ -112,22 +141,32 @@ const AdminDashboard: React.FC = () => {
     try {
       const { data, error } = await supabase
         .from('bookings')
-        .select(`
-          *,
-          user:profiles(*),
-          service:services(*)
-        `)
+        .select('*')
         .order('created_at', { ascending: false })
         .limit(5);
 
-      if (error) throw error;
+      if (error) {
+        console.error('Erreur réservations récentes:', error);
+        setRecentBookings([]);
+        return;
+      }
 
-      setRecentBookings(data || []);
+      // Formater les réservations
+      const formattedBookings = (data || []).map((booking: any) => ({
+        id: booking.id,
+        user_id: booking.user_id,
+        service_id: booking.service_id,
+        start_date: booking.start_date || booking.created_at,
+        status: booking.status || 'pending',
+        total_price: booking.total_price || 0,
+        user: booking.user || null,
+        service: booking.service || { title: booking.service_title || booking.service_name || 'Service inconnu' }
+      }));
+
+      setRecentBookings(formattedBookings);
     } catch (error) {
       console.error('Error fetching recent bookings:', error);
-      toast.error('Erreur lors du chargement des réservations récentes');
-    } finally {
-      setLoading(false);
+      setRecentBookings([]);
     }
   };
 
@@ -143,6 +182,15 @@ const AdminDashboard: React.FC = () => {
   // Fonction pour formater un nombre avec des espaces comme séparateurs de milliers
   const formatNumber = (num: number) => {
     return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+  };
+
+  // Fonction pour formater le montant en devise
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat('fr-MA', {
+      style: 'currency',
+      currency: 'MAD',
+      minimumFractionDigits: 0
+    }).format(amount);
   };
 
   if (loading) {
@@ -172,7 +220,7 @@ const AdminDashboard: React.FC = () => {
                 </p>
               </div>
               <div className="border-t border-gray-200 px-4 py-5 sm:px-6">
-                <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
+                <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-5">
                   {/* Carte Utilisateurs */}
                   <div className="bg-white overflow-hidden shadow rounded-lg">
                     <div className="px-4 py-5 sm:p-6">
@@ -214,7 +262,7 @@ const AdminDashboard: React.FC = () => {
                           <dl>
                             <dt className="text-sm font-medium text-gray-500 truncate">Réservations</dt>
                             <dd className="flex items-baseline">
-                              <div className="text-2xl font-semibold text-gray-900">{stats.totalBookings}</div>
+                              <div className="text-2xl font-semibold text-gray-900">{formatNumber(stats.totalBookings)}</div>
                               <div className="ml-2 flex items-baseline text-sm font-semibold text-green-600">
                                 <span className="sr-only">Augmentation de</span>
                                 +8%
@@ -229,6 +277,32 @@ const AdminDashboard: React.FC = () => {
                       <div className="text-sm">
                         <a href="/dashboard/admin/reservations" className="font-medium text-blue-600 hover:text-blue-500">
                           Voir toutes les réservations<span className="sr-only"> statistiques</span>
+                        </a>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Carte Chiffre d'affaires */}
+                  <div className="bg-white overflow-hidden shadow rounded-lg">
+                    <div className="px-4 py-5 sm:p-6">
+                      <div className="flex items-center">
+                        <div className="shrink-0 bg-emerald-500 rounded-md p-3">
+                          <DollarSign className="h-6 w-6 text-white" />
+                        </div>
+                        <div className="ml-5 w-0 flex-1">
+                          <dl>
+                            <dt className="text-sm font-medium text-gray-500 truncate">Chiffre d'affaires</dt>
+                            <dd className="flex items-baseline">
+                              <div className="text-2xl font-semibold text-gray-900">{formatCurrency(stats.totalRevenue)}</div>
+                            </dd>
+                          </dl>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="bg-gray-50 px-4 py-4 sm:px-6">
+                      <div className="text-sm">
+                        <a href="/dashboard/admin/payments" className="font-medium text-blue-600 hover:text-blue-500">
+                          Voir les paiements<span className="sr-only"> statistiques</span>
                         </a>
                       </div>
                     </div>
@@ -328,7 +402,7 @@ const AdminDashboard: React.FC = () => {
                               </p>
                             </div>
                             <div className="mt-2 flex items-center text-sm text-gray-500 sm:mt-0">
-                              {booking.total_price.toFixed(2)} €
+                              {formatCurrency(booking.total_price || 0)}
                             </div>
                           </div>
                         </div>

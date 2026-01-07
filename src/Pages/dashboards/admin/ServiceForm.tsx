@@ -4,7 +4,6 @@ import { supabase } from '../../../lib/supabase';
 import { uploadMultipleImages, deleteImage } from '../../../lib/storage';
 import { ArrowLeft, Upload, X, Save, Loader } from 'lucide-react';
 import toast from 'react-hot-toast';
-import DashboardLayout from '../../../components/DashboardLayout';
 
 interface ServiceFormData {
   title: string;
@@ -188,16 +187,14 @@ const ServiceForm: React.FC = () => {
 
   if (loading && isEditMode) {
     return (
-      <DashboardLayout role="admin">
-        <div className="flex items-center justify-center h-64">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-600"></div>
-        </div>
-      </DashboardLayout>
+      <div className="flex items-center justify-center h-64">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-600"></div>
+      </div>
     );
   }
 
   return (
-    <DashboardLayout role="admin">
+    <>
       <div className="max-w-4xl mx-auto">
         {/* Header */}
         <div className="mb-6">
@@ -531,7 +528,7 @@ const ServiceForm: React.FC = () => {
           </div>
         </form>
       </div>
-    </DashboardLayout>
+    </>
   );
 };
 

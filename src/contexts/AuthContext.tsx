@@ -65,7 +65,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const handleAuthStateChange = async (event: string, newSession: Session | null) => {
+  const handleAuthStateChange = async (_event: string, newSession: Session | null) => {
     setSession(newSession);
     setUser(newSession?.user ?? null);
 
@@ -155,7 +155,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         // Ajoutez d'autres champs nécessaires
       };
 
-      const { error: profileError } = await supabase
+      const { error: profileError, data: createdProfile } = await supabase
         .from('profiles')
         .upsert(profileData)
         .select()
@@ -166,10 +166,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         throw new Error('Erreur lors de la création du profil. Contactez le support.');
       }
 
+      // Charger le profil créé
+      const finalProfile = createdProfile || profileData;
+      
       if (data.session) {
         setSession(data.session);
         setUser(data.user);
-        setProfile(profileData);
+        setProfile(finalProfile);
+      } else {
+        // Même sans session immédiate (si email confirmation requise), on charge le profil
+        setUser(data.user);
+        setProfile(finalProfile);
       }
 
       return { 

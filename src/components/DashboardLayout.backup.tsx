@@ -72,7 +72,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, role }) => 
           .limit(5);
 
         if (!msgError && messages) {
-          notificationsList = messages.map(msg => ({
+          notificationsList = messages.map((msg: any) => ({
             id: msg.id,
             type: 'message',
             title: 'Nouveau message de contact',
@@ -92,7 +92,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, role }) => 
           .limit(5);
 
         if (!bookError && bookings) {
-          notificationsList = bookings.map(booking => ({
+          notificationsList = bookings.map((booking: any) => ({
             id: booking.id,
             type: 'booking',
             title: 'Nouvelle réservation',
@@ -139,7 +139,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, role }) => 
           .limit(5);
 
         if (users) {
-          users.forEach(user => {
+          users.forEach((user: any) => {
             results.push({
               id: user.id,
               type: 'user',
@@ -158,7 +158,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, role }) => 
           .limit(5);
 
         if (messages) {
-          messages.forEach(msg => {
+          messages.forEach((msg: any) => {
             results.push({
               id: msg.id,
               type: 'message',
@@ -178,7 +178,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, role }) => 
           .limit(5);
 
         if (bookings) {
-          bookings.forEach(booking => {
+          bookings.forEach((booking: any) => {
             results.push({
               id: booking.id,
               type: 'booking',
@@ -198,7 +198,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, role }) => 
           .limit(5);
 
         if (events) {
-          events.forEach(event => {
+          events.forEach((event: any) => {
             results.push({
               id: event.id,
               type: 'event',

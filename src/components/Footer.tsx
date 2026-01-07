@@ -186,7 +186,7 @@ const Footer = () => {
                     href="https://marocgestionentreprendre.com" 
                     target="_blank" 
                     rel="noopener noreferrer"
-                    className="text-primary hover:text-primary/80 transition-colors font-semibold text-base"
+                    className="text-primary hover:text-primary/80 transition-colors font-semibold text-xl"
                   >
                     Maroc Gestion Entreprendre
                   </a>

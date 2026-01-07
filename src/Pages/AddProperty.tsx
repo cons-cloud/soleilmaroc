@@ -1,5 +1,5 @@
 // src/Pages/AddProperty.tsx
-import { PropertyForm } from '../components/PropertyForm';
+import PropertyForm from '../components/PropertyForm';
 import { supabase } from '../lib/supabase';
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -30,7 +30,11 @@ export default function AddProperty() {
   return (
     <div className="max-w-2xl mx-auto p-4">
       <h1 className="text-2xl font-bold mb-6">Ajouter une propriété</h1>
-      <PropertyForm />
+      <PropertyForm 
+        type="hotel"
+        onClose={() => navigate('/dashboard/partner')}
+        onSuccess={() => navigate('/dashboard/partner')}
+      />
     </div>
   );
 }

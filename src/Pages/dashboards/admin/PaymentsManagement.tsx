@@ -29,7 +29,7 @@ const PaymentsManagement: React.FC = () => {
       
       // Ensuite, pour chaque paiement, récupérer les informations de réservation
       const paymentsWithDetails = await Promise.all(
-        (paymentsData || []).map(async (payment) => {
+        (paymentsData || []).map(async (payment: any) => {
           let booking = null;
           
           try {

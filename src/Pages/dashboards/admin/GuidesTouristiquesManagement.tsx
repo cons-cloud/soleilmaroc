@@ -2,7 +2,6 @@ import React, { useEffect, useState } from 'react';
 import { supabase } from '../../../lib/supabase';
 import { UserCheck, Plus, Edit, Trash2, Star } from 'lucide-react';
 import toast from 'react-hot-toast';
-import DashboardLayout from '../../../components/DashboardLayout';
 import GuideForm from '../../../components/forms/GuideForm';
 import ConfirmDialog from '../../../components/modals/ConfirmDialog';
 
@@ -70,16 +69,14 @@ const GuidesTouristiquesManagement: React.FC = () => {
 
   if (loading) {
     return (
-      <DashboardLayout role="admin">
-        <div className="flex items-center justify-center h-64">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-600"></div>
-        </div>
-      </DashboardLayout>
+      <div className="flex items-center justify-center h-64">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-600"></div>
+      </div>
     );
   }
 
   return (
-    <DashboardLayout role="admin">
+    <>
       <div className="space-y-6">
         <div className="flex justify-between items-center">
           <div>
@@ -185,7 +182,7 @@ const GuidesTouristiquesManagement: React.FC = () => {
           cancelText="Annuler"
         />
       )}
-    </DashboardLayout>
+    </>
   );
 };
 

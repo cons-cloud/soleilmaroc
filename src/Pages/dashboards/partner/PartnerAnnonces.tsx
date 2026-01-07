@@ -70,14 +70,28 @@ const PartnerAnnonces = () => {
         .from('annonces')
         .select('*')
         .eq('partner_id', user?.id)
-        .eq('is_partner_annonce', true)
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
-      setAnnonces(data || []);
+      if (error) {
+        console.error('Erreur annonces:', error);
+        // Essayer sans le filtre is_partner_annonce si la colonne n'existe pas
+        const { data: fallbackData, error: fallbackError } = await supabase
+          .from('annonces')
+          .select('*')
+          .eq('partner_id', user?.id)
+          .order('created_at', { ascending: false });
+        
+        if (fallbackError) {
+          throw fallbackError;
+        }
+        setAnnonces(fallbackData || []);
+      } else {
+        setAnnonces(data || []);
+      }
     } catch (error: any) {
       console.error('Erreur:', error);
       toast.error('Erreur lors du chargement des annonces');
+      setAnnonces([]);
     } finally {
       setLoading(false);
     }

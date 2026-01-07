@@ -87,7 +87,7 @@ const ServiceDetail: React.FC<ServiceDetailProps> = ({
               id={item.id}
               title={item.title}
               description={item.description}
-              image={item.image}
+              images={Array.isArray(item.image) ? item.image : [item.image]}
               price={item.price}
               className="h-full"
             />

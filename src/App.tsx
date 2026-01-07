@@ -10,7 +10,7 @@ import ErrorBoundary from "./components/ErrorBoundary";
 import { ROUTES } from "./config/routes";
 import { SEO } from "./components/SEO";
 // Import des composants de gestion des propriétés
-import PropertiesManagement from './components/PropertiesManagement';
+// import PropertiesManagement from './components/PropertiesManagement';
 
 
 
@@ -79,8 +79,7 @@ const PartnerDashboard = lazy(() => import('./Pages/dashboards/partner/PartnerDa
 const ClientDashboard = lazy(() => import('./Pages/dashboards/ClientDashboard'));
 
 // Pages de gestion des propriétés (anciennes - gardées pour compatibilité)
-const CarRentalsManagement = () => <PropertiesManagement type="car" />;
-const ToursManagement = () => <PropertiesManagement type="tour" />;
+
 const ServiceForm = lazy(() => import("./Pages/dashboards/admin/ServiceForm"));
 const SiteSettingsPage = lazy(() => import("./Pages/dashboards/admin/SiteSettingsPage"));
 const CommissionsPage = lazy(() => import("./Pages/dashboards/admin/CommissionsPage"));

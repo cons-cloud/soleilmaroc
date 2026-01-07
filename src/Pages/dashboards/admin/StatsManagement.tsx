@@ -117,9 +117,9 @@ const StatsManagement: React.FC = () => {
         supabase.from('profiles').select('*', { count: 'exact' }),
         supabase.from('bookings').select('*', { count: 'exact' }),
         supabase.from('payments').select('amount')
-          .then(({ data, error }) => {
+          .then(({ data, error }: { data: any; error: any }) => {
             if (error) throw error;
-            const total = data.reduce((sum, { amount }) => sum + (amount || 0), 0);
+            const total = data.reduce((sum: number, { amount }: { amount: number }) => sum + (amount || 0), 0);
             return { data: total };
           }),
         supabase.from('properties').select('*', { count: 'exact' })

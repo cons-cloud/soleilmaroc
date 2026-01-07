@@ -52,10 +52,9 @@ const ClientDashboard: React.FC = () => {
           onClose={handleCloseBooking}
           service={{
             id: selectedService.id,
-            type: selectedService.type || 'property',
+            type: (selectedService.type === 'car' ? 'voiture' : selectedService.type === 'tourism' ? 'circuit' : 'hebergement') as 'voiture' | 'circuit' | 'hebergement',
             title: selectedService.title,
             price: selectedService.price,
-            partnerId: selectedService.partnerId,
             image: selectedService.image
           }}
         />

@@ -1,9 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
 import { useAuth } from '../contexts/AuthContext';
-import { ArrowLeft, Loader2, Eye, EyeOff, Check, X } from 'lucide-react';
 import { validateEmail, validatePhoneMaroc as validatePhone } from '../utils/validation';
+import { Loader2, Eye, EyeOff, Check } from 'lucide-react';
+import LegalModal from '../components/LegalModal';
+import { ROUTES } from '../config/routes';
 
 interface FormData {
   nom: string;
@@ -42,8 +44,8 @@ const Inscription = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [touched, setTouched] = useState<Record<string, boolean>>({});
+  const [legalModalType, setLegalModalType] = useState<'mentions' | 'confidentialite' | 'cgv' | null>(null);
 
-  // Validation du formulaire
   const validateForm = (): boolean => {
     const newErrors: FormErrors = {};
 
@@ -83,7 +85,6 @@ const Inscription = () => {
     return Object.keys(newErrors).length === 0;
   };
 
-  // Gestion du changement de champ
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value, type, checked } = e.target;
     setFormData(prev => ({
@@ -91,7 +92,6 @@ const Inscription = () => {
       [name]: type === 'checkbox' ? checked : value
     }));
 
-    // Effacer l'erreur quand l'utilisateur commence à taper
     if (errors[name as keyof typeof errors]) {
       setErrors(prev => {
         const newErrors = { ...prev };
@@ -101,7 +101,6 @@ const Inscription = () => {
     }
   };
 
-  // Gestion de la soumission du formulaire
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     
@@ -112,27 +111,32 @@ const Inscription = () => {
     setIsSubmitting(true);
 
     try {
-      // Vérifier s'il y a une réservation en attente AVANT l'inscription
       const pendingReservation = sessionStorage.getItem('pendingReservation');
+      
+      const profileData = {
+        first_name: formData.prenom.trim(),
+        last_name: formData.nom.trim(),
+        phone: formData.telephone.trim() || undefined,
+        role: 'client' as const,
+        is_verified: false,
+        country: 'Maroc'
+      };
       
       await signUp(
         formData.email.trim(), 
         formData.password,
-        {
-          first_name: formData.prenom.trim(),
-          last_name: formData.nom.trim(),
-          phone: formData.telephone.trim() || undefined,
-        }
+        profileData
       );
       
-      // Si une réservation était en attente, la restaurer après inscription
+      // Attendre un peu pour que le profil soit bien chargé dans le contexte
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
       if (pendingReservation) {
         try {
           const pending = JSON.parse(pendingReservation);
           const serviceType = pending.serviceType || 'service';
           const serviceId = pending.serviceId;
           
-          // Déterminer le chemin selon le type
           let reservationPath = null;
           switch (serviceType) {
             case 'appartement':
@@ -168,7 +172,6 @@ const Inscription = () => {
             toast.success('Compte créé avec succès ! Redirection vers votre réservation...', {
               duration: 4000,
             });
-            // Rediriger vers la réservation avec les données sauvegardées
             navigate(reservationPath, {
               state: {
                 fromSignup: true,
@@ -190,8 +193,7 @@ const Inscription = () => {
         duration: 6000,
       });
       
-      // Si pas de réservation en attente, rediriger vers login ou dashboard client
-      navigate('/dashboard/client');
+      navigate(ROUTES.CLIENT.DASHBOARD);
     } catch (error: any) {
       console.error('Registration error:', error);
       const errorMessage = error?.message?.includes('email') 
@@ -203,7 +205,6 @@ const Inscription = () => {
     }
   };
 
-  // Styles réutilisables
   const inputClass = (field: keyof FormErrors) => 
     `block w-full px-4 py-2 rounded-lg border ${
       errors[field] 
@@ -215,7 +216,7 @@ const Inscription = () => {
     `mt-1 text-sm ${errors[field] ? 'text-red-600' : 'text-gray-500'}`;
 
   return (
-    <div className="min-h-screen bg-linear-to-br from-emerald-50 to-green-50 py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-gradient-to-br from-emerald-50 to-green-50 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full mx-auto">
         <Link 
           to="/"
@@ -223,7 +224,7 @@ const Inscription = () => {
           aria-label="Retour à l'accueil"
         >
           <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 transition-transform group-hover:-translate-x-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
           </svg>
           Retour à l'accueil
         </Link>
@@ -448,23 +449,27 @@ const Inscription = () => {
               <div className="ml-3 text-sm">
                 <label htmlFor="terms" className="text-gray-700">
                   J'accepte les{' '}
-                  <Link 
-                    to="/conditions" 
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      setLegalModalType('cgv');
+                    }}
                     className="text-emerald-600 hover:text-emerald-500 hover:underline"
-                    target="_blank"
-                    rel="noopener noreferrer"
                   >
                     conditions d'utilisation
-                  </Link>{' '}
+                  </button>{' '}
                   et la{' '}
-                  <Link 
-                    to="/confidentialite" 
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      setLegalModalType('confidentialite');
+                    }}
                     className="text-emerald-600 hover:text-emerald-500 hover:underline"
-                    target="_blank"
-                    rel="noopener noreferrer"
                   >
                     politique de confidentialité
-                  </Link>{' '}
+                  </button>{' '}
                   <span className="text-red-500">*</span>
                 </label>
                 {errors.terms && (
@@ -479,7 +484,7 @@ const Inscription = () => {
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="w-full flex justify-center items-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-linear-to-r from-emerald-600 to-green-600 hover:from-emerald-700 hover:to-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 disabled:opacity-70 disabled:cursor-not-allowed transition-colors"
+                className="w-full flex justify-center items-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-700 hover:to-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 disabled:opacity-70 disabled:cursor-not-allowed transition-colors"
               >
                 {isSubmitting ? (
                   <>
@@ -492,6 +497,15 @@ const Inscription = () => {
           </form>
         </div>
       </div>
+      
+      {/* Modal légal */}
+      {legalModalType && (
+        <LegalModal 
+          isOpen={true}
+          type={legalModalType}
+          onClose={() => setLegalModalType(null)}
+        />
+      )}
     </div>
   );
 };

@@ -3,7 +3,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabase';
 import { X, CreditCard, Loader, Utensils, Bed, User } from 'lucide-react';
 import toast from 'react-hot-toast';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { ROUTES } from '../config/routes';
 import AuthGuard from './AuthGuard';
 
@@ -25,7 +25,7 @@ interface BookingModalProps {
 export const BookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose, service }) => {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const location = useLocation();
+ 
   const [loading, setLoading] = useState(false);
   
   const [formData, setFormData] = useState({

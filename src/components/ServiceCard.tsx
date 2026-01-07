@@ -18,12 +18,28 @@ import {
 } from 'lucide-react';
 import type { Service, ServiceType } from '../hooks/useServices';
 
-interface ServiceCardProps extends Omit<Service, 'name'> {
+interface ServiceCardProps extends Partial<Omit<Service, 'name'>> {
+  id: string;
+  title: string;
+  description: string;
+  images?: string[];
   className?: string;
   onBook?: () => void;
   showActions?: boolean;
-  title: string;
+  price?: number;
+  price_per_night?: number;
+  link?: string;
+  tags?: string[];
+  rating?: number;
+  duration?: string;
+  city?: string;
+  region?: string;
+  amenities?: string[];
+  type?: ServiceType;
+  featured?: boolean;
 }
+
+export type { ServiceCardProps };
 
 const getServiceIcon = (type: ServiceType) => {
   const iconClass = "w-4 h-4 mr-1";
@@ -105,6 +121,7 @@ const ServiceCard: React.FC<ServiceCardProps> = ({
   description,
   images = [],
   price_per_night,
+  price,
   city,
   region,
   amenities = [],
@@ -173,9 +190,10 @@ const ServiceCard: React.FC<ServiceCardProps> = ({
     }));
   };
 
-  const servicePath = type;
-  const serviceIcon = getServiceIcon(type);
-  const displayPrice = price_per_night ? `${price_per_night} MAD` : 'Sur demande';
+  const servicePath = type || 'hotels';
+  const serviceIcon = getServiceIcon(type || 'hotels');
+  const displayPriceValue = price_per_night || price;
+  const displayPrice = displayPriceValue ? `${displayPriceValue} MAD` : 'Sur demande';
   const locationText = [city, region].filter(Boolean).join(', ');
 
   return (
@@ -223,7 +241,7 @@ const ServiceCard: React.FC<ServiceCardProps> = ({
               )}
               <div className="flex items-center bg-teal-100 text-teal-800 text-xs font-semibold px-2 py-1 rounded">
                 {serviceIcon}
-                <span className="capitalize">{type.replace('_', ' ')}</span>
+                <span className="capitalize">{type?.replace('_', ' ') || 'service'}</span>
               </div>
             </div>
           </div>
@@ -260,7 +278,7 @@ const ServiceCard: React.FC<ServiceCardProps> = ({
           <div className="flex justify-between items-center mt-4 pt-4 border-t border-gray-100">
             <div className="flex items-center">
               <span className="text-lg font-bold text-teal-700">{displayPrice}</span>
-              {price_per_night && <span className="text-xs text-gray-500 ml-1">/nuit</span>}
+              {(price_per_night || price) && <span className="text-xs text-gray-500 ml-1">/nuit</span>}
             </div>
             
             {showActions && (

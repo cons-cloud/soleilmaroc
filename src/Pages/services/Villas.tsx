@@ -20,7 +20,7 @@ interface Property {
   [key: string]: any;
 }
 
-type BookingHandler = (property: Property | string | React.MouseEvent) => void;
+// type BookingHandler = (property: Property | string | React.MouseEvent) => void;
 
 const VillasPage: React.FC = () => {
   const [items, setItems] = useState<Property[]>([]);

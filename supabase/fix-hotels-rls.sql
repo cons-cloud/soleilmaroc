@@ -78,3 +78,6 @@ FROM pg_policies
 WHERE tablename = 'hotels'
 ORDER BY policyname;
 
+
+
+

@@ -4,6 +4,7 @@ import { toast } from 'react-hot-toast';
 import { ArrowLeft, Loader2, User, Mail, Phone, Building, Home, Car, Compass, ArrowLeftCircle } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { validateEmail, validatePhoneMaroc as validatePhone } from '../utils/validation';
+import LegalModal from '../components/LegalModal';
 
 interface FormData {
   nom: string;
@@ -35,6 +36,7 @@ const DevenirHote: React.FC = () => {
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState<Partial<FormData>>({});
+  const [legalModalType, setLegalModalType] = useState<'mentions' | 'confidentialite' | 'cgv' | null>(null);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -310,7 +312,29 @@ const DevenirHote: React.FC = () => {
                 </div>
                 <div className="ml-3 text-sm">
                   <label htmlFor="terms" className="font-medium text-gray-700">
-                    J'accepte les <a href="/conditions-generales" className="text-emerald-600 hover:text-emerald-500">conditions d'utilisation</a> et la <a href="/politique-de-confidentialite" className="text-emerald-600 hover:text-emerald-500">politique de confidentialité</a>.
+                    J'accepte les{' '}
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        setLegalModalType('cgv');
+                      }}
+                      className="text-emerald-600 hover:text-emerald-500 underline"
+                    >
+                      conditions d'utilisation
+                    </button>
+                    {' '}et la{' '}
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        setLegalModalType('confidentialite');
+                      }}
+                      className="text-emerald-600 hover:text-emerald-500 underline"
+                    >
+                      politique de confidentialité
+                    </button>
+                    .
                   </label>
                 </div>
               </div>
@@ -349,6 +373,15 @@ const DevenirHote: React.FC = () => {
           </div>
         </div>
       </div>
+      
+      {/* Modal légal */}
+      {legalModalType && (
+        <LegalModal 
+          isOpen={true}
+          type={legalModalType}
+          onClose={() => setLegalModalType(null)}
+        />
+      )}
     </div>
   );
 };

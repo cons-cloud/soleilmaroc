@@ -1,11 +1,24 @@
 import { useState } from "react";
 import { Link, Outlet } from "react-router-dom";
-import { motion } from "framer-motion";
+import { motion, Variants } from "framer-motion";
 import { FaCar, FaHome, FaUmbrellaBeach, FaHotel, FaRoute } from 'react-icons/fa';
 import ServiceCard from "../components/ServiceCard";
 import CallModal from "../components/CallModal";
+import React from "react";
 
-const serviceCategories = [
+interface ServiceCategory {
+  id: string;
+  title: string;
+  icon: React.ReactElement;
+  gradient: string;
+  hover: string;
+  description: string;
+  images: string[];
+  price: number;
+  duration: string;
+}
+
+const serviceCategories: ServiceCategory[] = [
   {
     id: 'voitures',
     title: 'Location de Voitures',
@@ -63,7 +76,7 @@ const serviceCategories = [
   },
 ];
 
-const container = {
+const container: Variants = {
   hidden: { opacity: 0 },
   show: {
     opacity: 1,
@@ -73,13 +86,13 @@ const container = {
   }
 };
 
-const item = {
+const item: Variants = {
   hidden: { opacity: 0, y: 20 },
   show: { 
     opacity: 1, 
     y: 0,
     transition: {
-      type: 'spring' as const,
+      type: 'spring',
       stiffness: 100,
       damping: 10
     }
@@ -87,7 +100,7 @@ const item = {
 };
 
 const Services = () => {
-  const [showCallModal, setShowCallModal] = useState(false);
+  const [showCallModal, setShowCallModal] = useState<boolean>(false);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-green-50">
@@ -135,7 +148,8 @@ const Services = () => {
               >
                 <Link 
                   to="/contact"
-                  className="inline-flex items-center bg-green-500 text-white px-6 py-3 rounded-full font-medium hover:bg-green-600 transition-all duration-300 transform hover:scale-105"                >
+                  className="inline-flex items-center bg-green-500 text-white px-6 py-3 rounded-full font-medium hover:bg-green-600 transition-all duration-300 transform hover:scale-105"
+                >
                   Réserver Maintenant
                 </Link>
                 <Link 
@@ -158,7 +172,7 @@ const Services = () => {
             transition={{
               duration: 1.5,
               repeat: Infinity,
-              repeatType: 'loop'
+              repeatType: 'loop' as const
             }}
             className="w-8 h-12 border-2 border-white/50 rounded-full flex justify-center p-1"
           >
@@ -171,7 +185,7 @@ const Services = () => {
               transition={{
                 duration: 1.5,
                 repeat: Infinity,
-                repeatType: 'loop'
+                repeatType: 'loop' as const
               }}
             />
           </motion.div>
@@ -235,13 +249,14 @@ const Services = () => {
           <div className="flex flex-col sm:flex-row justify-center gap-4">
             <Link 
               to="/contact"
-              className="px-8 py-3 bg-black/30 text-primary font-medium rounded-lg hover:bg-gray-100 transition-colors"
+              className="px-8 py-3 bg-black/30 text-white font-medium rounded-lg hover:bg-gray-100 hover:text-black transition-colors"
             >
               Contactez-nous
             </Link>
             <button 
               onClick={() => setShowCallModal(true)}
               className="px-8 py-3 border-2 border-white text-white font-medium rounded-lg hover:bg-white/10 transition-colors"
+              aria-label="Appeler maintenant"
             >
               Appelez-nous
             </button>

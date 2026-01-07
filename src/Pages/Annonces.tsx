@@ -68,19 +68,51 @@ const Annonces = () => {
   const loadAnnonces = async () => {
     try {
       setLoading(true);
-      const { data, error } = await supabase
+      
+      // 1. Charger les annonces principales
+      const { data: mainAnnonces, error: mainError } = await supabase
         .from('annonces')
         .select('*')
         .eq('available', true)
         .order('created_at', { ascending: false });
 
-      if (error) {
-        console.error('Erreur:', error);
-        // Si la table n'existe pas encore, afficher un message
-        setAnnonces([]);
-      } else {
-        setAnnonces(data || []);
+      if (mainError) {
+        console.error('Erreur annonces principales:', mainError);
       }
+
+      // 2. Charger les annonces des partenaires
+      const { data: partnerAnnonces, error: partnerError } = await supabase
+        .from('partner_products')
+        .select('*, partner:profiles(company_name)')
+        .eq('available', true)
+        .eq('product_type', 'annonce')
+        .order('created_at', { ascending: false });
+
+      if (partnerError) {
+        console.warn('Erreur annonces partenaires (non bloquant):', partnerError);
+      }
+
+      // 3. Formater les annonces partenaires
+      const formattedPartnerAnnonces: Annonce[] = (partnerAnnonces || []).map((product: any) => ({
+        id: product.id,
+        title: product.title || product.name || 'Annonce partenaire',
+        description: product.description || '',
+        category: product.category || 'autres',
+        price: product.price || 0,
+        images: Array.isArray(product.images) ? product.images : (product.main_image ? [product.main_image] : []),
+        contact_phone: product.contact_phone || '',
+        contact_email: product.contact_email || '',
+        city: product.city || '',
+        available: Boolean(product.available),
+        created_at: product.created_at,
+        partner: product.partner ? { company_name: product.partner.company_name || 'Partenaire' } : undefined
+      }));
+
+      // 4. Combiner toutes les annonces
+      const allAnnonces = [...(mainAnnonces || []), ...formattedPartnerAnnonces]
+        .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+
+      setAnnonces(allAnnonces);
     } catch (error: any) {
       console.error('Erreur:', error);
       setAnnonces([]);

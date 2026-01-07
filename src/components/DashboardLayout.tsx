@@ -128,7 +128,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, role }) => 
           .limit(5);
 
         if (!error && users) {
-          users.forEach(user => {
+          users.forEach((user: any) => {
             results.push({
               id: user.id,
               type: 'user',

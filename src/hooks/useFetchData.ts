@@ -1,6 +1,8 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../lib/supabase';
 
+
+
 export const useFetchData = <T,>(table: string, query: string = '*', filter: { column: string; value: any } | null = null) => {
   const [data, setData] = useState<T[]>([]);
   const [isLoading, setIsLoading] = useState(true);

@@ -193,7 +193,7 @@ const BookingsManagement: React.FC = () => {
           schema: 'public',
           table: 'bookings'
         },
-        (payload) => {
+        (payload: any) => {
           console.log('[BookingsManagement] Événement en temps réel reçu:', payload.eventType);
           try {
             if (payload.eventType === 'INSERT') {
@@ -219,7 +219,7 @@ const BookingsManagement: React.FC = () => {
           }
         }
       )
-      .subscribe((status) => {
+      .subscribe((status: any) => {
         console.log('[BookingsManagement] Statut de l\'abonnement:', status);
       });
 

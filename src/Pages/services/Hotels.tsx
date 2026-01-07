@@ -83,9 +83,9 @@ const Hotels: React.FC = () => {
           title="Hôtels de charme"
           subtitle="Découvrez nos hôtels soigneusement sélectionnés pour un séjour inoubliable"
           images={[
-            '/assets/hero/hotels-1.jpg',
-            '/assets/hero/hotels-2.jpg',
-            '/assets/hero/hotels-3.jpg'
+            '/assets/hero/A.jpg',
+            '/assets/hero/B.jpg',
+            '/assets/hero/C.jpg'
           ]}
         />
         <div className="container mx-auto px-4 py-12">
@@ -105,9 +105,9 @@ const Hotels: React.FC = () => {
           title="Hôtels de charme"
           subtitle="Découvrez nos hôtels soigneusement sélectionnés pour un séjour inoubliable"
           images={[
-            '/assets/hero/hotels-1.jpg',
-            '/assets/hero/hotels-2.jpg',
-            '/assets/hero/hotels-3.jpg'
+            '/assets/hero/A.jpg',
+            '/assets/hero/B.jpg',
+            '/assets/hero/C.jpg'
           ]}
         />
         <div className="container mx-auto px-4 py-12 text-center">
@@ -123,9 +123,9 @@ const Hotels: React.FC = () => {
         title="Nos Hôtels"
         subtitle="Découvrez notre sélection d'hôtels de charme pour un séjour inoubliable au Maroc"
         images={[
-          '/assets/hero/hotels-1.jpg',
-          '/assets/hero/hotels-2.jpg',
-          '/assets/hero/hotels-3.jpg'
+          '/assets/hero/A.jpg',
+          '/assets/hero/B.jpg',
+          '/assets/hero/C.jpg'
         ]}
         searchPlaceholder="Rechercher un hôtel, une ville..."
         onSearch={handleSearch}
