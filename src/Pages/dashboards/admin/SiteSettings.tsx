@@ -273,7 +273,7 @@ export const SiteSettings: React.FC = () => {
                           setLogoFile(file);
                           // Show preview
                           const reader = new FileReader();
-                          reader.onload = (event) => {
+                          reader.onload = (_event) => {
                             // Update the form value
                             // This is a simplified version, you might want to handle this differently
                             const target = e.target as HTMLInputElement;
@@ -323,7 +323,7 @@ export const SiteSettings: React.FC = () => {
                           setFaviconFile(file);
                           // Show preview
                           const reader = new FileReader();
-                          reader.onload = (event) => {
+                          reader.onload = (_event) => {
                             // Update the form value
                             // This is a simplified version, you might want to handle this differently
                             const target = e.target as HTMLInputElement;

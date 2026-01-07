@@ -60,7 +60,7 @@ export const SiteContentProvider: React.FC<{ children: ReactNode }> = ({ childre
         contentMap[fullKey] = item.value;
       });
       
-      setContent(prev => ({
+      setContent(() => ({
         ...getDefaultContent(),
         ...contentMap
       }));

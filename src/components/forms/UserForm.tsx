@@ -25,7 +25,7 @@ const UserForm: React.FC<UserFormProps> = ({ onClose, onSuccess }) => {
 
     try {
       // Créer l'utilisateur avec Supabase Auth
-      const { data: authData, error: authError } = await supabase.auth.signUp({
+      const { error: authError } = await supabase.auth.signUp({
         email: formData.email,
         password: formData.password,
         options: {

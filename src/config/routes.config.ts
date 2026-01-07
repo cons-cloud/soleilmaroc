@@ -25,13 +25,13 @@ const PageNotFound = lazy(() => import('../components/common/PageNotFound'));
 const Dashboard = () => React.createElement('div', null, 'Tableau de bord');
 
 // Fonction utilitaire pour créer des routes avec typage fort
-const createRoute = (config: RouteConfig): RouteConfig => ({
-  ...config,
-  children: config.children?.map(child => ({
-    ...child,
-    role: undefined, // S'assurer que les enfants n'ont pas de rôle défini
-  })),
-});
+// const createRoute = (config: RouteConfig): RouteConfig => ({
+//   ...config,
+//   children: config.children?.map(child => ({
+//     ...child,
+//     role: undefined, // S'assurer que les enfants n'ont pas de rôle défini
+//   })),
+// });
 
 // Routes publiques
 export const publicRoutes: RouteConfig[] = [

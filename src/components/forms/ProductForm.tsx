@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../contexts/AuthContext';
 import toast from 'react-hot-toast';
@@ -9,8 +9,6 @@ import {
   Loader,
   MapPin,
   DollarSign,
-  Package,
-  FileText,
   Save,
   Trash2
 } from 'lucide-react';
@@ -101,7 +99,7 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onClose, onSuccess }
       const fileName = `${user?.id}/${Date.now()}.${fileExt}`;
 
       // Upload vers Supabase Storage (bucket services)
-      const { data, error } = await supabase.storage
+      const { error } = await supabase.storage
         .from('services')
         .upload(fileName, file);
 

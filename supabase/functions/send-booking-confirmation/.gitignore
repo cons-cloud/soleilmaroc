@@ -1,0 +1,4 @@
+# Ignorer les fichiers de configuration locale
+.env
+.env.local
+

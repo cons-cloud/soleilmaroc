@@ -229,7 +229,7 @@ const CircuitBookingForm: React.FC<CircuitBookingFormProps> = ({ circuit, onClos
         }
 
         setStep(3);
-        toast.success('Réservation confirmée ! Un email de confirmation vous a été envoyé.');
+        toast.success('Réservation confirmée !');
       }
     } catch (error: any) {
       console.error('Erreur:', error);
@@ -533,7 +533,7 @@ const CircuitBookingForm: React.FC<CircuitBookingFormProps> = ({ circuit, onClos
               </div>
 
               <p className="text-sm text-gray-600">
-                Un email de confirmation a été envoyé à <strong>{formData.email}</strong>
+                Votre réservation a été confirmée
               </p>
 
               <button

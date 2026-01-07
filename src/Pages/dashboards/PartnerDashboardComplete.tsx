@@ -5,27 +5,13 @@ import DashboardLayout from '../../components/DashboardLayout';
 import toast from 'react-hot-toast';
 import {
   Package,
-  TrendingUp,
   Calendar,
   DollarSign,
-  Eye,
-  Star,
   Plus,
-  Edit,
-  Trash2,
   CheckCircle,
   Clock,
   AlertCircle,
-  Settings,
-  Bell,
-  X,
-  Save,
-  Upload,
-  MapPin,
-  Home,
-  Car,
-  Building2,
-  Palmtree
+  Settings
 } from 'lucide-react';
 
 interface PartnerStats {
@@ -76,11 +62,11 @@ const PartnerDashboardComplete: React.FC = () => {
   const { user, profile } = useAuth();
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState<PartnerStats | null>(null);
-  const [products, setProducts] = useState<Product[]>([]);
+  const [_products, setProducts] = useState<Product[]>([]);
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [activeTab, setActiveTab] = useState<'overview' | 'products' | 'bookings' | 'earnings' | 'profile'>('overview');
-  const [showProductForm, setShowProductForm] = useState(false);
-  const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+  const [_showProductForm, setShowProductForm] = useState(false);
+  const [_editingProduct, setEditingProduct] = useState<Product | null>(null);
 
   useEffect(() => {
     if (user) {
@@ -136,28 +122,7 @@ const PartnerDashboardComplete: React.FC = () => {
     }
   };
 
-  const getProductTypeLabel = (type: string) => {
-    const labels: { [key: string]: string } = {
-      'appartement': 'Appartement',
-      'villa': 'Villa',
-      'hotel': 'Hôtel',
-      'voiture': 'Voiture',
-      'circuit': 'Circuit'
-    };
-    return labels[type] || type;
-  };
-
-  const getProductTypeIcon = (type: string) => {
-    const icons: { [key: string]: any } = {
-      'appartement': Home,
-      'villa': Building2,
-      'hotel': Building2,
-      'voiture': Car,
-      'circuit': Palmtree
-    };
-    const Icon = icons[type] || Package;
-    return <Icon className="w-5 h-5" />;
-  };
+  // Note: getProductTypeLabel and getProductTypeIcon functions removed as they're not currently used
 
   const getStatusBadge = (status: string) => {
     const badges: { [key: string]: { color: string; label: string } } = {
@@ -175,41 +140,7 @@ const PartnerDashboardComplete: React.FC = () => {
     );
   };
 
-  const handleDeleteProduct = async (productId: string) => {
-    if (!confirm('Êtes-vous sûr de vouloir supprimer ce produit ?')) return;
-
-    try {
-      const { error } = await supabase
-        .from('partner_products')
-        .delete()
-        .eq('id', productId);
-
-      if (error) throw error;
-
-      toast.success('Produit supprimé avec succès');
-      loadDashboardData();
-    } catch (error: any) {
-      console.error('Erreur:', error);
-      toast.error('Erreur lors de la suppression');
-    }
-  };
-
-  const handleToggleAvailability = async (productId: string, currentStatus: boolean) => {
-    try {
-      const { error } = await supabase
-        .from('partner_products')
-        .update({ available: !currentStatus })
-        .eq('id', productId);
-
-      if (error) throw error;
-
-      toast.success(`Produit ${!currentStatus ? 'activé' : 'désactivé'}`);
-      loadDashboardData();
-    } catch (error: any) {
-      console.error('Erreur:', error);
-      toast.error('Erreur lors de la mise à jour');
-    }
-  };
+  // Note: handleDeleteProduct and handleToggleAvailability functions removed as they're not currently used
 
   if (loading) {
     return (

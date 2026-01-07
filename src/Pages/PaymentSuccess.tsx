@@ -85,8 +85,8 @@ const PaymentSuccess: React.FC = () => {
               {/* Informations supplémentaires */}
               <div className="bg-emerald-50 border border-blue-200 rounded-lg p-4 mb-8 text-left">
                 <p className="text-sm text-emerald-800">
-                  <strong>📧 Confirmation envoyée</strong><br />
-                  Un email de confirmation a été envoyé à votre adresse email avec tous les détails de votre réservation.
+                  <strong>✅ Réservation confirmée</strong><br />
+                  Votre paiement a été traité avec succès. Tous les détails de votre réservation sont disponibles ci-dessous.
                 </p>
               </div>
 
@@ -137,8 +137,8 @@ const PaymentSuccess: React.FC = () => {
                     <span className="text-primary font-semibold">1</span>
                   </div>
                   <div>
-                    <p className="font-medium text-gray-900">Confirmation par email</p>
-                    <p className="text-sm text-gray-600">Vous recevrez un email avec tous les détails</p>
+                    <p className="font-medium text-gray-900">Réservation confirmée</p>
+                    <p className="text-sm text-gray-600">Tous les détails sont disponibles ci-dessous</p>
                   </div>
                 </div>
 

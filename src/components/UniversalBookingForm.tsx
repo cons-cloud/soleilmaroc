@@ -4,7 +4,7 @@ import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
-import { X, Calendar, Users, MapPin, Clock, CreditCard, User, Mail, Phone } from 'lucide-react';
+import { Calendar, Users, MapPin, Clock, CreditCard, User, Mail, Phone } from 'lucide-react';
 import AuthGuard from './AuthGuard';
 
 type ServiceType = 'appartement' | 'hotel' | 'villa' | 'voiture' | 'circuit';
@@ -332,8 +332,8 @@ const UniversalBookingForm: React.FC<UniversalBookingFormProps> = ({ serviceType
               serviceTitle: service.title,
               totalPrice: totalPrice,
               serviceType: serviceType,
-              startDate: formData.startDate || formData.pickupDate,
-              endDate: formData.endDate || formData.returnDate,
+              startDate: formData.startDate || formData.pickupDate || formData.checkInDate,
+              endDate: formData.checkOutDate || formData.returnDate,
               transactionId: paymentIntent.id
             }
           });
@@ -348,7 +348,7 @@ const UniversalBookingForm: React.FC<UniversalBookingFormProps> = ({ serviceType
         }
 
         setStep(3);
-        toast.success('Réservation confirmée ! Un email de confirmation vous a été envoyé.');
+        toast.success('Réservation confirmée !');
       }
     } catch (error: any) {
       console.error('Erreur:', error);
@@ -611,7 +611,7 @@ const UniversalBookingForm: React.FC<UniversalBookingFormProps> = ({ serviceType
             </div>
             <h2 className="text-lg font-bold text-gray-900 mb-2">Réservation confirmée !</h2>
             <p className="text-gray-600 mb-4">
-              Vous recevrez un email de confirmation à {formData.email}
+              Votre réservation a été confirmée
             </p>
             <button
               onClick={onClose}
@@ -771,7 +771,8 @@ const UniversalBookingForm: React.FC<UniversalBookingFormProps> = ({ serviceType
                   Retour
                 </button>
                 <button
-                  type="submit"
+                  type="button"
+                  onClick={handlePayment}
                   disabled={loading || !stripe}
                   className="flex-1 px-4 py-2 text-sm bg-green-600 text-white rounded-lg hover:bg-green-700 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
                 >

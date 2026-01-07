@@ -8,8 +8,7 @@ import {
   User,
   Calendar,
   Search,
-  Filter,
-  Download
+  Filter
 } from 'lucide-react';
 
 interface PartnerEarning {

@@ -24,7 +24,7 @@ interface PropertyListProps {
 
 const PropertyList: React.FC<PropertyListProps> = ({
   properties = [],
-  propertyType,
+  propertyType: _propertyType,
   loading,
   error,
   onBookNow,

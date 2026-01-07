@@ -210,11 +210,11 @@ const PartnerProductBookingForm: React.FC<PartnerProductBookingFormProps> = ({
             paymentId: paymentMethod?.id,
             customerEmail: formData.email,
             customerName: formData.fullName,
-            serviceTitle: product.title || product.name,
+            serviceTitle: product.title,
             totalPrice: totalPrice,
             serviceType: product.product_type,
-            startDate: formData.startDate || formData.pickupDate,
-            endDate: formData.endDate || formData.returnDate,
+            startDate: formData.startDate || formData.pickupDate || formData.checkInDate,
+            endDate: formData.checkOutDate || formData.returnDate,
             transactionId: paymentMethod?.id
           }
         });
@@ -228,7 +228,7 @@ const PartnerProductBookingForm: React.FC<PartnerProductBookingFormProps> = ({
         // Ne pas bloquer le processus si l'email échoue
       }
 
-      toast.success('Réservation confirmée ! Un email de confirmation vous a été envoyé.');
+      toast.success('Réservation confirmée !');
       
       if (onSuccess) onSuccess();
       onClose();

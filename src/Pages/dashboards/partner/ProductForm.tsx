@@ -202,7 +202,7 @@ const ProductForm: React.FC = () => {
       }
     } else {
       const newImages = [...formData.images];
-      const imageToRemove = newImages.splice(index - (formData.existingImages?.length || 0), 1)[0];
+      newImages.splice(index - (formData.existingImages?.length || 0), 1);
       
       setFormData(prev => ({
         ...prev,
@@ -738,7 +738,7 @@ const ProductForm: React.FC = () => {
             </div>
 
             <div className="mt-6 space-y-4">
-              {formData.features.map((feature, index) => (
+              {formData.features.map((feature) => (
                 <div key={feature.id} className="grid grid-cols-1 gap-4 sm:grid-cols-5">
                   <div className="sm:col-span-2">
                     <label

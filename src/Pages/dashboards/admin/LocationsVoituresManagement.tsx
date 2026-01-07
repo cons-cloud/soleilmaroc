@@ -1,8 +1,8 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import type { FC } from 'react';
-import { useLocation, useNavigate, useParams } from 'react-router-dom';
+import { useLocation, useParams } from 'react-router-dom';
 import { supabase } from '../../../lib/supabase';
-import { Plus, Edit, Trash2, Search, ArrowLeft } from 'lucide-react';
+import { Plus, Edit, Trash2, Search } from 'lucide-react';
 import ImageWithFallback from '../../../components/common/ImageWithFallback';
 import toast from 'react-hot-toast';
 import VoitureForm from '../../../components/forms/VoitureForm';
@@ -34,7 +34,6 @@ interface Voiture {
 
 const LocationsVoituresManagement: FC = () => {
   const { pathname } = useLocation();
-  const navigate = useNavigate();
   const { id } = useParams();
   
   const isNew = pathname.endsWith('/new');
@@ -138,66 +137,7 @@ const LocationsVoituresManagement: FC = () => {
     }
   }, [voitureToDelete, handleDelete]);
 
-  // Gérer la soumission du formulaire
-  const handleSubmitForm = useCallback(async (formData: any) => {
-    try {
-      setLoading(true);
-      
-      if (selectedVoiture) {
-        // Mise à jour d'une voiture existante
-        const { error } = await supabase
-          .from('locations_voitures')
-          .update({
-            brand: formData.brand,
-            model: formData.model,
-            year: formData.year,
-            price_per_day: formData.price_per_day,
-            available: formData.available,
-            images: formData.images,
-            description: formData.description,
-            category: formData.category,
-            fuel_type: formData.fuel_type,
-            transmission: formData.transmission,
-            seats: formData.seats,
-            doors: formData.doors,
-            has_ac: formData.has_ac,
-            has_gps: formData.has_gps,
-            has_bluetooth: formData.has_bluetooth,
-            city: formData.city,
-            contact_phone: formData.contact_phone,
-            featured: formData.featured,
-            updated_at: new Date().toISOString()
-          })
-          .eq('id', selectedVoiture.id);
-
-        if (error) throw error;
-        
-        toast.success('Voiture mise à jour avec succès');
-      } else {
-        // Création d'une nouvelle voiture
-        const { error } = await supabase
-          .from('locations_voitures')
-          .insert([{
-            ...formData,
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString()
-          }]);
-
-        if (error) throw error;
-        
-        toast.success('Voiture ajoutée avec succès');
-      }
-      
-      loadVoitures();
-      setShowForm(false);
-      setSelectedVoiture(null);
-    } catch (error) {
-      console.error('Error saving voiture:', error);
-      toast.error('Une erreur est survenue lors de la sauvegarde de la voiture');
-    } finally {
-      setLoading(false);
-    }
-  }, [selectedVoiture, loadVoitures]);
+  // Note: Form submission is handled by VoitureForm component internally
 
   // Filtrer les voitures
   const filteredVoitures = useMemo(() => {

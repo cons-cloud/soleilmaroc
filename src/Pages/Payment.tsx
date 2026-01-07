@@ -199,7 +199,7 @@ const Payment: React.FC = () => {
         // Ne pas bloquer le processus si l'email échoue
       }
 
-      toast.success('Paiement effectué avec succès ! Un email de confirmation a été envoyé.');
+      toast.success('Paiement effectué avec succès !');
       
       // Rediriger vers la page de confirmation
       navigate('/payment/success', {

@@ -119,18 +119,31 @@ serve(async (req) => {
       </html>
     `
 
-    // Envoyer l'email via Supabase (nécessite la configuration SMTP)
-    const { error } = await supabaseClient.functions.invoke('send-email', {
-      body: {
-        to: customerEmail,
-        subject: `Confirmation de réservation - ${serviceTitle}`,
-        html: emailHtml
-      }
-    })
+    // Envoyer l'email via Resend (recommandé)
+    // Note: Pour utiliser SMTP Supabase, utilisez Resend ou SendGrid via leur API
+    const resendApiKey = Deno.env.get('RESEND_API_KEY')
+    
+    if (resendApiKey) {
+      const resendResponse = await fetch('https://api.resend.com/emails', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${resendApiKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          from: 'Maroc Soleil <noreply@marocsoleil.com>',
+          to: customerEmail,
+          subject: `Confirmation de réservation - ${serviceTitle}`,
+          html: emailHtml,
+        }),
+      })
 
-    if (error) {
-      console.error('Erreur envoi email:', error)
-      // Alternative : utiliser un service d'email externe (Resend, SendGrid, etc.)
+      if (!resendResponse.ok) {
+        const error = await resendResponse.json()
+        console.error('Erreur Resend:', error)
+      }
+    } else {
+      console.warn('RESEND_API_KEY non configuré - email non envoyé')
     }
 
     return new Response(

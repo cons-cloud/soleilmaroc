@@ -141,12 +141,6 @@ const ServiceReservation: React.FC = () => {
         case 'hebergements':
           tableName = 'hebergements';
           break;
-        case 'voitures':
-          tableName = 'voitures';
-          break;
-        case 'circuits':
-          tableName = 'circuits';
-          break;
         default:
           tableName = 'services';
       }

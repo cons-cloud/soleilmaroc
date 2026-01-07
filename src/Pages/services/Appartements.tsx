@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import ServiceHero from '../../components/ServiceHero';
 import LoadingState from '../../components/LoadingState';

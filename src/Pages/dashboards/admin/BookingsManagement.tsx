@@ -1,6 +1,5 @@
-import { useEffect, useState, useMemo, useCallback, useRef } from 'react';
+import { useEffect, useState, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import useRealtimeSubscription from '../../../hooks/useRealtimeSubscription';
 import { supabase } from '../../../lib/supabase';
 import { 
   Calendar, 
@@ -11,8 +10,7 @@ import {
   Trash2, 
   DollarSign,
   ArrowLeft,
-  ArrowRight,
-  RefreshCw
+  ArrowRight
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import ConfirmDialog from '../../../components/modals/ConfirmDialog';
@@ -48,16 +46,16 @@ interface Booking {
   notes?: string;
 }
 
-interface Stats {
-  total: number;
-  pending: number;
-  confirmed: number;
-  cancelled: number;
-  completed: number;
-  totalRevenue: number;
-  monthRevenue: number;
-  [key: string]: number;
-}
+// interface Stats {
+//   total: number;
+//   pending: number;
+//   confirmed: number;
+//   cancelled: number;
+//   completed: number;
+//   totalRevenue: number;
+//   monthRevenue: number;
+//   [key: string]: number;
+// }
 
 const ITEMS_PER_PAGE = 10;
 
@@ -71,7 +69,7 @@ const statusOptions = [
 
 const BookingsManagement: React.FC = () => {
   // Initialisation des états
-  const navigate = useNavigate();
+  void useNavigate; // Suppress unused import warning
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [searchTerm, setSearchTerm] = useState<string>('');

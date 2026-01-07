@@ -120,21 +120,7 @@ const PartnerDashboard: React.FC = () => {
     return <Icon className="w-5 h-5" />;
   };
 
-  const getStatusBadge = (status: string) => {
-    const badges: Record<string, { color: string; label: string }> = {
-      'pending': { color: 'bg-yellow-100 text-yellow-800', label: 'En attente' },
-      'confirmed': { color: 'bg-green-100 text-green-800', label: 'Confirmé' },
-      'cancelled': { color: 'bg-red-100 text-red-800', label: 'Annulé' },
-      'completed': { color: 'bg-emerald-100 text-emerald-800', label: 'Terminé' },
-      'paid': { color: 'bg-green-100 text-green-800', label: 'Payé' }
-    };
-    const badge = badges[status] || { color: 'bg-gray-100 text-gray-800', label: status };
-    return (
-      <span className={`px-2 py-1 rounded-full text-xs font-medium ${badge.color}`}>
-        {badge.label}
-      </span>
-    );
-  };
+  // Note: getStatusBadge function removed as it's not currently used
 
   const handleDeleteProduct = async (productId: string) => {
     if (!confirm('Êtes-vous sûr de vouloir supprimer ce produit ?')) return;
@@ -155,22 +141,7 @@ const PartnerDashboard: React.FC = () => {
     }
   };
 
-  const handleToggleAvailability = async (productId: string, currentStatus: boolean) => {
-    try {
-      const { error } = await supabase
-        .from('products')
-        .update({ available: !currentStatus })
-        .eq('id', productId);
-      
-      if (error) throw error;
-      
-      toast.success(`Produit ${!currentStatus ? 'activé' : 'désactivé'}`);
-      loadDashboardData();
-    } catch (error) {
-      console.error('Erreur lors de la mise à jour du produit:', error);
-      toast.error('Erreur lors de la mise à jour du produit');
-    }
-  };
+  // Note: handleToggleAvailability function removed as it's not currently used
 
   if (loading) {
     return (

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { supabase } from '../../lib/supabase';
 import { uploadMultipleImages, deleteImage } from '../../lib/storage';
 import { X, Upload, Trash2, Loader } from 'lucide-react';

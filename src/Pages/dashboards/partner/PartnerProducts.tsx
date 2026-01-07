@@ -3,8 +3,8 @@ import { Link } from 'react-router-dom';
 import { supabase } from '../../../lib/supabase';
 import { useAuth } from '../../../contexts/AuthContext';
 import { 
-  Plus, Edit, Trash2, Eye, Search, Filter, 
-  Check, X, ArrowUpDown, ChevronDown, MoreHorizontal 
+  Plus, Edit, Trash2, Eye, Search, 
+  Check, X, ArrowUpDown, ChevronDown 
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';

@@ -1,5 +1,5 @@
 import React from 'react';
-import { X, AlertCircle, CheckCircle, Clock, TrendingUp } from 'lucide-react';
+import { X, AlertCircle } from 'lucide-react';
 
 interface AlertsModalProps {
   onClose: () => void;

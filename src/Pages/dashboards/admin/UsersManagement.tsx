@@ -138,22 +138,7 @@ const UsersManagement: React.FC = () => {
     }
   }, [searchTerm, currentPage, itemsPerPage, updateTotalItems]);
 
-  // Fonction pour mettre à jour le rôle d'un utilisateur
-  const updateUserRole = useCallback(async (userId: string, newRole: string) => {
-    try {
-      const { error } = await supabase
-        .from('profiles')
-        .update({ role: newRole })
-        .eq('id', userId);
-
-      if (error) throw error;
-      toast.success('Rôle mis à jour');
-      loadUsers();
-    } catch (error) {
-      console.error('Error updating user role:', error);
-      toast.error('Erreur lors de la mise à jour du rôle');
-    }
-  }, [loadUsers]);
+  // Note: updateUserRole function removed as it's not currently used
 
   const toggleVerification = async (userId: string, currentStatus: boolean) => {
     try {

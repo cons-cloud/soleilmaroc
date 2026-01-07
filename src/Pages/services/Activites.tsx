@@ -5,7 +5,7 @@ import Navbar from '../../components/Navbar';
 import Footer from '../../components/Footer';
 import AuthGuard from '../../components/AuthGuard';
 import UniversalBookingForm from '../../components/UniversalBookingForm';
-import { MapPin, Clock, Users, Calendar, Tag } from 'lucide-react';
+import { MapPin, Clock, Users, Tag } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 interface Activite {

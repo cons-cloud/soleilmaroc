@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import { supabase } from '../../lib/supabase';
 import Navbar from '../../components/Navbar';
 import Footer from '../../components/Footer';
-import { MapPin, Calendar, Clock, Users, Tag, Ticket } from 'lucide-react';
+import { MapPin, Calendar, Users, Tag, Ticket } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 interface Evenement {
@@ -53,7 +53,7 @@ const Evenements = () => {
       // Vérifier si l'utilisateur revient d'une connexion
       const pendingReservation = sessionStorage.getItem('pendingReservation');
       if (pendingReservation) {
-        const { eventId, timestamp } = JSON.parse(pendingReservation);
+        const { timestamp } = JSON.parse(pendingReservation);
         // Vérifier que la réservation a moins de 5 minutes
         if (new Date().getTime() - timestamp < 5 * 60 * 1000) {
           // Ancienne logique de réservation désactivée pour les événements

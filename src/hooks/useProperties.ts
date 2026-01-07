@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
-import { PostgrestError } from '@supabase/supabase-js';
 
 // Définir le type pour une propriété
 interface Property {

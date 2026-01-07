@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import { supabase } from '../lib/supabase';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
-import { MapPin, Home, Maximize, Bed, Bath, DollarSign, Phone, Mail, Filter } from 'lucide-react';
+import { MapPin, Home, Maximize, Bed, Bath, Phone, Mail, Filter } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 interface Immobilier {

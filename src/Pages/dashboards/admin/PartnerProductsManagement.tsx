@@ -6,7 +6,6 @@ import {
   Eye,
   CheckCircle,
   XCircle,
-  DollarSign,
   MapPin,
   Calendar,
   User,

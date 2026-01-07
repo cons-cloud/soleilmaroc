@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import ServiceHero from '../../components/ServiceHero';
 import LoadingState from '../../components/LoadingState';
 import BookingModal from '../../components/BookingModal';
@@ -62,7 +61,6 @@ const Hotels: React.FC = () => {
   )).filter(Boolean) as string[];
   
   // Gestion de la réservation
-  const navigate = useNavigate();
   const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
   const [selectedHotel, setSelectedHotel] = useState<Hotel | null>(null);
   

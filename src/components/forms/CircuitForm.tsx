@@ -138,15 +138,15 @@ const CircuitForm: React.FC<CircuitFormProps> = ({ circuit, onClose, onSuccess }
 
     console.log('Données à enregistrer:', JSON.stringify(dataToSave, null, 2));
 
-    let data, error;
+    let error;
     if (circuit?.id) {
-      ({ data, error } = await supabase
+      ({ error } = await supabase
         .from('circuits_touristiques')
         .update(dataToSave)
         .eq('id', circuit.id)
         .select());
     } else {
-      ({ data, error } = await supabase
+      ({ error } = await supabase
         .from('circuits_touristiques')
         .insert([dataToSave])
         .select());

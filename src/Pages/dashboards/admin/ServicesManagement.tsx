@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import { useNavigate, useLocation, Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { supabase } from '../../../lib/supabase';
-import { Plus, Edit, Trash2, Eye, Search, Filter, Package } from 'lucide-react';
+import { Plus, Edit, Trash2, Search, Filter, Package } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 interface Service {
