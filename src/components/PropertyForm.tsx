@@ -3,6 +3,7 @@ import { X, Upload, Trash2, Loader, Plus } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { uploadMultipleImages, deleteImage } from '../lib/storage';
 import toast from 'react-hot-toast';
+import { useNavigate } from 'react-router-dom';
 
 type PropertyType = 'hotel' | 'apartment' | 'villa' | 'car' | 'tour';
 
@@ -94,12 +95,13 @@ const defaultFormData = (type: PropertyType): BaseProperty => ({
 
 const PropertyForm: React.FC<PropertyFormProps> = ({ property, type, onClose, onSuccess }) => {
   const [loading, setLoading] = useState(false);
-  const [uploadingImages, setUploadingImages] = useState(false);
+  const [uploading, setUploading] = useState(false);
   const [formData, setFormData] = useState<BaseProperty>(defaultFormData(type));
   const [images, setImages] = useState<string[]>([]);
   const [newAmenity, setNewAmenity] = useState('');
-  const [newIncluded, setNewIncluded] = useState('');
-  const [newNotIncluded, setNewNotIncluded] = useState('');
+  const [files, setFiles] = useState<FileList | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (property) {
@@ -122,36 +124,42 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ property, type, onClose, on
     }));
   };
 
-  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files;
-    if (!files || files.length === 0) return;
-
-    setUploadingImages(true);
-    try {
-      const uploadedUrls = await uploadMultipleImages(Array.from(files), 'properties');
-      const newImages = [...images, ...uploadedUrls];
-      setImages(newImages);
-      setFormData(prev => ({ ...prev, images: newImages }));
-      toast.success(`${uploadedUrls.length} image(s) téléchargée(s) avec succès`);
-    } catch (error) {
-      console.error('Erreur lors du téléchargement des images:', error);
-      toast.error('Erreur lors du téléchargement des images');
-    } finally {
-      setUploadingImages(false);
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files) {
+      setFiles(e.target.files);
     }
   };
 
-  const handleDeleteImage = async (imageUrl: string, index: number) => {
+  const uploadImages = async (): Promise<string[]> => {
+    if (!files) return [];
+    const uploadedUrls: string[] = [];
+    setUploading(true);
+    
     try {
-      await deleteImage(imageUrl);
-      const newImages = [...images];
-      newImages.splice(index, 1);
-      setImages(newImages);
-      setFormData(prev => ({ ...prev, images: newImages }));
-      toast.success('Image supprimée avec succès');
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        const fileExt = file.name.split('.').pop();
+        const fileName = `${Math.random()}.${fileExt}`;
+        const filePath = `properties/${fileName}`;
+
+        const { error: uploadError } = await supabase.storage
+          .from('property-images')
+          .upload(filePath, file);
+
+        if (uploadError) throw uploadError;
+
+        const { data: { publicUrl } } = supabase.storage
+          .from('property-images')
+          .getPublicUrl(filePath);
+
+        uploadedUrls.push(publicUrl);
+      }
+      return uploadedUrls;
     } catch (error) {
-      console.error('Erreur lors de la suppression de l\'image:', error);
-      toast.error('Erreur lors de la suppression de l\'image');
+      console.error('Erreur lors du téléchargement des images:', error);
+      throw error;
+    } finally {
+      setUploading(false);
     }
   };
 
@@ -171,11 +179,24 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ property, type, onClose, on
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+    setError(null);
 
     try {
+      // Vérifier si des fichiers ont été sélectionnés
+      if (files && files.length === 0 && !property?.id) {
+        setError('Veuillez sélectionner au moins une image');
+        return;
+      }
+
+      // Télécharger les images si de nouvelles ont été ajoutées
+      let imageUrls = [...images];
+      if (files && files.length > 0) {
+        imageUrls = [...imageUrls, ...(await uploadImages())];
+      }
+
       const dataToSave = {
         ...formData,
-        images,
+        images: imageUrls,
         type,
         updated_at: new Date().toISOString()
       };
@@ -191,7 +212,10 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ property, type, onClose, on
       } else {
         const { data, error } = await supabase
           .from('properties')
-          .insert([{ ...dataToSave, created_at: new Date().toISOString() }])
+          .insert([{ 
+            ...dataToSave, 
+            created_at: new Date().toISOString() 
+          }])
           .select();
 
         if (error) throw error;
@@ -202,6 +226,7 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ property, type, onClose, on
       onClose();
     } catch (error: any) {
       console.error('Erreur lors de la sauvegarde:', error);
+      setError(error.message || 'Une erreur est survenue');
       toast.error(`Erreur: ${error.message}`);
     } finally {
       setLoading(false);
@@ -303,160 +328,7 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ property, type, onClose, on
             </div>
           </div>
         );
-      // Ajouter les autres cas pour les autres types de propriétés
-      default:
-        return null;
-    }
-  };
-
-  const uploadImages = async () => {
-    const uploadedUrls: string[] = [];
-    setUploading(true);
-    
-    try {
-      for (const file of files) {
-        const url = await storage.upload(file, 'property-images');
-        uploadedUrls.push(url);
-      }
-      return uploadedUrls;
-    } catch (error) {
-      console.error('Erreur lors du téléchargement des images:', error);
-      throw error;
-    } finally {
-      setUploading(false);
-    }
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    try {
-      // Vérifier si des fichiers ont été sélectionnés
-      if (files.length === 0) {
-        alert('Veuillez sélectionner au moins une image');
-        return;
-      }
-
-      // Télécharger les images d'abord
-      const imageUrls = await uploadImages();
-      
-      // Créer la propriété avec les URLs des images
-      await createProperty({
-        title: formData.title,
-        description: formData.description,
-        property_type: formData.property_type,
-        address: formData.address,
-        city: formData.city,
-        price_per_night: Number(formData.price_per_night),
-        is_available: true,
-        images: imageUrls
-      });
-      
-      // Afficher un message de succès et rediriger
-      alert('Propriété créée avec succès !');
-      navigate('/'); // Rediriger vers la page d'accueil
-      
-    } catch (error) {
-      console.error('Erreur lors de la création:', error);
-      alert('Une erreur est survenue lors de la création de la propriété');
-    }
-  };
-
-  const renderSpecificFields = () => {
-    switch (type) {
-      case 'hotel':
-        return (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="form-group">
-              <label htmlFor="stars" className="block text-sm font-medium text-gray-700">
-                Nombre d'étoiles
-              </label>
-              <select
-                id="stars"
-                name="stars"
-                value={formData.stars || 3}
-                onChange={handleChange}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-              >
-                {[1, 2, 3, 4, 5].map(num => (
-                  <option key={num} value={num}>
-                    {num} {num > 1 ? 'étoiles' : 'étoile'}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div className="form-group">
-              <label htmlFor="price_per_night" className="block text-sm font-medium text-gray-700">
-                Prix par nuit (MAD)
-              </label>
-              <input
-                type="number"
-                id="price_per_night"
-                name="price_per_night"
-                value={formData.price_per_night || ''}
-                onChange={handleChange}
-                min="0"
-                step="0.01"
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-              />
-            </div>
-            <div className="form-group">
-              <label htmlFor="rooms_count" className="block text-sm font-medium text-gray-700">
-                Nombre de chambres
-              </label>
-              <input
-                type="number"
-                id="rooms_count"
-                name="rooms_count"
-                value={formData.rooms_count || ''}
-                onChange={handleChange}
-                min="1"
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-              />
-            </div>
-            <div className="form-group">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Équipements
-              </label>
-              <div className="flex">
-                <input
-                  type="text"
-                  value={newAmenity}
-                  onChange={(e) => setNewAmenity(e.target.value)}
-                  placeholder="Ajouter un équipement"
-                  className="flex-1 rounded-l-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                />
-                <button
-                  type="button"
-                  onClick={handleAddAmenity}
-                  className="px-3 bg-blue-600 text-white rounded-r-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                >
-                  <Plus className="h-4 w-4" />
-                </button>
-              </div>
-              {formData.amenities && formData.amenities.length > 0 && (
-                <div className="mt-2 flex flex-wrap gap-2">
-                  {formData.amenities.map((amenity, index) => (
-                    <span 
-                      key={index}
-                      className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800"
-                    >
-                      {amenity}
-                      <button
-                        type="button"
-                        onClick={() => handleRemoveAmenity(amenity)}
-                        className="ml-1.5 inline-flex text-blue-400 hover:text-blue-600 focus:outline-none"
-                      >
-                        <X className="h-3 w-3" />
-                      </button>
-                    </span>
-                  ))}
-                </div>
-              )}
-            </div>
-          </div>
-        );
-      // Ajouter les autres cas pour les autres types de propriétés
+      // Ajoutez ici les autres cas pour les autres types de propriétés
       default:
         return null;
     }
@@ -594,8 +466,8 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ property, type, onClose, on
                     type="file"
                     className="sr-only"
                     multiple
-                    onChange={handleImageUpload}
-                    disabled={uploadingImages}
+                    onChange={handleFileChange}
+                    disabled={uploading}
                   />
                 </label>
                 <p className="pl-1">ou glisser-déposer</p>
@@ -606,7 +478,7 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ property, type, onClose, on
             </div>
           </div>
           
-          {uploadingImages && (
+          {uploading && (
             <div className="mt-2 flex items-center text-sm text-gray-500">
               <Loader className="animate-spin -ml-1 mr-2 h-4 w-4 text-blue-500" />
               Téléchargement en cours...
@@ -625,7 +497,11 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ property, type, onClose, on
                     />
                     <button
                       type="button"
-                      onClick={() => handleDeleteImage(image, index)}
+                      onClick={() => {
+                        const newImages = [...images];
+                        newImages.splice(index, 1);
+                        setImages(newImages);
+                      }}
                       className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
                       title="Supprimer l'image"
                     >
@@ -678,103 +554,19 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ property, type, onClose, on
         </button>
         <button
           type="submit"
-          disabled={loading}
+          disabled={loading || uploading}
           className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          {loading ? (
+          {loading || uploading ? (
             <>
               <Loader className="animate-spin -ml-1 mr-2 h-4 w-4" />
-              Enregistrement...
+              {uploading ? 'Téléchargement...' : 'Enregistrement...'}
             </>
           ) : property ? (
             'Mettre à jour'
           ) : (
             'Ajouter'
           )}
-        </button>
-      </div>
-          onChange={handleChange}
-          required
-          className="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm"
-        />
-      </div>
-
-      <div>
-        <label className="block text-sm font-medium text-gray-700">Description</label>
-        <textarea
-          name="description"
-          value={formData.description}
-          onChange={handleChange}
-          required
-          rows={4}
-          className="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm"
-        />
-      </div>
-
-      <div>
-        <label className="block text-sm font-medium text-gray-700">Type de propriété</label>
-        <select
-          name="property_type"
-          value={formData.property_type}
-          onChange={handleChange}
-          className="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm"
-        >
-          <option value="apartment">Appartement</option>
-          <option value="villa">Villa</option>
-          <option value="hotel">Hôtel</option>
-          <option value="car">Voiture</option>
-          <option value="tour">Circuit touristique</option>
-        </select>
-      </div>
-
-      <div>
-        <label className="block text-sm font-medium text-gray-700">Adresse</label>
-        <input
-          type="text"
-
-      <div>
-        <label className="block text-sm font-medium text-gray-700">Prix par nuit (MAD)</label>
-        <input
-          type="number"
-          name="price_per_night"
-          value={formData.price_per_night}
-          onChange={handleChange}
-          min="0"
-          step="0.01"
-          required
-          className="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm"
-        />
-      </div>
-
-      <div>
-        <label className="block text-sm font-medium text-gray-700">
-          Images
-          <span className="text-xs text-gray-500 ml-1">(Sélectionnez une ou plusieurs images)</span>
-        </label>
-        <input
-          type="file"
-          multiple
-          accept="image/*"
-          onChange={handleFileChange}
-          required
-          className="mt-1 block w-full text-sm text-gray-500
-                    file:mr-4 file:py-2 file:px-4
-                    file:rounded-md file:border-0
-                    file:text-sm file:font-semibold
-                    file:bg-blue-50 file:text-blue-700
-                    hover:file:bg-blue-100"
-        />
-      </div>
-
-      <div className="pt-4">
-        <button
-          type="submit"
-          disabled={loading || uploading}
-          className={`w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white 
-                    ${loading || uploading ? 'bg-blue-400' : 'bg-blue-600 hover:bg-blue-700'} 
-                    focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500`}
-        >
-          {loading || uploading ? 'Traitement en cours...' : 'Créer la propriété'}
         </button>
       </div>
 
@@ -786,3 +578,5 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ property, type, onClose, on
     </form>
   );
 };
+
+export default PropertyForm;
