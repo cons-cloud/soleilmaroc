@@ -1,144 +1,197 @@
 import { useState } from 'react';
-import { FiChevronLeft, FiChevronRight, FiStar } from 'react-icons/fi';
+import { Star, MapPin, Wifi, Coffee, WashingMachine, ParkingCircle, Bed, Users, Heart } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { Link } from 'react-router-dom';
 
 interface HotelCardProps {
   id: string;
   title: string;
   description: string;
   price: number;
-  address: string;
-  city: string;
+  location: string;
+  rating?: number;
   images: string[];
-  stars: number;
   amenities?: string[];
-  onBook: (hotelId: string) => void;
+  className?: string;
+  onBook?: () => void;
+  showActions?: boolean;
 }
 
-const HotelCard = ({
+const HotelCard: React.FC<HotelCardProps> = ({
   id,
   title,
   description,
   price,
-  address,
-  city,
+  location,
+  rating = 0,
   images = [],
-  stars,
   amenities = [],
-  onBook
-}: HotelCardProps) => {
+  className = '',
+  onBook,
+  showActions = true
+}) => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [isFavorite, setIsFavorite] = useState(false);
 
-  const nextImage = () => {
-    setCurrentImageIndex((prev) => (prev === images.length - 1 ? 0 : prev + 1));
+  const nextImage = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setCurrentImageIndex((prev) => 
+      prev === images.length - 1 ? 0 : prev + 1
+    );
   };
 
-  const prevImage = () => {
-    setCurrentImageIndex((prev) => (prev === 0 ? images.length - 1 : prev - 1));
+  const prevImage = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setCurrentImageIndex((prev) => 
+      prev === 0 ? images.length - 1 : prev - 1
+    );
   };
 
-  // Render star rating
-  const renderStars = () => {
-    return Array(5).fill(0).map((_, i) => (
-      <FiStar 
-        key={i} 
-        className={`${i < stars ? 'text-yellow-400 fill-current' : 'text-gray-300'} w-5 h-5`} 
-      />
-    ));
+  const toggleFavorite = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setIsFavorite(!isFavorite);
   };
+
+  const defaultImage = 'https://images.unsplash.com/photo-1566073771259-6a8506099945?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1470&q=80';
 
   return (
     <motion.div 
-      className="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-xl transition-shadow duration-300 cursor-pointer"
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.3 }}
-      onClick={() => onBook(id)}
+      className={`bg-white rounded-xl shadow-md overflow-hidden hover:shadow-xl transition-shadow duration-300 ${className}`}
+      whileHover={{ y: -5 }}
     >
-      {/* Image Carousel */}
-      <div className="relative h-64 overflow-hidden">
+      <div className="relative h-48 overflow-hidden group">
         {images.length > 0 ? (
-          <div 
-            className="w-full h-full bg-cover bg-center transition-transform duration-500"
-            style={{ backgroundImage: `url(${images[currentImageIndex]})` }}
+          <img
+            src={images[currentImageIndex] || defaultImage}
+            alt={title}
+            className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
           />
         ) : (
-          <div className="w-full h-full bg-gray-200 flex items-center justify-center">
-            <span className="text-gray-400">No image available</span>
+          <div className="w-full h-full flex items-center justify-center bg-gray-100">
+            <span className="text-gray-400">Pas d'image</span>
           </div>
         )}
-        
+
+        {/* Navigation des images */}
         {images.length > 1 && (
           <>
             <button 
-              onClick={(e) => {
-                e.stopPropagation();
-                prevImage();
-              }}
-              className="absolute left-2 top-1/2 -translate-y-1/2 bg-black bg-opacity-50 text-white p-2 rounded-full hover:bg-opacity-70 transition-all"
+              onClick={prevImage}
+              className="absolute left-2 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white text-gray-800 rounded-full p-2 shadow-md transition-all duration-200 opacity-0 group-hover:opacity-100"
+              aria-label="Image précédente"
             >
-              <FiChevronLeft className="w-5 h-5" />
+              ❮
             </button>
             <button 
-              onClick={(e) => {
-                e.stopPropagation();
-                nextImage();
-              }}
-              className="absolute right-2 top-1/2 -translate-y-1/2 bg-black bg-opacity-50 text-white p-2 rounded-full hover:bg-opacity-70 transition-all"
+              onClick={nextImage}
+              className="absolute right-2 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white text-gray-800 rounded-full p-2 shadow-md transition-all duration-200 opacity-0 group-hover:opacity-100"
+              aria-label="Image suivante"
             >
-              <FiChevronRight className="w-5 h-5" />
+              ❯
             </button>
           </>
         )}
+
+        {/* Badge de favori */}
+        <button 
+          onClick={toggleFavorite}
+          className="absolute top-2 right-2 p-2 bg-white/90 rounded-full shadow-md hover:bg-red-50 transition-colors"
+          aria-label={isFavorite ? 'Retirer des favoris' : 'Ajouter aux favoris'}
+        >
+          <Heart 
+            className={`w-5 h-5 ${isFavorite ? 'fill-red-500 text-red-500' : 'text-gray-400'}`} 
+          />
+        </button>
+
+        {/* Indicateur de prix */}
+        <div className="absolute bottom-2 left-2 bg-white/90 px-3 py-1 rounded-full text-sm font-semibold text-teal-700">
+          {price?.toLocaleString()} MAD
+          <span className="text-xs font-normal">/nuit</span>
+        </div>
+
+        {/* Note */}
+        <div className="absolute top-2 left-2 bg-white/90 px-2 py-1 rounded-full text-xs font-semibold flex items-center">
+          <Star className="w-3 h-3 text-yellow-500 mr-1" fill="#f59e0b" />
+          {rating?.toFixed(1) || 'Nouveau'}
+        </div>
       </div>
 
-      {/* Content */}
       <div className="p-4">
-        <div className="flex justify-between items-start">
-          <h3 className="text-xl font-semibold text-gray-800">{title}</h3>
-          <div className="flex items-center">
-            {renderStars()}
-          </div>
+        <div className="flex justify-between items-start mb-2">
+          <Link to={`/hotels/${id}`} className="group">
+            <h3 className="font-bold text-lg text-gray-900 group-hover:text-teal-600 transition-colors line-clamp-1">
+              {title}
+            </h3>
+          </Link>
         </div>
-        
-        <p className="text-gray-600 text-sm mt-1">{address}, {city}</p>
-        
-        <p className="text-gray-700 mt-3 line-clamp-2">{description}</p>
-        
+
+        <div className="flex items-center text-sm text-gray-600 mb-3">
+          <MapPin className="w-4 h-4 mr-1 flex-shrink-0" />
+          <span className="line-clamp-1" title={location}>{location}</span>
+        </div>
+
+        <p className="text-gray-600 text-sm mb-4 line-clamp-2" title={description}>
+          {description}
+        </p>
+
+        {/* Équipements */}
         {amenities && amenities.length > 0 && (
-          <div className="mt-3 flex flex-wrap gap-2">
+          <div className="flex flex-wrap gap-2 mb-4">
             {amenities.slice(0, 3).map((amenity, index) => (
-              <span key={index} className="text-xs bg-emerald-100 text-emerald-800 px-2 py-1 rounded">
+              <span
+                key={index}
+                className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded-full flex items-center"
+                title={amenity}
+              >
+                {amenity === 'Wifi' && <Wifi className="w-3 h-3 mr-1" />}
+                {amenity === 'Petit déjeuner' && <Coffee className="w-3 h-3 mr-1" />}
+                {amenity === 'Parking' && <ParkingCircle className="w-3 h-3 mr-1" />}
+                {amenity === 'Chambres familiales' && <Users className="w-3 h-3 mr-1" />}
+                {amenity === 'Service en chambre' && <Bed className="w-3 h-3 mr-1" />}
+                {amenity === 'Blanchisserie' && <WashingMachine className="w-3 h-3 mr-1" />}
                 {amenity}
               </span>
             ))}
             {amenities.length > 3 && (
-              <span className="text-xs text-gray-500">+{amenities.length - 3} more</span>
+              <span className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded-full">
+                +{amenities.length - 3} plus
+              </span>
             )}
           </div>
         )}
-        
-        <div className="mt-4 flex justify-between items-center">
-          <div>
-            <span className="text-2xl font-bold text-emerald-600">{price} DH</span>
-            <span className="text-gray-500 text-sm"> / nuit</span>
+
+        {showActions && (
+          <div className="flex justify-between items-center mt-4 pt-4 border-t border-gray-100">
+            <div className="flex items-center">
+              <Star className="w-4 h-4 text-yellow-500 mr-1" fill="#f59e0b" />
+              <span className="text-sm font-medium text-gray-700">
+                {rating ? rating.toFixed(1) : 'Nouveau'}
+              </span>
+              <span className="mx-2 text-gray-300">•</span>
+              <span className="text-sm text-gray-500">
+                {Math.floor(Math.random() * 50) + 5} avis
+              </span>
+            </div>
+
+            <div className="flex space-x-2">
+              <Link
+                to={`/hotels/${id}`}
+                className="px-3 py-2 text-sm font-medium text-teal-600 hover:text-teal-700 transition-colors"
+              >
+                Voir plus
+              </Link>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onBook?.();
+                }}
+                className="px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white rounded-lg text-sm font-medium transition-colors"
+              >
+                Réserver
+              </button>
+            </div>
           </div>
-          <p className="text-sm text-gray-600 line-clamp-2">{description}</p>
-          <span 
-            className="mt-2 inline-flex items-center text-sm font-medium text-primary-600 group-hover:text-primary-800"
-            aria-hidden="true"
-          >
-            Découvrir plus
-            <svg 
-              className="ml-1 h-4 w-4 transition-transform duration-200 group-hover:translate-x-1" 
-              fill="none" 
-              viewBox="0 0 24 24" 
-              stroke="currentColor"
-            >
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-            </svg>
-          </span>
-        </div>
+        )}
       </div>
     </motion.div>
   );

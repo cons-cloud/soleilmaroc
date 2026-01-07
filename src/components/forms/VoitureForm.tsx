@@ -13,25 +13,26 @@ interface VoitureFormProps {
 const VoitureForm: React.FC<VoitureFormProps> = ({ voiture, onClose, onSuccess }) => {
   const [loading, setLoading] = useState(false);
   const [uploadingImages, setUploadingImages] = useState(false);
-  const [formData, setFormData] = useState({
-    brand: voiture?.brand || '',
-    model: voiture?.model || '',
-    year: voiture?.year || new Date().getFullYear(),
-    description: voiture?.description || '',
-    price_per_day: voiture?.price_per_day || '',
-    category: voiture?.category || 'Économique',
-    fuel_type: voiture?.fuel_type || 'Essence',
-    transmission: voiture?.transmission || 'Manuelle',
-    seats: voiture?.seats || 5,
-    doors: voiture?.doors || 4,
-    has_ac: voiture?.has_ac ?? true,
-    has_gps: voiture?.has_gps ?? false,
-    has_bluetooth: voiture?.has_bluetooth ?? false,
-    city: voiture?.city || '',
-    contact_phone: voiture?.contact_phone || '',
-    available: voiture?.available ?? true,
-    featured: voiture?.featured ?? false,
-  });
+ const [formData, setFormData] = useState({
+  
+  marque: voiture?.marque || '',
+  modele: voiture?.modele || '',  // Changé de model à modele
+  annee: voiture?.annee || new Date().getFullYear(),
+  description: voiture?.description || '',
+  price_per_day: voiture?.price_per_day || '',
+  categorie: voiture?.categorie || 'Économique',
+  carburant: voiture?.carburant || 'Essence',
+  transmission: voiture?.transmission || 'Manuelle',
+  places: voiture?.places || 5,
+  portes: voiture?.portes || 4,
+  climatisation: voiture?.climatisation ?? true,
+  gps: voiture?.gps ?? false,
+  bluetooth: voiture?.bluetooth ?? false,
+  ville: voiture?.ville || '',
+  contact_phone: voiture?.contact_phone || '',
+  disponible: voiture?.disponible ?? true,
+  en_vedette: voiture?.en_vedette ?? false,
+});
   const [images, setImages] = useState<string[]>(voiture?.images || []);
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -69,9 +70,9 @@ const VoitureForm: React.FC<VoitureFormProps> = ({ voiture, onClose, onSuccess }
         ...formData,
         images,
         price_per_day: parseFloat(formData.price_per_day as any),
-        year: parseInt(formData.year as any),
-        seats: parseInt(formData.seats as any),
-        doors: parseInt(formData.doors as any),
+        annee: parseInt(formData.annee as any),
+        places: parseInt(formData.places as any),
+        portes: parseInt(formData.portes as any),
       };
 
       if (voiture?.id) {
@@ -133,17 +134,17 @@ const VoitureForm: React.FC<VoitureFormProps> = ({ voiture, onClose, onSuccess }
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">Marque *</label>
-              <input type="text" required value={formData.brand} onChange={(e) => setFormData({ ...formData, brand: e.target.value })} className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent" />
+              <input type="text" required value={formData.marque} onChange={(e) => setFormData({ ...formData, marque: e.target.value })} className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent" />
             </div>
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">Modèle *</label>
-              <input type="text" required value={formData.model} onChange={(e) => setFormData({ ...formData, model: e.target.value })} className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent" />
+              <input type="text" required value={formData.modele} onChange={(e) => setFormData({ ...formData, modele: e.target.value })} className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent" />
             </div>
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">Année *</label>
-              <input type="number" required min="2000" max={new Date().getFullYear() + 1} value={formData.year} onChange={(e) => setFormData({ ...formData, year: parseInt(e.target.value) })} className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent" />
+              <input type="number" required min="2000" max={new Date().getFullYear() + 1} value={formData.annee} onChange={(e) => setFormData({ ...formData, annee: parseInt(e.target.value) })} className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent" />
             </div>
 
             <div>
@@ -153,7 +154,7 @@ const VoitureForm: React.FC<VoitureFormProps> = ({ voiture, onClose, onSuccess }
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">Catégorie *</label>
-              <select value={formData.category} onChange={(e) => setFormData({ ...formData, category: e.target.value })} className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent">
+              <select value={formData.categorie} onChange={(e) => setFormData({ ...formData, categorie: e.target.value })} className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent">
                 <option>Économique</option>
                 <option>Compacte</option>
                 <option>Berline</option>
@@ -165,14 +166,19 @@ const VoitureForm: React.FC<VoitureFormProps> = ({ voiture, onClose, onSuccess }
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Carburant *</label>
-              <select value={formData.fuel_type} onChange={(e) => setFormData({ ...formData, fuel_type: e.target.value })} className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent">
-                <option>Essence</option>
-                <option>Diesel</option>
-                <option>Hybride</option>
-                <option>Électrique</option>
-              </select>
-            </div>
+  <label className="block text-sm font-medium text-gray-700 mb-2">Type de carburant *</label>
+  <select 
+    value={formData.carburant}
+    onChange={(e) => setFormData({...formData, carburant: e.target.value})}
+    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+  >
+    <option value="Essence">Essence</option>
+    <option value="Diesel">Diesel</option>
+    <option value="Électrique">Électrique</option>
+    <option value="Hybride">Hybride</option>
+    <option value="GPL">GPL</option>
+  </select>
+</div>
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">Transmission *</label>
@@ -184,17 +190,17 @@ const VoitureForm: React.FC<VoitureFormProps> = ({ voiture, onClose, onSuccess }
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">Places *</label>
-              <input type="number" required min="2" max="9" value={formData.seats} onChange={(e) => setFormData({ ...formData, seats: parseInt(e.target.value) })} className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent" />
+              <input type="number" required min="2" max="9" value={formData.places} onChange={(e) => setFormData({ ...formData, places: parseInt(e.target.value) })} className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent" />
             </div>
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">Portes *</label>
-              <input type="number" required min="2" max="5" value={formData.doors} onChange={(e) => setFormData({ ...formData, doors: parseInt(e.target.value) })} className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent" />
+              <input type="number" required min="2" max="5" value={formData.portes} onChange={(e) => setFormData({ ...formData, portes: parseInt(e.target.value) })} className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent" />
             </div>
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">Ville *</label>
-              <input type="text" required value={formData.city} onChange={(e) => setFormData({ ...formData, city: e.target.value })} className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent" />
+              <input type="text" required value={formData.ville} onChange={(e) => setFormData({ ...formData, ville: e.target.value })} className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent" />
             </div>
 
             <div>
@@ -210,27 +216,27 @@ const VoitureForm: React.FC<VoitureFormProps> = ({ voiture, onClose, onSuccess }
 
           <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
             <label className="flex items-center gap-2 cursor-pointer">
-              <input type="checkbox" checked={formData.has_ac} onChange={(e) => setFormData({ ...formData, has_ac: e.target.checked })} className="w-5 h-5 text-orange-600 rounded focus:ring-2 focus:ring-orange-500" />
+              <input type="checkbox" checked={formData.climatisation} onChange={(e) => setFormData({ ...formData, climatisation: e.target.checked })} className="w-5 h-5 text-orange-600 rounded focus:ring-2 focus:ring-orange-500" />
               <span className="text-sm font-medium text-gray-700">Climatisation</span>
             </label>
 
             <label className="flex items-center gap-2 cursor-pointer">
-              <input type="checkbox" checked={formData.has_gps} onChange={(e) => setFormData({ ...formData, has_gps: e.target.checked })} className="w-5 h-5 text-orange-600 rounded focus:ring-2 focus:ring-orange-500" />
+              <input type="checkbox" checked={formData.gps} onChange={(e) => setFormData({ ...formData, gps: e.target.checked })} className="w-5 h-5 text-orange-600 rounded focus:ring-2 focus:ring-orange-500" />
               <span className="text-sm font-medium text-gray-700">GPS</span>
             </label>
 
             <label className="flex items-center gap-2 cursor-pointer">
-              <input type="checkbox" checked={formData.has_bluetooth} onChange={(e) => setFormData({ ...formData, has_bluetooth: e.target.checked })} className="w-5 h-5 text-orange-600 rounded focus:ring-2 focus:ring-orange-500" />
+              <input type="checkbox" checked={formData.bluetooth} onChange={(e) => setFormData({ ...formData, bluetooth: e.target.checked })} className="w-5 h-5 text-orange-600 rounded focus:ring-2 focus:ring-orange-500" />
               <span className="text-sm font-medium text-gray-700">Bluetooth</span>
             </label>
 
             <label className="flex items-center gap-2 cursor-pointer">
-              <input type="checkbox" checked={formData.available} onChange={(e) => setFormData({ ...formData, available: e.target.checked })} className="w-5 h-5 text-orange-600 rounded focus:ring-2 focus:ring-orange-500" />
+              <input type="checkbox" checked={formData.disponible} onChange={(e) => setFormData({ ...formData, disponible: e.target.checked })} className="w-5 h-5 text-orange-600 rounded focus:ring-2 focus:ring-orange-500" />
               <span className="text-sm font-medium text-gray-700">Disponible</span>
             </label>
 
             <label className="flex items-center gap-2 cursor-pointer">
-              <input type="checkbox" checked={formData.featured} onChange={(e) => setFormData({ ...formData, featured: e.target.checked })} className="w-5 h-5 text-orange-600 rounded focus:ring-2 focus:ring-orange-500" />
+              <input type="checkbox" checked={formData.en_vedette} onChange={(e) => setFormData({ ...formData, en_vedette: e.target.checked })} className="w-5 h-5 text-orange-600 rounded focus:ring-2 focus:ring-orange-500" />
               <span className="text-sm font-medium text-gray-700">À la une</span>
             </label>
           </div>

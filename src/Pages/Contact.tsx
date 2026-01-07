@@ -69,7 +69,7 @@ const Contact = () => {
     {
       icon: <FiPhone className="h-6 w-6 text-primary" />,
       title: 'Téléphone',
-      description: settings?.phone_primary || '+212 6 12 34 56 78',
+      description: settings?.phone_primary || '+212 669 742 780',
       link: `tel:${settings?.phone_primary?.replace(/\s/g, '') || '+212669742780'}`
     },
     {

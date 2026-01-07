@@ -22,7 +22,7 @@ const VillaForm: React.FC<VillaFormProps> = ({ villa, onClose, onSuccess }) => {
     address: villa?.address || '',
     bedrooms: villa?.bedrooms || 1,
     bathrooms: villa?.bathrooms || 1,
-    area_sqm: villa?.area_sqm || '',
+    
     has_pool: villa?.has_pool ?? false,
     has_garden: villa?.has_garden ?? false,
     has_parking: villa?.has_parking ?? false,
@@ -59,43 +59,48 @@ const VillaForm: React.FC<VillaFormProps> = ({ villa, onClose, onSuccess }) => {
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
+const handleSubmit = async (e: React.FormEvent) => {
+  e.preventDefault();
+  setLoading(true);
 
-    try {
-      const dataToSave = {
-        ...formData,
-        images,
-        price_per_night: parseFloat(formData.price_per_night as any),
-        bedrooms: parseInt(formData.bedrooms as any),
-        bathrooms: parseInt(formData.bathrooms as any),
-        area_sqm: formData.area_sqm ? parseFloat(formData.area_sqm as any) : null,
-      };
+  try {
+    const dataToSave = {
+      title: formData.title,
+      description: formData.description,
+      price_per_night: parseFloat(formData.price_per_night as any),
+      city: formData.city,
+      region: formData.region,
+      address: formData.address,
+      bedrooms: formData.bedrooms ? parseInt(formData.bedrooms as any) : null,
+      bathrooms: formData.bathrooms ? parseInt(formData.bathrooms as any) : null,
+      images: images,
+      // Ajoutez uniquement les champs qui existent dans votre table
+    };
 
-      if (villa?.id) {
-        const { error } = await supabase
-          .from('villas')
-          .update(dataToSave)
-          .eq('id', villa.id);
-        if (error) throw error;
-        toast.success('Villa modifiée avec succès');
-      } else {
-        const { error } = await supabase
-          .from('villas')
-          .insert([dataToSave]);
-        if (error) throw error;
-        toast.success('Villa créée avec succès');
-      }
-
-      onSuccess();
-      onClose();
-    } catch (error: any) {
-      toast.error(error.message || 'Erreur lors de l\'enregistrement');
-    } finally {
-      setLoading(false);
+    if (villa?.id) {
+      const { error } = await supabase
+        .from('villas')
+        .update(dataToSave)
+        .eq('id', villa.id);
+      if (error) throw error;
+      toast.success('Villa mise à jour avec succès');
+    } else {
+      const { error } = await supabase
+        .from('villas')
+        .insert([dataToSave]);
+      if (error) throw error;
+      toast.success('Villa créée avec succès');
     }
-  };
+
+    onSuccess();
+    onClose();
+  } catch (error: any) {
+    console.error('Erreur détaillée:', error);
+    toast.error(error.message || 'Erreur lors de l\'enregistrement');
+  } finally {
+    setLoading(false);
+  }
+};
 
   return (
     <div className="fixed inset-0 bg-white/30 backdrop-blur-sm flex items-center justify-center p-4 z-50 overflow-y-auto">
@@ -160,10 +165,7 @@ const VillaForm: React.FC<VillaFormProps> = ({ villa, onClose, onSuccess }) => {
               <input type="number" required min="1" value={formData.bathrooms} onChange={(e) => setFormData({ ...formData, bathrooms: parseInt(e.target.value) })} className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent" />
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Surface (m²)</label>
-              <input type="number" value={formData.area_sqm} onChange={(e) => setFormData({ ...formData, area_sqm: e.target.value })} className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent" />
-            </div>
+          
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">Téléphone</label>

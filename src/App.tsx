@@ -9,6 +9,12 @@ import RoleGuard from "./components/RoleGuard";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { ROUTES } from "./config/routes";
 import { SEO } from "./components/SEO";
+// Import des composants de gestion des propriétés
+import PropertiesManagement from './components/PropertiesManagement';
+
+
+
+
 
 // Composants de pages
 const DevenirHote = lazy(() => import("./Pages/DevenirHote"));
@@ -35,6 +41,27 @@ const PaymentSuccess = lazy(() => import("./Pages/PaymentSuccess"));
 const Recherche = lazy(() => import("./Pages/Recherche"));
 const PageNotFound = lazy(() => import("./Pages/PageNotFound"));
 
+const AddProperty = lazy(() => import("./Pages/AddProperty"));
+const LocationsVoituresManagement = lazy(() => import("./Pages/dashboards/admin/LocationsVoituresManagement"));
+const AppartementsManagement = lazy(() => import("./Pages/dashboards/admin/AppartementsManagement"));
+const HotelsManagement = lazy(() => import("./Pages/dashboards/admin/HotelsManagement"));
+const VillasManagement = lazy(() => import("./Pages/dashboards/admin/VillasManagement"));
+
+// Importations paresseuses des composants
+
+const AppartementDetails = lazy(() => import("./Pages/services/AppartementDetails"));
+
+const VillaDetails = lazy(() => import("./Pages/services/VillaDetails"));
+
+const HotelDetails = lazy(() => import("./Pages/services/HotelDetails"));
+
+const VoitureDetails = lazy(() => import("./Pages/services/VoitureDetails"));
+
+const TourismeDetails = lazy(() => import("./Pages/services/TourismeDetails"));
+
+
+
+
 // Sous-pages services
 const Tourisme = lazy(() => import("./Pages/services/Tourisme"));
 const Voitures = lazy(() => import("./Pages/services/Voitures"));
@@ -47,9 +74,13 @@ const ServiceReservation = lazy(() => import("./Pages/services/ServiceReservatio
 const Immobilier = lazy(() => import("./Pages/Immobilier"));
 
 // Tableaux de bord
-const AdminDashboard = lazy(() => import("./Pages/dashboards/AdminDashboardNew"));
-const PartnerDashboard = lazy(() => import("./Pages/dashboards/PartnerDashboard"));
-const ClientDashboard = lazy(() => import("./Pages/dashboards/ClientDashboard"));
+const AdminDashboard = lazy(() => import('./Pages/dashboards/admin/AdminDashboard'));
+const PartnerDashboard = lazy(() => import('./Pages/dashboards/partner/PartnerDashboard'));
+const ClientDashboard = lazy(() => import('./Pages/dashboards/ClientDashboard'));
+
+// Pages de gestion des propriétés (anciennes - gardées pour compatibilité)
+const CarRentalsManagement = () => <PropertiesManagement type="car" />;
+const ToursManagement = () => <PropertiesManagement type="tour" />;
 const ServiceForm = lazy(() => import("./Pages/dashboards/admin/ServiceForm"));
 const SiteSettingsPage = lazy(() => import("./Pages/dashboards/admin/SiteSettingsPage"));
 const CommissionsPage = lazy(() => import("./Pages/dashboards/admin/CommissionsPage"));
@@ -73,10 +104,6 @@ const PaymentsManagement = lazy(() => import("./Pages/dashboards/admin/PaymentsM
 const ServicesManagement = lazy(() => import("./Pages/dashboards/admin/ServicesManagement"));
 const MessagesManagement = lazy(() => import("./Pages/dashboards/admin/MessagesManagement"));
 const AdminSettings = lazy(() => import("./Pages/dashboards/admin/AdminSettings"));
-const HotelsManagement = lazy(() => import("./Pages/dashboards/admin/HotelsManagement"));
-const AppartementsManagement = lazy(() => import("./Pages/dashboards/admin/AppartementsManagement"));
-const VillasManagement = lazy(() => import("./Pages/dashboards/admin/VillasManagement"));
-const LocationsVoituresManagement = lazy(() => import("./Pages/dashboards/admin/LocationsVoituresManagement"));
 const ImmobilierManagement = lazy(() => import("./Pages/dashboards/admin/ImmobilierManagement"));
 const CircuitsTouristiquesManagement = lazy(() => import("./Pages/dashboards/admin/CircuitsTouristiquesManagement"));
 const CircuitBookingsManagement = lazy(() => import("./Pages/dashboards/admin/CircuitBookingsManagement"));
@@ -191,7 +218,6 @@ function App() {
                   <Route path={ROUTES.GUIDES} element={<Guides />} />
                   <Route path={ROUTES.ACTIVITIES} element={<Activites />} />
                   <Route path={ROUTES.EVENTS} element={<Evenements />} />
-                  <Route path={ROUTES.EVENTS} element={<Evenements />} />
                   
                   {/* Autres pages publiques */}
                   <Route path={ROUTES.REAL_ESTATE} element={<Immobilier />} />
@@ -199,7 +225,41 @@ function App() {
                   <Route path={ROUTES.ABOUT} element={<Apropos />} />
                   <Route path={ROUTES.CONTACT} element={<Contact />} />
                   <Route path={ROUTES.SEARCH} element={<Recherche />} />
+
+                    {/* Routes pour les propriétés */}
+                  <Route path="/appartements">
+                    <Route index element={<Appartements />} />
+                    <Route path=":id" element={<AppartementDetails />} />
+                    <Route path=":id/reserver" element={<ServiceReservation />} />
+                  </Route>
+  
+  <Route path="/villas">
+    <Route index element={<Villas />} />
+    <Route path=":id" element={<VillaDetails />} />
+    <Route path=":id/reserver" element={<ServiceReservation />} />
+  </Route>
+  
+  <Route path="/hotels">
+    <Route index element={<Hotels />} />
+    <Route path=":id" element={<HotelDetails />} />
+    <Route path=":id/reserver" element={<ServiceReservation />} />
+  </Route>
+  
+  <Route path="/voitures">
+    <Route index element={<Voitures />} />
+    <Route path=":id" element={<VoitureDetails />} />
+    <Route path=":id/reserver" element={<ServiceReservation />} />
+  </Route>
+  
+  <Route path="/tourisme">
+    <Route index element={<Tourisme />} />
+    <Route path=":id" element={<TourismeDetails />} />
+    <Route path=":id/reserver" element={<ServiceReservation />} />
+  </Route>
                   
+                  <Route path="/ajouter-propriete" element={<AddProperty />} />
+
+
                   {/* Routes de paiement */}
                   <Route path=":type/:id/reserver" element={<ServiceReservation />} />
                   <Route path={ROUTES.PAYMENT} element={<Payment />} />

@@ -8,17 +8,19 @@ import ConfirmDialog from '../../../components/modals/ConfirmDialog';
 interface Hotel {
   id: string;
   name: string;
-  name_ar: string;
+  
   description: string;
-  stars: number;
   price_per_night: number;
   city: string;
   region: string;
-  images: string[];
-  rooms_count: number;
+  address: string;
+  stars: number;
+  amenities: string[];
+  contact_phone: string;
   available: boolean;
   featured: boolean;
-  contact_phone: string;
+  images: string[];
+  rooms_count: number;
   created_at: string;
 }
 
@@ -36,21 +38,40 @@ const HotelsManagement: React.FC = () => {
   }, []);
 
   const loadHotels = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('hotels')
-        .select('*')
-        .order('created_at', { ascending: false });
+  try {
+    const { data, error } = await supabase
+      .from('hotels')
+      .select(`
+        id,
+        name,
+       
+        description,
+        price_per_night,
+        city,
+        region,
+        address,
+        stars,
+        amenities,
+       
+        available,
+        featured,
+        images,
+        rooms_count,
+        created_at
+      `)
+      .order('created_at', { ascending: false });
 
-      if (error) throw error;
-      setHotels(data || []);
-    } catch (error) {
-      console.error('Error loading hotels:', error);
-      toast.error('Erreur lors du chargement');
-    } finally {
-      setLoading(false);
-    }
-  };
+    if (error) throw error;
+
+    const typedData = (data || []) as Hotel[];
+    setHotels(typedData);
+  } catch (error) {
+    console.error('Error loading hotels:', error);
+    toast.error('Erreur lors du chargement');
+  } finally {
+    setLoading(false);
+  }
+};
 
   const handleDeleteClick = (hotel: Hotel) => {
     setHotelToDelete(hotel);
@@ -284,7 +305,7 @@ const HotelsManagement: React.FC = () => {
         />
       )}
 
-      {showConfirm && (
+       {showConfirm && (
         <ConfirmDialog
           isOpen={showConfirm}
           onClose={() => {
@@ -301,40 +322,7 @@ const HotelsManagement: React.FC = () => {
       )}
     </div>
   );
-
-  // Modals
-  if (showForm) {
-    return (
-      <HotelForm
-        hotel={selectedHotel}
-        onClose={() => {
-          setShowForm(false);
-          setSelectedHotel(null);
-        }}
-        onSuccess={() => {
-          loadHotels();
-        }}
-      />
-    );
-  }
-
-  if (showConfirm) {
-    return (
-      <ConfirmDialog
-        isOpen={showConfirm}
-        onClose={() => {
-          setShowConfirm(false);
-          setHotelToDelete(null);
-        }}
-        onConfirm={handleDeleteConfirm}
-        title="Supprimer l'hôtel"
-        message={`Êtes-vous sûr de vouloir supprimer "${hotelToDelete?.name}" ? Cette action est irréversible.`}
-        type="danger"
-        confirmText="Supprimer"
-        cancelText="Annuler"
-      />
-    );
-  }
 };
+
 
 export { HotelsManagement as default };

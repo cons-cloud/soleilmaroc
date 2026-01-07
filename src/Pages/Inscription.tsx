@@ -112,6 +112,9 @@ const Inscription = () => {
     setIsSubmitting(true);
 
     try {
+      // Vérifier s'il y a une réservation en attente AVANT l'inscription
+      const pendingReservation = sessionStorage.getItem('pendingReservation');
+      
       await signUp(
         formData.email.trim(), 
         formData.password,
@@ -122,10 +125,73 @@ const Inscription = () => {
         }
       );
       
+      // Si une réservation était en attente, la restaurer après inscription
+      if (pendingReservation) {
+        try {
+          const pending = JSON.parse(pendingReservation);
+          const serviceType = pending.serviceType || 'service';
+          const serviceId = pending.serviceId;
+          
+          // Déterminer le chemin selon le type
+          let reservationPath = null;
+          switch (serviceType) {
+            case 'appartement':
+            case 'apartment':
+            case 'appartements':
+              reservationPath = `/appartements/${serviceId}/reserver`;
+              break;
+            case 'villa':
+            case 'villas':
+              reservationPath = `/villas/${serviceId}/reserver`;
+              break;
+            case 'voiture':
+            case 'car':
+            case 'voitures':
+            case 'cars':
+              reservationPath = `/voitures/${serviceId}/reserver`;
+              break;
+            case 'circuit':
+            case 'tourism':
+            case 'tour':
+            case 'circuits':
+              reservationPath = `/tourisme/${serviceId}/reserver`;
+              break;
+            case 'hotel':
+            case 'hotels':
+              reservationPath = `/hotels/${serviceId}/reserver`;
+              break;
+            default:
+              reservationPath = `/${serviceType}/${serviceId}/reserver`;
+          }
+          
+          if (reservationPath) {
+            toast.success('Compte créé avec succès ! Redirection vers votre réservation...', {
+              duration: 4000,
+            });
+            // Rediriger vers la réservation avec les données sauvegardées
+            navigate(reservationPath, {
+              state: {
+                fromSignup: true,
+                fromLogin: true,
+                formData: pending.formData,
+                serviceId: pending.serviceId,
+                serviceType: pending.serviceType
+              }
+            });
+            return;
+          }
+        } catch (e) {
+          console.error('Erreur lors de la restauration de la réservation après inscription:', e);
+          sessionStorage.removeItem('pendingReservation');
+        }
+      }
+      
       toast.success('Inscription réussie ! Vérifiez votre email pour confirmer votre compte.', {
         duration: 6000,
       });
-      navigate('/login');
+      
+      // Si pas de réservation en attente, rediriger vers login ou dashboard client
+      navigate('/dashboard/client');
     } catch (error: any) {
       console.error('Registration error:', error);
       const errorMessage = error?.message?.includes('email') 

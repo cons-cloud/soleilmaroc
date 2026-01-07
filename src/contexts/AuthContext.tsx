@@ -1,15 +1,27 @@
+// src/contexts/AuthContext.tsx
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { supabase, type Profile } from '../lib/supabase';
-import type { User, Session } from '@supabase/supabase-js';
+import { supabase } from '../lib/supabase';
+import type { Session, User } from '@supabase/supabase-js';
 import { validatePassword } from '../utils/validation';
 import { isAdminEmail } from '../config/admins';
+import type { Profile } from '../types/auth';
+import { toast } from 'react-hot-toast';
 
 interface AuthContextType {
   user: User | null;
   profile: Profile | null;
   session: Session | null;
   loading: boolean;
-  signUp: (email: string, password: string, userData: Partial<Profile>) => Promise<void>;
+  error: string | null;
+  signUp: (
+    email: string, 
+    password: string, 
+    userData: Omit<Profile, 'id' | 'email' | 'created_at' | 'updated_at'>
+  ) => Promise<{ 
+    data: any; 
+    error: Error | null;
+    redirectTo: string | null;
+  }>;
   signIn: (email: string, password: string) => Promise<{ role: 'admin' | 'partner' | 'client' }>;
   signInWithGoogle: () => Promise<{ role: 'client' }>;
   signOut: () => Promise<void>;
@@ -17,12 +29,13 @@ interface AuthContextType {
   isAdmin: boolean;
 }
 
+const SIGNUP_DELAY_MS = 5000;
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (!context) {
-    throw new Error('useAuth must be used within an AuthProvider');
+    throw new Error('useAuth doit être utilisé à l\'intérieur d\'un AuthProvider');
   }
   return context;
 };
@@ -32,64 +45,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [profile, setProfile] = useState<Profile | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    console.log('AuthProvider: Initialisation du contexte d\'authentification');
-    
-    // Récupérer la session actuelle
-    supabase.auth.getSession().then(({ data: { session }, error }) => {
-      console.log('AuthProvider: Session récupérée', { session, error });
-      
-      setSession(session);
-      setUser(session?.user ?? null);
-      
-      if (session?.user) {
-        console.log('AuthProvider: Utilisateur connecté, chargement du profil...');
-        loadProfile(session.user.id);
-      } else {
-        console.log('AuthProvider: Aucun utilisateur connecté');
-        setLoading(false);
-      }
-    });
-
-    // Écouter les changements d'authentification
-    const handleAuthStateChange = async (event: string, session: Session | null) => {
-      console.log('AuthProvider: Événement d\'authentification', { event, session });
-      
-      if (session?.user) {
-        console.log('AuthProvider: Connexion détectée pour l\'utilisateur:', session.user.email);
-        setUser(session.user);
-        setSession(session);
-        
-        // Vérifier si c'est un admin
-        const isAdmin = isAdminEmail(session.user.email);
-        console.log('AuthProvider: Est admin?', isAdmin);
-        
-        if (!isAdmin) {
-          // Pour les non-admins, charger le profil
-          await loadProfile(session.user.id);
-        } else {
-          // Pour les admins, ne pas attendre de profil
-          console.log('AuthProvider: Utilisateur admin détecté, pas besoin de profil');
-          setLoading(false);
-        }
-      } else {
-        console.log('AuthProvider: Déconnexion détectée');
-        setUser(null);
-        setProfile(null);
-        setSession(null);
-        setLoading(false);
-      }
-    };
-
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange(handleAuthStateChange);
-
-    return () => subscription.unsubscribe();
-  }, []);
-
-  const loadProfile = async (userId: string) => {
+  const loadProfile = async (userId: string): Promise<Profile | null> => {
     try {
       const { data, error } = await supabase
         .from('profiles')
@@ -99,157 +57,275 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       if (error) throw error;
       setProfile(data);
+      return data;
     } catch (error) {
       console.error('Error loading profile:', error);
-    } finally {
-      setLoading(false);
+      setError('Erreur lors du chargement du profil');
+      return null;
     }
   };
 
-  const signUp = async (email: string, password: string, userData: Partial<Profile>) => {
+  const handleAuthStateChange = async (event: string, newSession: Session | null) => {
+    setSession(newSession);
+    setUser(newSession?.user ?? null);
+
+    if (newSession?.user) {
+      try {
+        const profile = await loadProfile(newSession.user.id);
+        setProfile(profile);
+      } catch (error) {
+        console.error('Error loading profile:', error);
+        setError('Erreur lors du chargement du profil');
+      }
+    } else {
+      setProfile(null);
+    }
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    const initializeAuth = async () => {
+      const { data: { session: currentSession } } = await supabase.auth.getSession();
+      await handleAuthStateChange('INITIAL_SESSION', currentSession);
+    };
+
+    initializeAuth();
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(handleAuthStateChange);
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, []);
+
+  const signUp = async (email: string, password: string, userData: Omit<Profile, 'id' | 'email' | 'created_at' | 'updated_at'>) => {
     try {
-      // Valider le mot de passe
+      setLoading(true);
+      await new Promise(resolve => setTimeout(resolve, SIGNUP_DELAY_MS));
+      
+      if (!email || !password || !userData.first_name || !userData.last_name) {
+        throw new Error('Tous les champs obligatoires doivent être remplis');
+      }
+
       const passwordValidation = validatePassword(password);
       if (!passwordValidation.isValid) {
         throw new Error(passwordValidation.errors.join(', '));
       }
 
-      // Créer l'utilisateur dans Supabase Auth
-      const { data, error } = await supabase.auth.signUp({
+      const { data: existingUser } = await supabase
+        .from('profiles')
+        .select('email')
+        .eq('email', email)
+        .maybeSingle();
+
+      if (existingUser) {
+        throw new Error('Cette adresse email est déjà utilisée');
+      }
+
+      const { data, error: signUpError } = await supabase.auth.signUp({
         email,
         password,
+        options: {
+          emailRedirectTo: `${window.location.origin}/auth/callback`,
+          data: {
+            full_name: `${userData.first_name} ${userData.last_name}`.trim(),
+            phone: userData.phone || ''
+          }
+        }
       });
 
-      if (error) throw error;
+      if (signUpError) throw signUpError;
+      if (!data.user) throw new Error('Aucun utilisateur créé');
 
-      if (data.user) {
-        // Créer le profil
-        const { error: profileError } = await supabase.from('profiles').insert([
-          {
-            id: data.user.id,
-            email: email,
-            role: 'client',
-            first_name: userData.first_name,
-            last_name: userData.last_name,
-            phone: userData.phone,
-            is_verified: true,
-          },
-        ]);
+      const profileData: Profile = {
+        id: data.user.id,
+        email: email,
+        first_name: userData.first_name,
+        last_name: userData.last_name,
+        phone: userData.phone || '',
+        role: userData.role || 'client',
+        is_verified: false,
+        country: userData.country || 'Maroc',
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        address: userData.address,
+        city: userData.city,
+        company_name: userData.company_name,
+        partner_type: userData.partner_type,
+        // Ajoutez d'autres champs nécessaires
+      };
 
-        if (profileError) throw profileError;
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .upsert(profileData)
+        .select()
+        .single();
+
+      if (profileError) {
+        console.error('Erreur création profil:', profileError);
+        throw new Error('Erreur lors de la création du profil. Contactez le support.');
       }
-    } catch (error: unknown) {
-      console.error('Error signing up:', error);
-      const errorMessage = error instanceof Error ? error.message : 'Erreur lors de l\'inscription';
-      throw new Error(errorMessage);
+
+      if (data.session) {
+        setSession(data.session);
+        setUser(data.user);
+        setProfile(profileData);
+      }
+
+      return { 
+        data, 
+        error: null,
+        redirectTo: '/dashboard'
+      };
+
+    } catch (error: any) {
+      console.error('Erreur inscription:', error);
+      const errorMessage = error.message.includes('rate limit') 
+        ? 'Trop de tentatives. Réessayez plus tard.' 
+        : error.message || 'Erreur lors de l\'inscription';
+      
+      setError(errorMessage);
+      toast.error(errorMessage);
+      return { 
+        data: null, 
+        error: new Error(errorMessage),
+        redirectTo: null
+      };
+    } finally {
+      setLoading(false);
     }
   };
 
   const signIn = async (email: string, password: string) => {
     try {
       setLoading(true);
+      setError(null);
       
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
 
-      if (error) {
-        throw error;
-      }
+      if (error) throw error;
+      if (!data.user) throw new Error('Aucun utilisateur trouvé');
 
-      if (!data.user) {
-        throw new Error('Aucun utilisateur trouvé');
-      }
+      // Vérifier le rôle dans la table profiles
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', data.user.id)
+        .single();
 
-      // Vérifier si c'est un admin
-      const isAdminUser = isAdminEmail(data.user.email);
-      
-      if (isAdminUser) {
-        // Créer un profil admin de base
-        const adminProfile = {
-          id: data.user.id,
-          email: data.user.email || '',
-          role: 'admin' as const,
-          first_name: 'Admin',
-          last_name: 'User',
-          country: 'Maroc', // Champ requis
-          is_verified: true,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-          // Champs optionnels
-          phone: '',
-          address: '',
-          city: '',
-          avatar_url: '',
-          description: '',
-          company_name: '',
-          partner_type: '',
-          commission_rate: 0,
-          bank_account: '',
-          iban: '',
-          total_earnings: 0,
-          pending_earnings: 0,
-          paid_earnings: 0
-        };
-        
-        // Mettre à jour l'état
-        setUser(data.user);
-        setSession(data.session);
-        setProfile(adminProfile);
-        
-        // Vérifier si le profil admin existe dans la base de données, sinon le créer
-        const { error: profileError } = await supabase
-          .from('profiles')
-          .upsert(adminProfile, { onConflict: 'id' });
-          
-        if (profileError) {
-          console.error('Erreur lors de la création du profil admin:', profileError);
+      if (profileError) {
+        if (isAdminEmail(data.user.email)) {
+          // Créer un profil admin minimal si pas trouvé
+          const adminProfile = {
+            id: data.user.id,
+            email: data.user.email || '',
+            role: 'admin' as const,
+            first_name: 'Admin',
+            last_name: 'User',
+            is_verified: true,
+            country: 'Maroc',
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+            phone: '',
+            address: '',
+            city: '',
+            company_name: '',
+            partner_type: '',
+          };
+
+          const { error: upsertError } = await supabase
+            .from('profiles')
+            .upsert(adminProfile, { onConflict: 'id' });
+
+          if (upsertError) {
+            console.error('Erreur lors de la création du profil admin:', upsertError);
+            throw new Error('Erreur lors de la mise à jour du profil administrateur');
+          }
+
+          setProfile(adminProfile);
+          setUser(data.user);
+          setSession(data.session);
+
+          return { role: 'admin' as const };
         }
-        
-        return { role: 'admin' as const };
-      } else {
-        // Pour les non-admins, charger le profil pour déterminer le rôle
-        const { data: profile, error: profileError } = await supabase
+        throw new Error(profileError.message || 'Profil utilisateur non trouvé');
+      }
+
+      // Mettre à jour les champs manquants si nécessaire
+      const updates: Partial<Profile> = {};
+      if (!profile.country) updates.country = 'Maroc';
+      if (!profile.updated_at) updates.updated_at = new Date().toISOString();
+
+      if (Object.keys(updates).length > 0) {
+        await supabase
           .from('profiles')
-          .select('*')
-          .eq('id', data.user.id)
+          .update(updates)
+          .eq('id', profile.id);
+      }
+
+      const updatedProfile = { ...profile, ...updates };
+      setProfile(updatedProfile);
+      setUser(data.user);
+      setSession(data.session);
+
+      // Déterminer le rôle
+      if (updatedProfile.role === 'admin') {
+        return { role: 'admin' as const };
+      } else if (updatedProfile.role === 'partenaire' || updatedProfile.role === 'partner') {
+        return { role: 'partner' as const };
+      }
+      return { role: 'client' as const };
+
+    } catch (error) {
+      console.error('Erreur lors de la connexion:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Échec de la connexion';
+      setError(errorMessage);
+      throw error;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const signInWithGoogle = async () => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (session?.user) {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('role')
+          .eq('id', session.user.id)
           .single();
           
-        if (profileError || !profile) {
-          throw new Error(profileError?.message || 'Profil utilisateur non trouvé');
-        }
-        
-        // S'assurer que le pays est défini (champ requis)
-        if (!profile.country) {
-          profile.country = 'Maroc';
-          // Mettre à jour le profil dans la base de données
-          await supabase
-            .from('profiles')
-            .update({ country: 'Maroc', updated_at: new Date().toISOString() })
-            .eq('id', profile.id);
-        }
-        
-        // Déterminer si c'est un partenaire (vérifier les variantes comme 'partner_tourism')
-        const isPartnerUser = profile.role?.startsWith('partner') || profile.role === 'partner';
-        
-        // Mettre à jour l'état avec les données du profil
-        setUser(data.user);
-        setSession(data.session);
-        setProfile(profile);
-        
-        // Retourner le rôle approprié
-        if (isPartnerUser) {
-          return { role: 'partner' as const };
+        if (profile && profile.role !== 'client') {
+          await supabase.auth.signOut();
+          throw new Error('La connexion avec Google est réservée aux comptes clients');
         }
         
         return { role: 'client' as const };
       }
+      
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${window.location.origin}/dashboard/client`,
+          queryParams: {
+            access_type: 'offline',
+            prompt: 'consent',
+          },
+        },
+      });
+
+      if (error) throw error;
+      
+      return { role: 'client' as const };
+      
     } catch (error) {
-      console.error('Erreur lors de la connexion:', error);
-      throw error;
-    } finally {
-      setLoading(false);
+      console.error('Error signing in with Google:', error);
+      throw new Error('Erreur lors de la connexion avec Google');
     }
   };
 
@@ -258,17 +334,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
       
-      // Réinitialiser tous les états
       setUser(null);
       setProfile(null);
       setSession(null);
       
-      // Supprimer les données de session du stockage local
       localStorage.removeItem('supabase.auth.token');
       
       console.log('Déconnexion réussie');
       
-      // Retourner une promesse résolue après la déconnexion
       return Promise.resolve();
     } catch (error: unknown) {
       console.error('Error signing out:', error);
@@ -278,72 +351,38 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const updateProfile = async (updates: Partial<Profile>) => {
-    if (!user) throw new Error('No user logged in');
+    if (!user) {
+      throw new Error('Aucun utilisateur connecté');
+    }
 
     try {
       const { error } = await supabase
         .from('profiles')
-        .update(updates)
+        .update({
+          ...updates,
+          updated_at: new Date().toISOString()
+        })
         .eq('id', user.id);
 
-      if (error) throw error;
-
-      // Recharger le profil
-      await loadProfile(user.id);
-    } catch (error: unknown) {
-      console.error('Error updating profile:', error);
-      const errorMessage = error instanceof Error ? error.message : 'Erreur lors de la mise à jour du profil';
-      throw new Error(errorMessage);
-    }
-  };
-
-  const signInWithGoogle = async () => {
-    try {
-      // Vérifier si l'utilisateur a un compte client
-      const { data: { session } } = await supabase.auth.getSession();
-      
-      if (session?.user) {
-        // Vérifier si l'utilisateur a un profil client
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('role')
-          .eq('id', session.user.id)
-          .single();
-          
-        if (profile && profile.role !== 'client') {
-          // Déconnecter l'utilisateur s'il n'est pas un client
-          await supabase.auth.signOut();
-          throw new Error('La connexion avec Google est réservée aux comptes clients');
-        }
-        
-        // Si c'est un client, retourner le rôle
-        return { role: 'client' as const };
+      if (error) {
+        console.error('Error updating profile:', error);
+        throw new Error('Erreur lors de la mise à jour du profil');
       }
-      
-      // Si pas de session, procéder à l'authentification OAuth
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-          redirectTo: `${window.location.origin}/dashboard/client`,
-        },
-      });
 
-      if (error) throw error;
-      
-      // Pour les nouveaux utilisateurs, nous supposerons qu'ils sont des clients
-      return { role: 'client' as const };
-      
+      // Recharger le profil mis à jour
+      await loadProfile(user.id);
     } catch (error) {
-      console.error('Error signing in with Google:', error);
-      throw new Error('Erreur lors de la connexion avec Google');
+      console.error('Error in updateProfile:', error);
+      throw error;
     }
   };
 
-  const value = {
+  const value: AuthContextType = {
     user,
     profile,
     session,
     loading,
+    error,
     signUp,
     signIn,
     signInWithGoogle,
@@ -352,5 +391,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     isAdmin: user ? isAdminEmail(user.email) : false,
   };
 
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+  return (
+    <AuthContext.Provider value={value}>
+      {!loading && children}
+    </AuthContext.Provider>
+  );
 };
+
+export default AuthProvider;

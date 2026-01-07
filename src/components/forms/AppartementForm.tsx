@@ -22,7 +22,7 @@ const AppartementForm: React.FC<AppartementFormProps> = ({ appartement, onClose,
     address: appartement?.address || '',
     bedrooms: appartement?.bedrooms || 1,
     bathrooms: appartement?.bathrooms || 1,
-    area_sqm: appartement?.area_sqm || '',
+    
     floor: appartement?.floor || '',
     has_elevator: appartement?.has_elevator ?? false,
     has_parking: appartement?.has_parking ?? false,
@@ -71,7 +71,7 @@ const AppartementForm: React.FC<AppartementFormProps> = ({ appartement, onClose,
         price_per_night: parseFloat(formData.price_per_night as any),
         bedrooms: parseInt(formData.bedrooms as any),
         bathrooms: parseInt(formData.bathrooms as any),
-        area_sqm: formData.area_sqm ? parseFloat(formData.area_sqm as any) : null,
+        
         floor: formData.floor ? parseInt(formData.floor as any) : null,
       };
 
@@ -231,17 +231,7 @@ const AppartementForm: React.FC<AppartementFormProps> = ({ appartement, onClose,
               />
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Surface (m²)
-              </label>
-              <input
-                type="number"
-                value={formData.area_sqm}
-                onChange={(e) => setFormData({ ...formData, area_sqm: e.target.value })}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-              />
-            </div>
+           
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">

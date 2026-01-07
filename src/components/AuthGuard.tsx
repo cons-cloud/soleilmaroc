@@ -89,11 +89,11 @@ const AuthGuard: React.FC<AuthGuardProps> = ({ children, onAuthRequired }) => {
                 onClick={() => {
                   // Enregistrer l'action à effectuer après la connexion
                   setPendingAction(() => {
-                    return () => {
+                      return () => {
                       // Après connexion : recharger la page pour permettre
                       // aux pages concernées de rouvrir le formulaire via pendingReservation
-                      window.location.reload();
-                    };
+                        window.location.reload();
+                      };
                   });
                   
                   // Rediriger vers la page de connexion avec l'état actuel

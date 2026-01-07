@@ -189,7 +189,7 @@ const Navbar: React.FC<NavbarProps> = () => {
             {!profile ? (
               <Link
                 to={ROUTES.BECOME_HOST}
-                className="mr-4 bg-linear-to-r from-yellow-700 to-yellow-400 text-white px-4 py-2 rounded-lg text-sm font-bold hover:from-yellow-700 hover:to-yellow-400 transition-all duration-300 shadow-md hover:shadow-lg flex items-center gap-2"
+                className="mr-4 bg-linear-to-r from-emerald-600 to-green-600 text-white px-4 py-2 rounded-lg text-sm font-bold hover:from-emerald-700 hover:to-green-700 transition-all duration-300 shadow-md hover:shadow-lg flex items-center gap-2"
               >
                 <UserPlus className="w-4 h-4" />
                 <span>Devenir hôte</span>

@@ -37,16 +37,22 @@ interface FormData {
   email: string;
   phone: string;
   specialRequests: string;
+  roomType?: string;
+  breakfastIncluded?: boolean;
 }
 
 const ServiceReservation: React.FC = () => {
-  const { type, id } = useParams<{ type: string; id: string }>();
+  const { type, id } = useParams<{ type?: string; id: string }>();
   const location = useLocation();
   const navigate = useNavigate();
   const { user } = useAuth() as { user: User | null };
+  
+  // Déterminer le type depuis l'URL ou le state
+  const serviceType = type || location.pathname.split('/')[1] || 'service';
 
   const [service, setService] = useState<ServiceData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState<FormData>({
     startDate: '',
     endDate: '',
@@ -55,14 +61,19 @@ const ServiceReservation: React.FC = () => {
     email: '',
     phone: '',
     specialRequests: '',
+    roomType: 'standard',
+    breakfastIncluded: false
   });
 
   const fetchService = useCallback(async (): Promise<void> => {
-    if (!id || !type) {
+    if (!id) {
       toast.error('Service non trouvé');
       navigate(ROUTES.HOME);
       return;
     }
+    
+    // Utiliser le type déterminé depuis l'URL ou le state
+    const currentType = type || serviceType;
 
     try {
       setIsLoading(true);
@@ -75,11 +86,70 @@ const ServiceReservation: React.FC = () => {
           ...state.formData
         }));
       }
+      
+      // Vérifier aussi sessionStorage pour une réservation en attente (après connexion ou inscription)
+      if (state?.fromLogin || state?.fromSignup) {
+        const pendingReservation = sessionStorage.getItem('pendingReservation');
+        if (pendingReservation) {
+          try {
+            const pending = JSON.parse(pendingReservation);
+            if (pending.formData) {
+              setFormData(prev => ({
+                ...prev,
+                ...pending.formData
+              }));
+            }
+            // Supprimer après utilisation
+            sessionStorage.removeItem('pendingReservation');
+            toast.success('Vos informations de réservation ont été restaurées');
+          } catch (e) {
+            console.error('Erreur lors de la restauration depuis sessionStorage:', e);
+            sessionStorage.removeItem('pendingReservation');
+          }
+        }
+      }
 
       // Déterminer la table en fonction du type de service
-      const tableName = type === 'hebergements' ? 'hebergements' :
-        type === 'voitures' ? 'voitures' :
-          type === 'circuits' ? 'circuits' : 'services';
+      let tableName = '';
+      
+      switch (currentType) {
+        case 'hotel':
+        case 'hotels':
+          tableName = 'hotels';
+          break;
+        case 'appartement':
+        case 'apartment':
+        case 'appartements':
+          tableName = 'appartements';
+          break;
+        case 'villa':
+        case 'villas':
+          tableName = 'villas';
+          break;
+        case 'voiture':
+        case 'car':
+        case 'voitures':
+        case 'cars':
+          tableName = 'locations_voitures';
+          break;
+        case 'circuit':
+        case 'tourism':
+        case 'tour':
+        case 'circuits':
+          tableName = 'circuits_touristiques';
+          break;
+        case 'hebergements':
+          tableName = 'hebergements';
+          break;
+        case 'voitures':
+          tableName = 'voitures';
+          break;
+        case 'circuits':
+          tableName = 'circuits';
+          break;
+        default:
+          tableName = 'services';
+      }
 
       const { data, error } = await supabase
         .from(tableName)
@@ -92,14 +162,34 @@ const ServiceReservation: React.FC = () => {
         throw new Error('Service non trouvé');
       }
 
-      // Mapper les données du service
+      // Mapper les données du service selon le type
+      let title = '';
+      let price = 0;
+      
+      if (tableName === 'hotels') {
+        title = data.name || 'Sans titre';
+        price = data.price_per_night || 0;
+      } else if (tableName === 'appartements' || tableName === 'villas') {
+        title = data.title || 'Sans titre';
+        price = data.price_per_night || 0;
+      } else if (tableName === 'locations_voitures') {
+        title = `${data.brand || ''} ${data.model || ''} ${data.year ? data.year : ''}`.trim();
+        price = data.price_per_day || 0;
+      } else if (tableName === 'circuits_touristiques') {
+        title = data.title || 'Sans titre';
+        price = data.price_per_person || 0;
+      } else {
+        title = data.nom || data.titre || data.name || data.title || 'Sans titre';
+        price = data.prix || data.prix_nuit || data.prix_jour || data.price_per_night || data.price_per_day || data.price_per_person || data.price || 0;
+      }
+
       setService({
         id: data.id,
-        title: data.nom || data.titre || data.name || 'Sans titre',
+        title: title,
         description: data.description || data.details || '',
-        price: data.prix || data.prix_nuit || data.prix_jour || 0,
-        images: data.images || [data.image_url].filter(Boolean) as string[],
-        type: type
+        price: price,
+        images: data.images || (data.image_url ? [data.image_url] : []) || [],
+        type: currentType
       });
 
       // Pré-remplir les champs si l'utilisateur est connecté
@@ -118,80 +208,44 @@ const ServiceReservation: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [id, type, user, navigate, location.state]);
+  }, [id, type, serviceType, user, navigate, location.state]);
 
   useEffect(() => {
     fetchService();
   }, [fetchService]);
 
+  const calculateNights = (start: string, end: string): number => {
+    if (!start || !end) return 0;
+    const startDate = new Date(start);
+    const endDate = new Date(end);
+    return Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
+  };
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+    const { name, value, type } = e.target as HTMLInputElement;
+    setFormData(prev => ({
+      ...prev,
+      [name]: type === 'number' ? parseInt(value, 10) : 
+              type === 'checkbox' ? (e.target as HTMLInputElement).checked : 
+              value
+    }));
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Vérifier les champs obligatoires
-    if (!formData.startDate || !formData.endDate) {
-      toast.error('Veuillez sélectionner des dates valides');
-      return;
-    }
-
-    if (!formData.fullName || !formData.email || !formData.phone) {
-      toast.error('Veuillez remplir tous les champs obligatoires');
-      return;
-    }
-
-    // Vérifier si la date de fin est après la date de début
-    const startDate = new Date(formData.startDate);
-    const endDate = new Date(formData.endDate);
+    // Validation des dates selon le type de service
+    const currentType = type || serviceType;
+    const isAccommodation = ['hotel', 'hotels', 'appartement', 'apartment', 'appartements', 'villa', 'villas'].includes(currentType);
+    const isCar = ['voiture', 'car', 'voitures', 'cars'].includes(currentType);
+    const isCircuit = ['circuit', 'tourism', 'tour', 'circuits'].includes(currentType);
     
-    if (endDate <= startDate) {
-      toast.error('La date de fin doit être postérieure à la date de début');
-      return;
-    }
-
-    // Calculer le nombre de nuits
-    const nights = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
-    const totalPrice = service ? service.price * nights : 0;
-
-    // Préparer les données de réservation
-    const reservationData = {
-      serviceType: type,
-      serviceId: id,
-      serviceTitle: service?.title,
-      servicePrice: service?.price,
-      startDate: formData.startDate,
-      endDate: formData.endDate,
-      guests: formData.guests,
-      totalPrice,
-      customerInfo: {
-        fullName: formData.fullName,
-        email: formData.email,
-        phone: formData.phone,
-        specialRequests: formData.specialRequests
-      }
-    };
-
-    // Si l'utilisateur n'est pas connecté, le rediriger vers la page de connexion
-    if (!user) {
-      navigate(ROUTES.LOGIN, {
-        state: {
-          from: ROUTES.PAYMENT,
-          reservationData,
-          message: 'Veuillez vous connecter ou créer un compte pour finaliser votre réservation.'
-        }
-      });
-      return;
-    }
-
-    // Si l'utilisateur est connecté, procéder à la réservation
-    try {
-      setIsLoading(true);
-      
-      // Vérifier si les dates sont valides
+    if (isAccommodation || isCar) {
       if (!formData.startDate || !formData.endDate) {
-        toast.error('Veuillez sélectionner des dates de séjour valides');
+        toast.error('Veuillez sélectionner les dates');
         return;
       }
-      
-      // Vérifier si la date de fin est après la date de début
+
       const startDate = new Date(formData.startDate);
       const endDate = new Date(formData.endDate);
       
@@ -199,66 +253,109 @@ const ServiceReservation: React.FC = () => {
         toast.error('La date de fin doit être postérieure à la date de début');
         return;
       }
+    } else if (isCircuit) {
+      if (!formData.startDate) {
+        toast.error('Veuillez sélectionner la date de départ');
+        return;
+      }
+    }
+
+    if (!user) {
+      // Sauvegarder les données du formulaire avant la redirection
+      const currentType = type || serviceType;
+      sessionStorage.setItem('pendingReservation', JSON.stringify({
+        formData,
+        serviceId: id,
+        serviceType: currentType
+      }));
+
+      navigate(ROUTES.LOGIN, { 
+        state: { 
+          from: location.pathname,
+          fromReservation: true,
+          reservationData: formData
+        } 
+      });
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    try {
+      // Calculer le prix total selon le type de service
+      const currentType = type || serviceType;
+      let totalPrice = 0;
+      let days = 0;
       
-      // Calculer le nombre de nuits
-      const nights = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
-      
-      // Créer la réservation dans la base de données
+      if (currentType === 'voiture' || currentType === 'car' || currentType === 'voitures' || currentType === 'cars') {
+        // Pour les voitures, calculer par jour
+        days = calculateNights(formData.startDate, formData.endDate);
+        totalPrice = service ? service.price * days : 0;
+      } else if (currentType === 'circuit' || currentType === 'tourism' || currentType === 'tour' || currentType === 'circuits') {
+        // Pour les circuits, prix par personne
+        totalPrice = service ? service.price * formData.guests : 0;
+      } else {
+        // Pour les hébergements (hôtels, appartements, villas), calculer par nuit
+        days = calculateNights(formData.startDate, formData.endDate);
+        let basePrice = service ? service.price * days : 0;
+        let breakfastPrice = formData.breakfastIncluded ? 150 * days : 0;
+        totalPrice = basePrice + breakfastPrice;
+      }
+
+      // Créer la réservation dans la table bookings
       const { data: reservation, error } = await supabase
-        .from('reservations')
-        .insert([
-          {
-            user_id: user.id,
-            service_id: id,
-            service_type: type,
-            start_date: formData.startDate,
-            end_date: formData.endDate,
-            guests: formData.guests,
-            total_price: service ? service.price * nights : 0,
-            status: 'en_attente',
-            special_requests: formData.specialRequests,
-            customer_name: formData.fullName,
-            customer_email: formData.email,
-            customer_phone: formData.phone
-          }
-        ])
+        .from('bookings')
+        .insert([{
+          client_id: user.id,
+          service_type: currentType,
+          service_id: service?.id,
+          start_date: formData.startDate,
+          end_date: formData.endDate,
+          guests: formData.guests,
+          total_price: totalPrice,
+          status: 'pending',
+          payment_status: 'pending',
+          customer_name: formData.fullName,
+          customer_email: formData.email,
+          customer_phone: formData.phone,
+          special_requests: formData.specialRequests,
+          room_type: formData.roomType,
+          breakfast_included: formData.breakfastIncluded
+        }])
         .select()
         .single();
-      
+
       if (error) throw error;
-      
-      // Rediriger vers la page de paiement après la réservation réussie
+
+      // Rediriger vers la page de paiement avec les détails de la réservation
       navigate(ROUTES.PAYMENT, {
         state: {
+          bookingId: reservation.id,
           reservationId: reservation.id,
-          serviceId: id,
-          serviceType: type,
+          bookingType: currentType,
+          serviceId: service?.id,
+          serviceType: currentType,
           serviceTitle: service?.title,
-          servicePrice: service?.price,
-          totalPrice: service ? service.price * nights : 0,
+          totalPrice: totalPrice,
+          startDate: formData.startDate,
+          endDate: formData.endDate,
+          guests: formData.guests,
+          customerInfo: {
+            name: formData.fullName,
+            email: formData.email,
+            phone: formData.phone
+          },
           formData: formData
         }
       });
-      
-    } catch (error) {
+
+      toast.success('Réservation créée avec succès !');
+    } catch (error: any) {
       console.error('Erreur lors de la réservation:', error);
-      toast.error('Une erreur est survenue lors de la réservation');
+      toast.error(error.message || 'Erreur lors de la création de la réservation');
     } finally {
-      setIsLoading(false);
+      setIsSubmitting(false);
     }
-  };
-
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: name === 'guests' ? parseInt(value, 10) : value
-    }));
-  };
-
-  const calculateNights = (start: string, end: string) => {
-    if (!start || !end) return 0;
-    return Math.ceil((new Date(end).getTime() - new Date(start).getTime()) / (1000 * 60 * 60 * 24));
   };
 
   if (isLoading) {
@@ -298,6 +395,9 @@ const ServiceReservation: React.FC = () => {
       </div>
     );
   }
+
+  const nights = calculateNights(formData.startDate, formData.endDate);
+  const totalPrice = service.price * nights * formData.guests;
 
   return (
     <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
@@ -385,6 +485,39 @@ const ServiceReservation: React.FC = () => {
                             required
                           />
                         </div>
+                      </div>
+
+                      <div>
+                        <label htmlFor="roomType" className="block text-sm font-medium text-gray-700 mb-1">
+                          Type de chambre <span className="text-red-500">*</span>
+                        </label>
+                        <select
+                          id="roomType"
+                          name="roomType"
+                          value={formData.roomType}
+                          onChange={handleInputChange}
+                          className="mt-1 block w-full pl-3 pr-10 py-2.5 text-base border-gray-300 focus:outline-none focus:ring-emerald-500 focus:border-emerald-500 sm:text-sm rounded-lg"
+                          required
+                        >
+                          <option value="standard">Standard</option>
+                          <option value="superior">Supérieure</option>
+                          <option value="deluxe">Deluxe</option>
+                          <option value="suite">Suite</option>
+                        </select>
+                      </div>
+
+                      <div className="flex items-center">
+                        <input
+                          id="breakfastIncluded"
+                          name="breakfastIncluded"
+                          type="checkbox"
+                          checked={formData.breakfastIncluded}
+                          onChange={handleInputChange}
+                          className="h-4 w-4 text-emerald-600 focus:ring-emerald-500 border-gray-300 rounded"
+                        />
+                        <label htmlFor="breakfastIncluded" className="ml-2 block text-sm text-gray-700">
+                          Petit-déjeuner inclus (+150 MAD/nuit)
+                        </label>
                       </div>
                     </div>
 
@@ -476,10 +609,18 @@ const ServiceReservation: React.FC = () => {
                     <div className="pt-6">
                       <button
                         type="submit"
-                        disabled={isLoading}
+                        disabled={isSubmitting}
                         className="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-emerald-600 hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                       >
-                        {isLoading ? 'Traitement...' : 'Confirmer la réservation'}
+                        {isSubmitting ? (
+                          <>
+                            <svg className="animate-spin -ml-1 mr-2 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                            Traitement...
+                          </>
+                        ) : 'Confirmer la réservation'}
                       </button>
                     </div>
                   </form>
@@ -512,23 +653,34 @@ const ServiceReservation: React.FC = () => {
                             </div>
                             
                             {formData.startDate && formData.endDate && (
-                              <div className="mt-2">
-                                <div className="flex justify-between text-sm">
-                                  <span className="text-gray-500">Durée du séjour</span>
-                                  <span className="font-medium text-gray-900">
-                                    {calculateNights(formData.startDate, formData.endDate)} nuits
-                                  </span>
-                                </div>
-                                
-                                <div className="mt-2 pt-2 border-t border-gray-200">
-                                  <div className="flex justify-between text-base font-medium text-gray-900">
-                                    <span>Total</span>
-                                    <span>
-                                      {calculateNights(formData.startDate, formData.endDate) * service.price} MAD
+                              <>
+                                <div className="mt-2">
+                                  <div className="flex justify-between text-sm">
+                                    <span className="text-gray-500">Durée du séjour</span>
+                                    <span className="font-medium text-gray-900">
+                                      {nights} nuit{nights > 1 ? 's' : ''}
                                     </span>
                                   </div>
+                                  
+                                  {formData.breakfastIncluded && (
+                                    <div className="mt-1 flex justify-between text-sm">
+                                      <span className="text-gray-500">Petit-déjeuner</span>
+                                      <span className="font-medium text-gray-900">
+                                        +{150 * nights} MAD
+                                      </span>
+                                    </div>
+                                  )}
+                                  
+                                  <div className="mt-2 pt-2 border-t border-gray-200">
+                                    <div className="flex justify-between text-base font-medium text-gray-900">
+                                      <span>Total</span>
+                                      <span>
+                                        {totalPrice + (formData.breakfastIncluded ? 150 * nights : 0)} MAD
+                                      </span>
+                                    </div>
+                                  </div>
                                 </div>
-                              </div>
+                              </>
                             )}
                           </div>
                         </div>

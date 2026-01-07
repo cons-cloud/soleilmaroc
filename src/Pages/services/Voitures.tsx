@@ -1,203 +1,176 @@
-import { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import ServiceHero from "../../components/ServiceHero";
-import ServiceCard from '../../components/ServiceCard';
-import { useFetchData } from '../../hooks/useFetchData';
+import ServiceHero from '../../components/ServiceHero';
 import LoadingState from '../../components/LoadingState';
+import CarCard from '../../components/carCard';
+import { useCars } from '../../hooks/useCars';
 
-// Interface pour les données d'une voiture
-interface Voiture {
-  id: string;
-  title: string;
-  description: string;
-  images: string[];
-  price_per_day: number;
-  brand: string;
-  model: string;
-  year: number;
-  fuel_type: string;
-  transmission: string;
-  seats: number;
-  doors: number;
-  has_ac: boolean;
-  city: string;
-  available: boolean;
-  rating?: number;
-  features?: string[];
-  [key: string]: any;
-}
-
-
-const Voitures = () => {
-  // États locaux
-  const [selectedCity, setSelectedCity] = useState<string | null>(null);
+const VoituresPage: React.FC = () => {
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedCity, setSelectedCity] = useState<string>('');
+  const { cars, loading, error, refetch } = useCars();
   const navigate = useNavigate();
-  
-  // Récupération des données avec le hook personnalisé
-  const { 
-    data: voitures = [], 
-    isLoading, 
-    error 
-  } = useFetchData<Voiture>('locations_voitures', '*');
-  
-  // Gestion de la sélection d'une ville
-  const handleCitySelect = (city: string | null) => {
-    setSelectedCity(city);
-  };
-  
-  // Filtrage des voitures par ville si une ville est sélectionnée
-  const filteredVoitures = selectedCity
-    ? voitures.filter(voiture => voiture.city === selectedCity)
-    : voitures;
 
-  // Extraction des villes uniques pour les filtres
-  const cities = Array.from(new Set(voitures.map(voiture => voiture.city))).filter(Boolean) as string[];
-  
-  // Gestion de la réservation
-  const handleBookNow = (voiture: Voiture) => {
-    // Rediriger vers la page de réservation avec les détails de la voiture
-    navigate(`/reservation/voiture/${voiture.id}`, {
+  const handleBookNow = useCallback((car: any) => {
+    if (!car?.id) {
+      console.error('handleBookNow: invalid car', car);
+      return;
+    }
+    navigate(`/voitures/${car.id}/reserver`, {
       state: {
         service: {
-          id: voiture.id,
-          title: `${voiture.brand} ${voiture.model}`,
-          description: voiture.description,
-          price: voiture.price_per_day,
-          images: voiture.images,
+          id: car.id,
+          title: `${car.marque} ${car.modele}`,
+          price: car.prix_jour,
+          images: Array.isArray(car.images) ? car.images : [],
           type: 'voiture',
-          city: voiture.city,
-          maxGuests: voiture.seats || 5,
-          details: {
-            marque: voiture.brand,
-            modele: voiture.model,
-            annee: voiture.year,
-            carburant: voiture.fuel_type,
-            transmission: voiture.transmission,
-            places: voiture.seats,
-            portes: voiture.doors,
-            clim: voiture.has_ac ? 'Oui' : 'Non',
-            caracteristiques: voiture.features || []
-          }
+          city: car.ville,
+          marque: car.marque,
+          modele: car.modele,
+          annee: car.annee,
+          type_carburant: car.type_carburant,
+          boite_vitesse: car.boite_vitesse
         }
       }
     });
-  };
-  
-  // Gestion de la recherche
-  const handleSearch = (query: string) => {
-    console.log('Recherche de voiture:', query);
-    // Implémentez la logique de recherche ici
-  };
+  }, [navigate]);
 
-  // Affichage du chargement ou des erreurs
-  if (isLoading || error) {
-    return (
-      <div className="min-h-screen">
-        <ServiceHero 
-          title="Location de voitures"
-          subtitle="Trouvez la voiture parfaite pour vos déplacements au Maroc"
-          images={[
-            '/assets/hero/cars-1.jpg',
-            '/assets/hero/cars-2.jpg',
-            '/assets/hero/cars-3.jpg'
-          ]}
-        />
-        <div className="container mx-auto px-4 py-12">
-          <LoadingState 
-            fullScreen={false}
-            text={error ? 'Erreur lors du chargement' : 'Chargement des véhicules...'}
-            className={error ? 'text-red-500' : ''}
-          />
-        </div>
-      </div>
-    );
-  }
+  const handleViewDetails = useCallback((carId: string) => {
+    navigate(`/voitures/${carId}`);
+  }, [navigate]);
+
+  // Filtrer les voitures par recherche et ville
+  const filteredCars = cars.filter(car => {
+    const matchesSearch = `${car.marque} ${car.modele} ${car.ville} ${car.description || ''}`
+      .toLowerCase()
+      .includes(searchQuery.toLowerCase());
+    
+    const matchesCity = !selectedCity || car.ville.toLowerCase() === selectedCity.toLowerCase();
+    
+    return matchesSearch && matchesCity;
+  });
+
+  // Extraire les villes uniques pour le filtre
+  const cities = Array.from(new Set(cars.map(car => car.ville).filter(Boolean)));
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <ServiceHero
-        title="Location de Voitures"
-        subtitle="Trouvez la voiture parfaite pour vos déplacements au Maroc"
-        images={[
-          '/assets/hero/cars-1.jpg',
-          '/assets/hero/cars-2.jpg',
-          '/assets/hero/cars-3.jpg'
-        ]}
-        searchPlaceholder="Rechercher une voiture, une marque, une ville..."
-        onSearch={handleSearch}
+      <ServiceHero 
+        title="Locations de voitures" 
+        subtitle="Trouvez la voiture idéale" 
+        images={['/assets/hero/A.jpg', '/assets/hero/B.jpg']} 
+        searchPlaceholder="Rechercher une voiture..."
+        onSearch={setSearchQuery}
       />
       
-      <div className="container mx-auto px-4 py-12">
-        {/* Filtres par ville */}
-        {cities.length > 0 && (
-          <div className="flex flex-wrap gap-2 mb-8 overflow-x-auto pb-2">
-            <button
-              onClick={() => handleCitySelect(null)}
-              className={`px-4 py-2 rounded-full text-sm whitespace-nowrap ${
-                !selectedCity 
-                  ? 'bg-emerald-600 text-white' 
-                  : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
-              } transition-colors`}
+      <div className="max-w-7xl mx-auto py-12 px-4">
+        {/* Filtres */}
+        <div className="mb-8 flex flex-col sm:flex-row gap-4">
+          <div className="w-full sm:w-64">
+            <label htmlFor="city" className="block text-sm font-medium text-gray-700 mb-1">
+              Ville
+            </label>
+            <select
+              id="city"
+              value={selectedCity}
+              onChange={(e) => setSelectedCity(e.target.value)}
+              className="w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-emerald-500 text-sm"
             >
-              Toutes les villes
-            </button>
-            {cities.map((city) => (
-              <button
-                key={city}
-                onClick={() => handleCitySelect(city)}
-                className={`px-4 py-2 rounded-full text-sm whitespace-nowrap ${
-                  selectedCity === city 
-                    ? 'bg-emerald-600 text-white' 
-                    : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
-                } transition-colors`}
-              >
-                {city}
-              </button>
-            ))}
+              <option value="">Toutes les villes</option>
+              {cities.map(city => (
+                <option key={city} value={city}>
+                  {city}
+                </option>
+              ))}
+            </select>
           </div>
-        )}
-
-        {/* Liste des voitures */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredVoitures.map((voiture) => (
-            <ServiceCard
-              key={voiture.id}
-              id={voiture.id}
-              title={`${voiture.brand} ${voiture.model}`}
-              description={voiture.description}
-              images={voiture.images}
-              price={voiture.price_per_day}
-              rating={voiture.rating}
-              tags={[
-                voiture.year.toString(),
-                voiture.transmission,
-                `${voiture.seats} places`,
-                voiture.fuel_type
-              ]}
-              link={`/voitures/${voiture.id}`}
-              onBookNow={() => handleBookNow(voiture)}
+          
+          <div className="flex-1">
+            <label htmlFor="search" className="block text-sm font-medium text-gray-700 mb-1">
+              Rechercher
+            </label>
+            <input
+              type="text"
+              id="search"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Marque, modèle, ville..."
+              className="w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-emerald-500 text-sm"
             />
-          ))}
+          </div>
         </div>
 
-        {filteredVoitures.length === 0 && (
+        {loading ? (
+          <LoadingState fullScreen={false} text="Chargement des voitures..." />
+        ) : error ? (
           <div className="text-center py-12">
-            <p className="text-gray-500">Aucun véhicule disponible pour le moment.</p>
-            {selectedCity && (
-              <button
-                onClick={() => setSelectedCity(null)}
-                className="mt-4 text-emerald-600 hover:text-emerald-800 font-medium"
-              >
-                Voir tous les véhicules
-              </button>
-            )}
+            <p className="text-red-500 mb-4">Erreur lors du chargement des voitures : {error}</p>
+            <button
+              onClick={refetch}
+              className="bg-emerald-600 text-white px-4 py-2 rounded-lg hover:bg-emerald-700 transition-colors"
+            >
+              Réessayer
+            </button>
           </div>
+        ) : (
+          <>
+            <div className="mb-4 flex justify-between items-center">
+              <h2 className="text-xl font-semibold text-gray-900">
+                {filteredCars.length} {filteredCars.length > 1 ? 'voitures disponibles' : 'voiture disponible'}
+              </h2>
+            </div>
+
+            {filteredCars.length > 0 ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                {filteredCars.map(car => (
+                  <CarCard
+                    key={car.id}
+                    {...car}
+                    onBook={() => handleBookNow(car)}
+                    onViewDetails={() => handleViewDetails(car.id)}
+                  />
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-16 bg-white rounded-lg shadow">
+                <svg
+                  className="mx-auto h-12 w-12 text-gray-400"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={1.5}
+                    d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"
+                  />
+                </svg>
+                <h3 className="mt-2 text-lg font-medium text-gray-900">
+                  Aucune voiture trouvée
+                </h3>
+                <p className="mt-1 text-sm text-gray-500">
+                  Essayez de modifier vos critères de recherche
+                </p>
+                <div className="mt-6">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSearchQuery('');
+                      setSelectedCity('');
+                    }}
+                    className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-emerald-600 hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500"
+                  >
+                    Réinitialiser les filtres
+                  </button>
+                </div>
+              </div>
+            )}
+          </>
         )}
       </div>
-
-      {/* Formulaire de réservation */}
     </div>
   );
 };
 
-export default Voitures;
+export default VoituresPage;

@@ -44,20 +44,81 @@ export default function Login() {
     try {
       const { role } = await signIn(email, password);
       
-      // Vérifier s'il y a des données de réservation dans l'état de navigation
+      // Vérifier s'il y a des données de réservation dans l'état de navigation ou sessionStorage
       const locationState = location.state as { 
         from?: string;
         fromReservation?: boolean;
         reservationData?: any;
       };
 
-      // Si l'utilisateur venait d'une réservation
+      // Vérifier sessionStorage pour une réservation en attente (PRIORITÉ ABSOLUE)
+      const pendingReservation = sessionStorage.getItem('pendingReservation');
+      let reservationPath = null;
+      
+      if (pendingReservation) {
+        try {
+          const pending = JSON.parse(pendingReservation);
+          // Reconstruire le chemin de réservation
+          const serviceType = pending.serviceType || 'service';
+          const serviceId = pending.serviceId;
+          
+          // Déterminer le chemin selon le type
+          switch (serviceType) {
+            case 'appartement':
+            case 'apartment':
+            case 'appartements':
+              reservationPath = `/appartements/${serviceId}/reserver`;
+              break;
+            case 'villa':
+            case 'villas':
+              reservationPath = `/villas/${serviceId}/reserver`;
+              break;
+            case 'voiture':
+            case 'car':
+            case 'voitures':
+            case 'cars':
+              reservationPath = `/voitures/${serviceId}/reserver`;
+              break;
+            case 'circuit':
+            case 'tourism':
+            case 'tour':
+            case 'circuits':
+              reservationPath = `/tourisme/${serviceId}/reserver`;
+              break;
+            case 'hotel':
+            case 'hotels':
+              reservationPath = `/hotels/${serviceId}/reserver`;
+              break;
+            default:
+              reservationPath = `/${serviceType}/${serviceId}/reserver`;
+          }
+          
+          // Rediriger vers la page de réservation avec les données sauvegardées
+          // IMPORTANT: Même pour les clients, on redirige vers la réservation, pas le dashboard
+          navigate(reservationPath, {
+            state: {
+              fromLogin: true,
+              formData: pending.formData,
+              serviceId: pending.serviceId,
+              serviceType: pending.serviceType
+            }
+          });
+          // Ne pas supprimer sessionStorage ici, laisser ServiceReservation le faire
+          return;
+        } catch (e) {
+          console.error('Erreur lors de la restauration de la réservation:', e);
+          sessionStorage.removeItem('pendingReservation');
+        }
+      }
+
+      // Si l'utilisateur venait d'une réservation (ancien système)
       if (locationState?.fromReservation) {
         // Revenir à la page d'où il venait
         navigate(locationState.from || '/', { 
           state: { 
             fromLogin: true,
-            fromReservation: true
+            fromReservation: true,
+            reservationData: locationState.reservationData
           } 
         });
         return;
@@ -75,6 +136,7 @@ export default function Login() {
       }
       
       // Redirection normale en fonction du rôle
+      // Note: Si pendingReservation existait, on serait déjà redirigé vers la réservation
       switch (role) {
         case 'admin':
           navigate('/dashboard/admin');
@@ -83,6 +145,7 @@ export default function Login() {
           navigate('/dashboard/partner');
           break;
         case 'client':
+          // Si pas de réservation en attente, rediriger vers le dashboard client
           navigate('/dashboard/client');
           break;
         default:

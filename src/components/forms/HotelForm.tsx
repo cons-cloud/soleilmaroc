@@ -23,7 +23,6 @@ const HotelForm: React.FC<HotelFormProps> = ({ hotel, onClose, onSuccess }) => {
     stars: hotel?.stars || 3,
     amenities: hotel?.amenities || [],
     contact_phone: hotel?.contact_phone || '',
-    contact_email: hotel?.contact_email || '',
     available: hotel?.available ?? true,
     featured: hotel?.featured ?? false,
   });
@@ -36,7 +35,7 @@ const HotelForm: React.FC<HotelFormProps> = ({ hotel, onClose, onSuccess }) => {
 
     setUploadingImages(true);
     try {
-      const uploadedUrls = await uploadMultipleImages(Array.from(files), 'hotels');
+      const uploadedUrls = await uploadMultipleImages(Array.from(files), 'services', 'hotels');
       setImages([...images, ...uploadedUrls]);
       toast.success(`${uploadedUrls.length} photo(s) ajoutée(s)`);
     } catch (error) {
@@ -48,7 +47,7 @@ const HotelForm: React.FC<HotelFormProps> = ({ hotel, onClose, onSuccess }) => {
 
   const handleDeleteImage = async (imageUrl: string, index: number) => {
     try {
-      await deleteImage(imageUrl);
+      await deleteImage(imageUrl, 'services');
       setImages(images.filter((_: string, i: number) => i !== index));
       toast.success('Photo supprimée');
     } catch (error) {

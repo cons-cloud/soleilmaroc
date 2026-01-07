@@ -26,15 +26,8 @@ const Payment: React.FC = () => {
   // Extraire les données de l'URL ou de l'état de navigation
   const { 
     bookingId, 
-    bookingType, 
     totalPrice, 
     serviceTitle, 
-    serviceType,
-    serviceId,
-    startDate,
-    endDate,
-    guests,
-    customerInfo,
     fromLogin
   } = location.state || {};
 
@@ -71,20 +64,40 @@ const Payment: React.FC = () => {
     setLoading(true);
     
     try {
+      // Normaliser le service_type
+      const currentServiceType = reservationData.serviceType || location.state?.serviceType || 'hotel';
+      let normalizedType = currentServiceType;
+      
+      // Normaliser les types pour correspondre à la table bookings
+      if (['appartement', 'apartment', 'appartements'].includes(currentServiceType)) {
+        normalizedType = 'appartement';
+      } else if (['villa', 'villas'].includes(currentServiceType)) {
+        normalizedType = 'villa';
+      } else if (['voiture', 'car', 'voitures', 'cars'].includes(currentServiceType)) {
+        normalizedType = 'voiture';
+      } else if (['circuit', 'tourism', 'tour', 'circuits'].includes(currentServiceType)) {
+        normalizedType = 'circuit';
+      } else if (['hotel', 'hotels'].includes(currentServiceType)) {
+        normalizedType = 'hotel';
+      }
+
+      // Créer la réservation dans la table bookings (table unifiée)
       const { data: reservation, error } = await supabase
-        .from(`${reservationData.serviceType}_bookings`)
+        .from('bookings')
         .insert([{
-          user_id: user.id,
+          client_id: user.id,
+          service_type: normalizedType,
           service_id: reservationData.serviceId,
           start_date: reservationData.startDate,
           end_date: reservationData.endDate,
-          guests: reservationData.guests,
+          guests: reservationData.guests || 1,
           total_price: reservationData.totalPrice,
-          status: 'en_attente',
-          customer_name: reservationData.customerInfo.fullName,
-          customer_email: reservationData.customerInfo.email,
-          customer_phone: reservationData.customerInfo.phone,
-          special_requests: reservationData.customerInfo.specialRequests || ''
+          status: 'pending',
+          payment_status: 'pending',
+          customer_name: reservationData.customerInfo?.fullName || reservationData.customerInfo?.name,
+          customer_email: reservationData.customerInfo?.email,
+          customer_phone: reservationData.customerInfo?.phone,
+          special_requests: reservationData.customerInfo?.specialRequests || ''
         }])
         .select()
         .single();
@@ -96,9 +109,9 @@ const Payment: React.FC = () => {
         state: {
           ...location.state,
           bookingId: reservation.id,
-          bookingType: reservationData.serviceType,
+          bookingType: normalizedType,
           totalPrice: reservationData.totalPrice,
-          serviceTitle: reservationData.serviceTitle
+          serviceTitle: reservationData.serviceTitle || serviceTitle
         },
         replace: true
       });
@@ -117,29 +130,30 @@ const Payment: React.FC = () => {
     setLoading(true);
 
     try {
-      // 1. Créer le paiement
+      // 1. Créer le paiement dans la table payments
       const { data: payment, error: paymentError } = await supabase
         .from('payments')
         .insert([{
           booking_id: bookingId,
-          user_id: profile?.id,
+          client_id: profile?.id || user?.id,
           amount: totalPrice,
-          status: 'paid',
+          status: 'succeeded',
           payment_method: paymentMethod,
           transaction_id: `TXN-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+          paid_at: new Date().toISOString(),
           created_at: new Date().toISOString(),
         }])
         .select()
         .single();
 
-      if (paymentError) throw paymentError;
+      if (paymentError) {
+        console.error('Erreur création paiement:', paymentError);
+        throw paymentError;
+      }
 
-      // 2. Mettre à jour le statut de la réservation
-      const tableName = bookingType === 'car' ? 'car_bookings' :
-                       bookingType === 'tourism' ? 'tourism_bookings' : 'property_bookings';
-
+      // 2. Mettre à jour le statut de la réservation dans la table bookings
       const { error: bookingError } = await supabase
-        .from(tableName)
+        .from('bookings')
         .update({
           status: 'confirmed',
           payment_status: 'paid',
@@ -149,7 +163,43 @@ const Payment: React.FC = () => {
 
       if (bookingError) throw bookingError;
 
-      toast.success('Paiement effectué avec succès !');
+      // 3. Envoyer l'email de confirmation
+      try {
+        // Récupérer les détails de la réservation pour l'email
+        const { data: bookingData } = await supabase
+          .from('bookings')
+          .select('customer_email, customer_name, service_type, start_date, end_date')
+          .eq('id', bookingId)
+          .single();
+
+        if (bookingData?.customer_email) {
+          // Appeler la fonction Supabase Edge Function pour envoyer l'email
+          const { error: emailError } = await supabase.functions.invoke('send-booking-confirmation', {
+            body: {
+              bookingId,
+              paymentId: payment.id,
+              customerEmail: bookingData.customer_email,
+              customerName: bookingData.customer_name,
+              serviceTitle,
+              totalPrice,
+              serviceType: bookingData.service_type,
+              startDate: bookingData.start_date,
+              endDate: bookingData.end_date,
+              transactionId: payment.transaction_id
+            }
+          });
+
+          if (emailError) {
+            console.error('Erreur envoi email:', emailError);
+            // Ne pas bloquer le processus si l'email échoue
+          }
+        }
+      } catch (emailErr) {
+        console.error('Erreur lors de l\'envoi de l\'email:', emailErr);
+        // Ne pas bloquer le processus si l'email échoue
+      }
+
+      toast.success('Paiement effectué avec succès ! Un email de confirmation a été envoyé.');
       
       // Rediriger vers la page de confirmation
       navigate('/payment/success', {

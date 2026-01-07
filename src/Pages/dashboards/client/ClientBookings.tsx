@@ -39,79 +39,128 @@ const ClientBookings = () => {
       
       if (!user?.id) {
         console.log('Aucun utilisateur connecté');
+        setError('Veuillez vous connecter pour voir vos réservations');
+        setLoading(false);
         return;
       }
 
       console.log('Récupération des réservations pour l\'utilisateur:', user.id);
       
-      // 1. Récupérer d'abord les réservations
+      // 1. Récupérer d'abord les réservations avec une meilleure gestion des erreurs
       const { data: bookingsData, error: bookingsError } = await supabase
         .from('bookings')
         .select('*')
-        .eq('client_id', user.id)  // Correction: utilisation de client_id au lieu de user_id
+        .eq('user_id', user.id)
         .order('created_at', { ascending: false });
 
       console.log('Résultats de la requête bookings:', { bookingsData, bookingsError });
 
       if (bookingsError) {
-        console.error('Erreur lors de la récupération des réservations:', bookingsError);
-        throw new Error(`Erreur lors du chargement des réservations: ${bookingsError.message}`);
-      }
-
-      if (!bookingsData || bookingsData.length === 0) {
-        setBookings([]);
+        console.error('Erreur lors de la récupération des réservations:', {
+          message: bookingsError.message,
+          code: bookingsError.code,
+          details: bookingsError.details,
+          hint: bookingsError.hint
+        });
+        
+        if (bookingsError.code === '42501') { // Erreur de permission
+          setError('Vous n\'avez pas les permissions nécessaires pour voir ces réservations');
+        } else {
+          throw new Error(`Erreur lors du chargement des réservations: ${bookingsError.message}`);
+        }
         return;
       }
 
       if (!bookingsData || bookingsData.length === 0) {
         console.log('Aucune réservation trouvée pour cet utilisateur');
         setBookings([]);
+        setLoading(false);
         return;
       }
 
-      // 2. Récupérer les IDs des services uniques
-      const serviceIds = bookingsData
-        .map(b => b.service_id)
-        .filter((id): id is string => !!id);
+      // 2. Grouper les réservations par type de service
+      const bookingsByType: { [key: string]: any[] } = {};
+      bookingsData.forEach(booking => {
+        const serviceType = booking.service_type || 'service';
+        if (!bookingsByType[serviceType]) {
+          bookingsByType[serviceType] = [];
+        }
+        bookingsByType[serviceType].push(booking);
+      });
+
+      // 3. Récupérer les services depuis les bonnes tables
+      const servicesMap = new Map();
       
-      console.log('ID utilisateur:', user.id);
-      console.log('Réservations trouvées:', bookingsData);
-      console.log('IDs de services:', serviceIds);
-      
-      console.log('IDs des services à récupérer:', serviceIds);
+      for (const [serviceType, bookings] of Object.entries(bookingsByType)) {
+        const serviceIds = bookings
+          .map(b => b.service_id)
+          .filter((id): id is string => !!id);
+        
+        if (serviceIds.length === 0) continue;
 
-      let servicesData = [];
-      if (serviceIds.length > 0) {
-        // 3. Récupérer les détails des services
-        const { data: services, error: servicesError } = await supabase
-          .from('services')
-          .select('*')
-          .in('id', serviceIds);
+        let tableName = 'services';
+        switch (serviceType) {
+          case 'hotel':
+          case 'hotels':
+            tableName = 'hotels';
+            break;
+          case 'appartement':
+          case 'apartment':
+          case 'appartements':
+            tableName = 'appartements';
+            break;
+          case 'villa':
+          case 'villas':
+            tableName = 'villas';
+            break;
+          case 'voiture':
+          case 'car':
+          case 'voitures':
+          case 'cars':
+            tableName = 'locations_voitures';
+            break;
+          case 'circuit':
+          case 'tourism':
+          case 'tour':
+          case 'circuits':
+            tableName = 'circuits_touristiques';
+            break;
+        }
 
-        console.log('Résultats de la requête services:', { services, servicesError });
+        try {
+          const { data: services, error: servicesError } = await supabase
+            .from(tableName)
+            .select('*')
+            .in('id', serviceIds);
 
-        if (servicesError) {
-          console.error('Erreur lors de la récupération des services:', servicesError);
-          // On continue même en cas d'erreur, on affichera juste moins d'informations
-        } else if (services) {
-          servicesData = services;
+          if (servicesError) {
+            console.error(`Erreur lors de la récupération des ${serviceType}:`, servicesError);
+            continue;
+          }
+
+          if (services) {
+            services.forEach(service => {
+              servicesMap.set(service.id, {
+                ...service,
+                title: service.title || service.name || 'Sans titre',
+                image_url: service.images?.[0] || service.image || service.image_url || null,
+                type: serviceType
+              });
+            });
+          }
+        } catch (err) {
+          console.error(`Erreur lors du chargement des ${serviceType}:`, err);
         }
       }
-
-      // Créer une map pour un accès rapide aux services par ID
-      const servicesMap = new Map(servicesData.map(service => [service.id, service]));
-
-      console.log('Services chargés:', servicesMap.size);
 
       // 4. Combiner les données
       const formattedBookings = bookingsData.map(booking => {
         const service = booking.service_id ? servicesMap.get(booking.service_id) : null;
         return {
           ...booking,
-          service_title: service?.title || 'Service inconnu',
-          service_image: service?.image_url || null,
-          service_type: service?.type || 'service',
-          // Assurez-vous que ces champs existent dans votre objet booking
+          service_title: service?.title || booking.service_title || 'Service inconnu',
+          service_image: service?.image_url || service?.images?.[0] || null,
+          service_type: booking.service_type || service?.type || 'service',
           start_date: booking.start_date || booking.created_at,
           end_date: booking.end_date || null,
           total_price: booking.total_price || 0,
@@ -119,9 +168,7 @@ const ClientBookings = () => {
         };
       });
 
-      console.log('Réservations formatées:', formattedBookings);
-
-      // 5. Appliquer le filtre si nécessaire
+      // 5. Appliquer le filtre
       const filteredBookings = filter === 'all' 
         ? formattedBookings 
         : formattedBookings.filter(booking => booking.status === filter);
@@ -130,7 +177,7 @@ const ClientBookings = () => {
       
     } catch (err) {
       console.error('Erreur lors du chargement des réservations:', err);
-      setError('Impossible de charger les réservations. Veuillez réessayer.');
+      setError('Une erreur est survenue lors du chargement de vos réservations. Veuillez réessayer plus tard.');
       toast.error('Erreur lors du chargement des réservations');
     } finally {
       setLoading(false);
@@ -141,7 +188,6 @@ const ClientBookings = () => {
   useEffect(() => {
     if (!user?.id) return;
 
-    // S'abonner aux mises à jour en temps réel
     const channel = supabase
       .channel('bookings_changes')
       .on('postgres_changes', {
@@ -150,11 +196,10 @@ const ClientBookings = () => {
         table: 'bookings',
         filter: `user_id=eq.${user.id}`
       }, () => {
-        loadBookings(); // Recharger les réservations à chaque mise à jour
+        loadBookings();
       })
       .subscribe();
 
-    // Nettoyer l'abonnement lors du démontage du composant
     return () => {
       if (channel) {
         supabase.removeChannel(channel);
@@ -179,7 +224,8 @@ const ClientBookings = () => {
           status: 'cancelled',
           updated_at: new Date().toISOString()
         })
-        .eq('id', bookingId);
+        .eq('id', bookingId)
+        .eq('user_id', user?.id); // S'assurer que l'utilisateur ne peut annuler que ses propres réservations
 
       if (error) throw error;
       
@@ -201,10 +247,10 @@ const ClientBookings = () => {
     }
   };
 
-  // Vérifier si l'utilisateur est connecté
+  // Rendu conditionnel
   if (!user) {
     return (
-      <div className="min-h-screen bg-linear-to-br from-emerald-50 to-green-50 pt-24 pb-12">
+      <div className="min-h-screen bg-gradient-to-br from-emerald-50 to-green-50 pt-24 pb-12">
         <div className="container mx-auto px-4">
           <div className="max-w-6xl mx-auto">
             <div className="bg-white/80 backdrop-blur-sm rounded-xl shadow-sm p-8">
@@ -228,10 +274,9 @@ const ClientBookings = () => {
     );
   }
 
-  // Afficher le chargement
   if (loading && bookings.length === 0) {
     return (
-      <div className="min-h-screen bg-linear-to-br from-emerald-50 to-green-50 pt-24 pb-12">
+      <div className="min-h-screen bg-gradient-to-br from-emerald-50 to-green-50 pt-24 pb-12">
         <div className="container mx-auto px-4">
           <div className="max-w-6xl mx-auto">
             <div className="bg-white/80 backdrop-blur-sm rounded-xl shadow-sm p-8">
@@ -247,10 +292,9 @@ const ClientBookings = () => {
     );
   }
 
-  // Afficher les erreurs
   if (error) {
     return (
-      <div className="min-h-screen bg-linear-to-br from-emerald-50 to-green-50 pt-24 pb-12">
+      <div className="min-h-screen bg-gradient-to-br from-emerald-50 to-green-50 pt-24 pb-12">
         <div className="container mx-auto px-4">
           <div className="max-w-6xl mx-auto">
             <div className="bg-white/80 backdrop-blur-sm rounded-xl shadow-sm p-8">
@@ -274,10 +318,9 @@ const ClientBookings = () => {
     );
   }
 
-  // Afficher le message quand il n'y a pas de réservations
   if (bookings.length === 0) {
     return (
-      <div className="min-h-screen bg-linear-to-br from-emerald-50 to-green-50 pt-24 pb-12">
+      <div className="min-h-screen bg-gradient-to-br from-emerald-50 to-green-50 pt-24 pb-12">
         <div className="container mx-auto px-4">
           <div className="max-w-6xl mx-auto">
             <div className="bg-white/80 backdrop-blur-sm rounded-xl shadow-sm p-8">
@@ -287,7 +330,9 @@ const ClientBookings = () => {
                 </div>
                 <h3 className="text-lg font-medium text-gray-900 mb-2">Aucune réservation trouvée</h3>
                 <p className="text-gray-500 mb-6">
-                  Vous n'avez pas encore effectué de réservation. Parcourez nos services pour commencer.
+                  {filter === 'all' 
+                    ? "Vous n'avez pas encore effectué de réservation. Parcourez nos services pour commencer."
+                    : "Aucune réservation ne correspond à ce filtre."}
                 </p>
                 <Link 
                   to="/services" 
@@ -303,9 +348,8 @@ const ClientBookings = () => {
     );
   }
 
-  // Afficher la liste des réservations
   return (
-    <div className="min-h-screen bg-linear-to-br from-emerald-50 to-green-50 pt-24 pb-12">
+    <div className="min-h-screen bg-gradient-to-br from-emerald-50 to-green-50 pt-24 pb-12">
       <div className="container mx-auto px-4">
         <div className="max-w-6xl mx-auto">
           <div className="bg-white/80 backdrop-blur-sm rounded-xl shadow-sm p-8">
@@ -316,7 +360,6 @@ const ClientBookings = () => {
               </p>
             </div>
 
-            {/* Filtres */}
             <div className="mb-6 flex flex-wrap gap-2">
               <button
                 onClick={() => setFilter('all')}
@@ -360,7 +403,6 @@ const ClientBookings = () => {
               </button>
             </div>
 
-            {/* Liste des réservations */}
             <div className="space-y-4">
               {bookings.map((booking) => (
                 <div key={booking.id} className="bg-white border border-gray-200 rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow">
@@ -372,6 +414,9 @@ const ClientBookings = () => {
                             src={booking.service_image} 
                             alt={booking.service_title || 'Image du service'} 
                             className="w-full h-full object-cover"
+                            onError={(e) => {
+                              (e.target as HTMLImageElement).src = '/placeholder-image.jpg';
+                            }}
                           />
                         </div>
                       )}
@@ -430,12 +475,13 @@ const ClientBookings = () => {
                             Voir les détails
                           </Link>
                           
-                          {!['cancelled', 'completed'].includes(booking.status) && (
+                          {!['cancelled', 'completed', 'refunded'].includes(booking.status) && (
                             <button
                               onClick={() => handleCancelBooking(booking.id)}
                               className="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-md text-red-700 bg-red-50 hover:bg-red-100 ml-2"
+                              disabled={loading}
                             >
-                              Annuler
+                              {loading ? 'Traitement...' : 'Annuler'}
                             </button>
                           )}
                         </div>

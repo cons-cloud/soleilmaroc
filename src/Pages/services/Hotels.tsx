@@ -1,79 +1,82 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import ServiceHero from '../../components/ServiceHero';
-import ServiceCard from '../../components/ServiceCard';
-import { useFetchData } from '../../hooks/useFetchData';
 import LoadingState from '../../components/LoadingState';
+import BookingModal from '../../components/BookingModal';
+import useServices, {  Service} from '../../hooks/useServices';
+import HotelCard from '../../components/HotelCard';
 
+// Type personnalisé pour le service de réservation
+type BookingServiceType = 'hebergement' | 'voiture' | 'circuit';
 
-// Interface pour les données d'un hôtel
-interface Hotel {
-  id: string;
-  title: string;
-  description: string;
-  price: number;
-  address: string;
-  city: string;
-  images: string[];
+// Extension de l'interface Service pour les hôtels
+interface Hotel extends Service {
   stars: number;
-  amenities?: string[];
-  available?: boolean;
-  featured?: boolean;
-  [key: string]: any;
+  city: string;
+  region?: string;
+  images: string[];
+  capacity?: number;
 }
 
 const Hotels: React.FC = () => {
   // États locaux
   const [selectedCity, setSelectedCity] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState<string>('');
   
-  // Récupération des données avec le hook personnalisé
-  const { 
-    data: hotels, 
-    isLoading, 
-    error 
-  } = useFetchData<Hotel>('hotels', '*');
+  // Récupération des données avec le hook useServices
+  const { services, loading, error } = useServices('hotels');
   
+  // Conversion des services en type Hotel
+  const hotels = services as Hotel[];
+
   // Gestion de la sélection d'une ville
   const handleCitySelect = (city: string | null) => {
     setSelectedCity(city);
   };
   
-  // Filtrage des hôtels par ville si une ville est sélectionnée
-  const filteredHotels = selectedCity
-    ? hotels.filter(hotel => hotel.city === selectedCity)
-    : hotels;
+  // Gestion de la recherche
+  const handleSearch = (query: string) => {
+    setSearchQuery(query.toLowerCase());
+  };
+
+  // Filtrage des hôtels
+  const filteredHotels = hotels.filter((hotel) => {
+    if (!hotel) return false;
+    
+    const cityMatch = !selectedCity || 
+      (hotel.city && hotel.city.toLowerCase() === selectedCity.toLowerCase());
+    
+    const searchMatch = !searchQuery || 
+      (hotel.name?.toLowerCase().includes(searchQuery) || 
+      (hotel.city && hotel.city.toLowerCase().includes(searchQuery)) ||
+      (hotel.description && hotel.description.toLowerCase().includes(searchQuery)));
+    
+    return cityMatch && searchMatch;
+  });
 
   // Extraction des villes uniques pour les filtres
-  const cities = Array.from(new Set(hotels.map(hotel => hotel.city))).filter(Boolean) as string[];
+  const cities = Array.from(new Set(
+    hotels
+      .filter(hotel => hotel?.city)
+      .map(hotel => hotel.city as string)
+  )).filter(Boolean) as string[];
   
   // Gestion de la réservation
   const navigate = useNavigate();
+  const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
+  const [selectedHotel, setSelectedHotel] = useState<Hotel | null>(null);
   
   const handleBookNow = (hotel: Hotel) => {
-    // Rediriger vers la page de réservation avec les détails de l'hôtel
-    navigate(`/reservation/hotel/${hotel.id}`, {
-      state: {
-        service: {
-          id: hotel.id,
-          title: hotel.title,
-          description: hotel.description,
-          price: hotel.price,
-          images: hotel.images,
-          type: 'hotel',
-          city: hotel.city,
-          maxGuests: hotel.amenities?.includes('Famille') ? 6 : 2
-        }
-      }
-    });
+    setSelectedHotel(hotel);
+    setIsBookingModalOpen(true);
   };
   
-  // Gestion de la recherche
-  const handleSearch = (query: string) => {
-    console.log('Recherche d\'hôtel:', query);
-    // Implémentez la logique de recherche ici
+  const handleCloseBooking = () => {
+    setIsBookingModalOpen(false);
+    setSelectedHotel(null);
   };
 
-  if (isLoading || error) {
+  if (loading) {
     return (
       <div className="min-h-screen">
         <ServiceHero 
@@ -88,9 +91,27 @@ const Hotels: React.FC = () => {
         <div className="container mx-auto px-4 py-12">
           <LoadingState 
             fullScreen={false}
-            text={error ? 'Erreur lors du chargement' : 'Chargement des hôtels...'}
-            className={error ? 'text-red-500' : ''}
+            text="Chargement des hôtels..."
           />
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen">
+        <ServiceHero 
+          title="Hôtels de charme"
+          subtitle="Découvrez nos hôtels soigneusement sélectionnés pour un séjour inoubliable"
+          images={[
+            '/assets/hero/hotels-1.jpg',
+            '/assets/hero/hotels-2.jpg',
+            '/assets/hero/hotels-3.jpg'
+          ]}
+        />
+        <div className="container mx-auto px-4 py-12 text-center">
+          <p className="text-red-500">Erreur lors du chargement des hôtels : {error}</p>
         </div>
       </div>
     );
@@ -125,9 +146,9 @@ const Hotels: React.FC = () => {
               >
                 Toutes les villes
               </button>
-              {cities.map((city) => (
+              {cities.map((city, index) => (
                 <button
-                  key={city}
+                  key={`${city}-${index}`}
                   onClick={() => handleCitySelect(city)}
                   className={`px-4 py-2 rounded-full text-sm whitespace-nowrap ${
                     selectedCity === city 
@@ -142,39 +163,61 @@ const Hotels: React.FC = () => {
           )}
 
           {/* Liste des hôtels */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredHotels.map((hotel) => (
-              <ServiceCard
-                key={hotel.id}
-                id={hotel.id}
-                title={hotel.title}
-                description={hotel.description}
-                images={hotel.images}
-                price={hotel.price}
-                rating={hotel.stars}
-                tags={hotel.amenities}
-                link={`/hotels/${hotel.id}`}
-                onBookNow={() => handleBookNow(hotel)}
-              />
-            ))}
-          </div>
-
-          {filteredHotels.length === 0 && (
+          {filteredHotels.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {filteredHotels.map((hotel) => (
+                <HotelCard
+                  key={hotel.id}
+                  id={hotel.id}
+                  title={hotel.name}
+                  description={hotel.description || ''}
+                  price={hotel.price_per_night}
+                  location={`${hotel.city}${hotel.region ? `, ${hotel.region}` : ''}`}
+                  rating={hotel.rating || 0}
+                  images={Array.isArray(hotel.images) ? hotel.images : []}
+                  amenities={hotel.amenities || []}
+                  onBook={() => handleBookNow(hotel)}
+                  showActions={true}
+                />
+              ))}
+            </div>
+          ) : (
             <div className="text-center py-12">
-              <p className="text-gray-500">Aucun hôtel disponible pour le moment.</p>
+              <p className="text-gray-500">Aucun hôtel trouvé pour votre recherche.</p>
               {selectedCity && (
                 <button
-                  onClick={() => setSelectedCity(null)}
+                  onClick={() => {
+                    setSelectedCity(null);
+                    setSearchQuery('');
+                  }}
                   className="mt-4 text-emerald-600 hover:text-emerald-800 font-medium"
                 >
-                  Voir tous les hôtels
+                  Réinitialiser les filtres
                 </button>
               )}
             </div>
           )}
         </div>
       </div>
-
+      
+      {selectedHotel && (
+        <BookingModal
+          isOpen={isBookingModalOpen}
+          onClose={handleCloseBooking}
+          service={{
+            id: selectedHotel.id,
+            type: 'hebergement' as BookingServiceType,
+            title: selectedHotel.name,
+            price: selectedHotel.price_per_night,
+            image: Array.isArray(selectedHotel.images) && selectedHotel.images.length > 0 
+              ? selectedHotel.images[0] 
+              : undefined,
+            description: selectedHotel.description || '',
+            capacity: selectedHotel.capacity || 2,
+            amenities: selectedHotel.amenities || []
+          }}
+        />
+      )}
     </div>
   );
 };
