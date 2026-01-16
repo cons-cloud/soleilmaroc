@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import SearchBar from '../../components/SearchBar';
 import ServiceHero from '../../components/ServiceHero';
 import ServiceCard from '@/components/ServiceCard';
+import ImageGallery from '../../components/modals/ImageGallery';
 import { supabase } from '../../lib/supabase';
 import toast from 'react-hot-toast';
 import LoadingSpinner from '../../components/LoadingSpinner';
@@ -89,6 +90,8 @@ const Tourisme = () => {
   const [villes, setVilles] = useState<Ville[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [selectedCircuit, setSelectedCircuit] = useState<Voyage | null>(null);
+  const [isImageGalleryOpen, setIsImageGalleryOpen] = useState(false);
 
   useEffect(() => {
     loadCircuits();
@@ -122,12 +125,18 @@ const Tourisme = () => {
           .order('created_at', { ascending: false });
 
         if (partnerError) {
-          console.warn('Erreur partner_products (non bloquant):', partnerError);
+          // Erreur non bloquante - la table peut ne pas exister ou avoir des restrictions RLS
+          if (partnerError.code !== 'PGRST116' && partnerError.code !== '42501') {
+            console.warn('Erreur partner_products (non bloquant):', partnerError.message);
+          }
         } else {
           partnerCircuits = data || [];
         }
-      } catch (err) {
-        console.warn('Erreur lors du chargement des circuits partenaires (non bloquant):', err);
+      } catch (err: any) {
+        // Ignorer les erreurs de table manquante ou de permissions
+        if (err?.code !== 'PGRST116' && err?.code !== '42501') {
+          console.warn('Erreur lors du chargement des circuits partenaires (non bloquant):', err?.message || err);
+        }
       }
 
       console.log('Circuits chargés:', { 
@@ -407,7 +416,13 @@ const Tourisme = () => {
                         rating={Number(voyage.rating) || 0}
                         duration={voyage.duration || 'N/A'}
                         tags={Array.isArray(voyage.tags) ? voyage.tags : []}
-                        link={`/tourisme/${voyage.id}/reserver`}
+                        link={`/tourisme/${voyage.id}`}
+                        onImageClick={() => {
+                          if (Array.isArray(voyage.images) && voyage.images.length > 0) {
+                            setSelectedCircuit(voyage);
+                            setIsImageGalleryOpen(true);
+                          }
+                        }}
                         className="h-full"
                       />
                     ))}
@@ -470,7 +485,13 @@ const Tourisme = () => {
                     rating={Number(voyage.rating) || 0}
                     duration={voyage.duration || 'N/A'}
                     tags={Array.isArray(voyage.tags) ? voyage.tags : []}
-                    link={`/tourisme/${voyage.id}/reserver`}
+                    link={`/tourisme/${voyage.id}`}
+                    onImageClick={() => {
+                      if (Array.isArray(voyage.images) && voyage.images.length > 0) {
+                        setSelectedCircuit(voyage);
+                        setIsImageGalleryOpen(true);
+                      }
+                    }}
                     className="h-full"
                   />
                 ))}
@@ -485,6 +506,19 @@ const Tourisme = () => {
           </div>
         )}
       </div>
+
+      {/* Image Gallery Modal */}
+      {selectedCircuit && (
+        <ImageGallery
+          images={Array.isArray(selectedCircuit.images) ? selectedCircuit.images : []}
+          isOpen={isImageGalleryOpen}
+          onClose={() => {
+            setIsImageGalleryOpen(false);
+            setSelectedCircuit(null);
+          }}
+          initialIndex={0}
+        />
+      )}
     </div>
   );
 };
