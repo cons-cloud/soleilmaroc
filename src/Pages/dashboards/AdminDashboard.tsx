@@ -98,14 +98,14 @@ const AdminDashboard: React.FC = () => {
       
       // Récupérer le nombre d'événements
       const { count: eventsCount, error: eventsError } = await supabase
-        .from('events')
+        .from('evenements')
         .select('*', { count: 'exact', head: true });
       
       if (eventsError) console.error('Erreur événements:', eventsError);
       
       // Récupérer le nombre d'annonces
       const { count: announcementsCount, error: announcementsError } = await supabase
-        .from('announcements')
+        .from('annonces')
         .select('*', { count: 'exact', head: true });
       
       if (announcementsError) console.error('Erreur annonces:', announcementsError);
@@ -132,9 +132,16 @@ const AdminDashboard: React.FC = () => {
 
   // Fonction pour vérifier si un onglet est actif
   const isActive = (path: string) => {
+    if (path === '/admin' || path === '') {
+      // Pour la route par défaut, vérifier si on est exactement sur /dashboard/admin
+      return location.pathname === '/dashboard/admin' || location.pathname === '/dashboard/admin/';
+    }
     return location.pathname === `/dashboard/admin${path}` || 
-           (path !== '/admin' && location.pathname.startsWith(`/dashboard/admin${path}`));
+           location.pathname.startsWith(`/dashboard/admin${path}/`);
   };
+  
+  // Vérifier si on est sur la page principale du dashboard
+  const isDashboardHome = location.pathname === '/dashboard/admin' || location.pathname === '/dashboard/admin/';
 
   // Fonction pour charger les réservations récentes
   const fetchRecentBookings = async () => {
@@ -209,7 +216,7 @@ const AdminDashboard: React.FC = () => {
           <h1 className="text-2xl font-bold text-gray-900">Tableau de bord d'administration</h1>
         </div>
         {/* Contenu principal */}
-        {isActive('/admin') && (
+        {isDashboardHome && (
           <div className="space-y-6">
             {/* Cartes de statistiques */}
             <div className="bg-white shadow overflow-hidden sm:rounded-lg">
@@ -244,9 +251,9 @@ const AdminDashboard: React.FC = () => {
                     </div>
                     <div className="bg-gray-50 px-4 py-4 sm:px-6">
                       <div className="text-sm">
-                        <a href="/dashboard/admin/utilisateurs" className="font-medium text-blue-600 hover:text-blue-500">
+                        <Link to="/dashboard/admin/users" className="font-medium text-blue-600 hover:text-blue-500">
                           Voir tous les utilisateurs<span className="sr-only"> statistiques</span>
-                        </a>
+                        </Link>
                       </div>
                     </div>
                   </div>
@@ -275,9 +282,9 @@ const AdminDashboard: React.FC = () => {
                     </div>
                     <div className="bg-gray-50 px-4 py-4 sm:px-6">
                       <div className="text-sm">
-                        <a href="/dashboard/admin/reservations" className="font-medium text-blue-600 hover:text-blue-500">
+                        <Link to="/dashboard/admin/bookings" className="font-medium text-blue-600 hover:text-blue-500">
                           Voir toutes les réservations<span className="sr-only"> statistiques</span>
-                        </a>
+                        </Link>
                       </div>
                     </div>
                   </div>
@@ -301,9 +308,9 @@ const AdminDashboard: React.FC = () => {
                     </div>
                     <div className="bg-gray-50 px-4 py-4 sm:px-6">
                       <div className="text-sm">
-                        <a href="/dashboard/admin/payments" className="font-medium text-blue-600 hover:text-blue-500">
+                        <Link to="/dashboard/admin/payments" className="font-medium text-blue-600 hover:text-blue-500">
                           Voir les paiements<span className="sr-only"> statistiques</span>
-                        </a>
+                        </Link>
                       </div>
                     </div>
                   </div>
@@ -331,9 +338,9 @@ const AdminDashboard: React.FC = () => {
                     </div>
                     <div className="bg-gray-50 px-4 py-4 sm:px-6">
                       <div className="text-sm">
-                        <a href="/dashboard/admin/evenements" className="font-medium text-blue-600 hover:text-blue-500">
+                        <Link to="/dashboard/admin/evenements" className="font-medium text-blue-600 hover:text-blue-500">
                           Gérer les événements<span className="sr-only"> statistiques</span>
-                        </a>
+                        </Link>
                       </div>
                     </div>
                   </div>
@@ -361,9 +368,9 @@ const AdminDashboard: React.FC = () => {
                     </div>
                     <div className="bg-gray-50 px-4 py-4 sm:px-6">
                       <div className="text-sm">
-                        <a href="/dashboard/admin/annonces" className="font-medium text-blue-600 hover:text-blue-500">
+                        <Link to="/dashboard/admin/annonces" className="font-medium text-blue-600 hover:text-blue-500">
                           Gérer les annonces<span className="sr-only"> statistiques</span>
-                        </a>
+                        </Link>
                       </div>
                     </div>
                   </div>
@@ -416,9 +423,9 @@ const AdminDashboard: React.FC = () => {
                 </ul>
               </div>
               <div className="bg-gray-50 px-4 py-3 text-right sm:px-6">
-                <a href="/dashboard/admin/reservations" className="text-sm font-medium text-blue-600 hover:text-blue-500">
+                <Link to="/dashboard/admin/bookings" className="text-sm font-medium text-blue-600 hover:text-blue-500">
                   Voir toutes les réservations<span className="sr-only">, tableau de bord</span>
-                </a>
+                </Link>
               </div>
             </div>
           </div>
@@ -745,7 +752,7 @@ const EvenementsList: React.FC = () => {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                     <Link
-                      to={`/admin/evenements/${event.id}/modifier`}
+                      to={`/dashboard/admin/evenements/${event.id}/edit`}
                       className="text-blue-600 hover:text-blue-900 mr-4"
                     >
                       Modifier
@@ -935,7 +942,7 @@ const AnnoncesList: React.FC = () => {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                     <Link
-                      to={`/admin/annonces/${annonce.id}/modifier`}
+                      to={`/dashboard/admin/annonces/${annonce.id}/edit`}
                       className="text-blue-600 hover:text-blue-900 mr-4"
                     >
                       Modifier

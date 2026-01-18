@@ -109,15 +109,29 @@ const PartnerDashboard: React.FC = () => {
           if (statsError) {
             console.warn('Fonction RPC non disponible, calcul manuel des stats:', statsError);
             // Calculer manuellement les statistiques
-            const [productsRes, bookingsRes, paymentsRes] = await Promise.all([
-              supabase.from('partner_products').select('*', { count: 'exact' }).eq('partner_id', user?.id),
-              supabase.from('bookings').select('*', { count: 'exact' }).eq('partner_id', user?.id),
-              supabase.from('payments').select('amount, status').eq('partner_id', user?.id)
-            ]);
+            // Charger d'abord les produits pour obtenir les IDs
+            const productsRes = await supabase.from('partner_products').select('id, available').eq('partner_id', user?.id);
+            const productIds = (productsRes.data || []).map((p: any) => p.id);
             
-            const totalProducts = productsRes.count || 0;
+            // Charger les réservations (via partner_id ou service_id)
+            let bookingsQuery = supabase.from('bookings').select('id, total_amount, status');
+            if (productIds.length > 0) {
+              bookingsQuery = bookingsQuery.or(`partner_id.eq.${user?.id},service_id.in.(${productIds.join(',')})`);
+            } else {
+              bookingsQuery = bookingsQuery.eq('partner_id', user?.id);
+            }
+            const bookingsRes = await bookingsQuery;
+            
+            // Récupérer les paiements via les booking_ids
+            const bookingIds = (bookingsRes.data || []).map((b: any) => b.id);
+            let paymentsRes: any = { data: [], error: null };
+            if (bookingIds.length > 0) {
+              paymentsRes = await supabase.from('payments').select('amount, status').in('booking_id', bookingIds);
+            }
+            
+            const totalProducts = (productsRes.data || []).length;
             const activeProducts = (productsRes.data || []).filter((p: any) => p.available).length;
-            const totalBookings = bookingsRes.count || 0;
+            const totalBookings = (bookingsRes.data || []).length;
             const confirmedBookings = (bookingsRes.data || []).filter((b: any) => b.status === 'confirmed').length;
             const completedBookings = (bookingsRes.data || []).filter((b: any) => b.status === 'completed').length;
             const cancelledBookings = (bookingsRes.data || []).filter((b: any) => b.status === 'cancelled').length;
@@ -344,7 +358,7 @@ const PartnerDashboard: React.FC = () => {
         <div className="mt-4 md:mt-0">
           <button
             onClick={() => navigate('/dashboard/partner/products/new')}
-            className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-primary hover:bg-primary-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
+            className="inline-flex items-center px-6 py-3 border border-transparent text-base font-semibold rounded-lg shadow-lg text-white bg-emerald-600 hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 transition-all duration-200"
           >
             <Plus className="-ml-1 mr-2 h-5 w-5" />
             Ajouter un produit

@@ -24,7 +24,7 @@ interface PropertyListProps {
 
 const PropertyList: React.FC<PropertyListProps> = ({
   properties = [],
-  propertyType: _propertyType,
+  propertyType,
   loading,
   error,
   onBookNow,
@@ -85,7 +85,9 @@ const PropertyList: React.FC<PropertyListProps> = ({
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
       {properties.map((property) => {
-        const propertyTypePath = getPropertyTypePath(property.property_type);
+        // Utiliser le propertyType passé en prop, sinon celui de la propriété
+        const typeToUse = propertyType || property.property_type;
+        const propertyTypePath = getPropertyTypePath(typeToUse);
         const imageUrl = property.images?.[0] || '';
         
         return (

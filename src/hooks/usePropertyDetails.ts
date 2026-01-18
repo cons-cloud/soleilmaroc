@@ -43,6 +43,8 @@ export const usePropertyDetails = (type: string, id?: string) => {
 
         // Utiliser maybeSingle() au lieu de single() pour éviter l'erreur 406
         // quand aucun résultat n'est trouvé
+        console.log(`usePropertyDetails: Recherche ${type} (id: ${id}) dans table ${tableName}`);
+        
         const { data, error: queryError } = await supabase
           .from(tableName)
           .select('*')
@@ -50,12 +52,13 @@ export const usePropertyDetails = (type: string, id?: string) => {
           .maybeSingle();
 
         if (queryError) {
-          console.error('Erreur lors de la récupération:', queryError);
+          console.error(`Erreur lors de la récupération ${type}:`, queryError);
           throw new Error(`Erreur lors de la récupération: ${queryError.message}`);
         }
         
         // Normaliser les données pour un format cohérent
         if (data) {
+          console.log(`usePropertyDetails: ${type} trouvé(e)`, data.id);
           const normalized = {
             ...data,
             title: data.title || data.name || '',
@@ -69,7 +72,31 @@ export const usePropertyDetails = (type: string, id?: string) => {
           };
           setProperty(normalized);
         } else {
-          throw new Error(`${type === 'hotel' ? 'Hôtel' : type === 'villa' ? 'Villa' : type === 'tourism' || type === 'circuit' ? 'Circuit' : 'Propriété'} non trouvé(e)`);
+          // Messages d'erreur spécifiques selon le type
+          let errorMessage = 'Propriété non trouvée';
+          switch (type) {
+            case 'hotel':
+              errorMessage = 'Hôtel non trouvé(e)';
+              break;
+            case 'villa':
+              errorMessage = 'Villa non trouvée';
+              break;
+            case 'apartment':
+              errorMessage = 'Appartement non trouvé(e)';
+              break;
+            case 'car':
+              errorMessage = 'Voiture non trouvée';
+              break;
+            case 'tourism':
+            case 'circuit':
+            case 'tour':
+              errorMessage = 'Circuit non trouvé(e)';
+              break;
+            default:
+              errorMessage = 'Propriété non trouvée';
+          }
+          console.error(`usePropertyDetails: ${errorMessage} (id: ${id}, type: ${type}, table: ${tableName})`);
+          throw new Error(errorMessage);
         }
       } catch (err: any) {
         console.error('Erreur usePropertyDetails:', err);

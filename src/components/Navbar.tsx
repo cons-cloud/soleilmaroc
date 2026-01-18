@@ -245,10 +245,15 @@ const Navbar: React.FC<NavbarProps> = () => {
                           return (
                             <button
                               key={subItem.path}
-                              onClick={() => handleNavigation(subItem.path)}
-                              className="group flex items-center gap-3 w-full px-3 py-2 rounded-lg text-sm font-medium text-gray-700 hover:bg-linear-to-r hover:from-gray-50 hover:to-gray-100 transition-all duration-200"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                if (subItem.path) {
+                                  handleNavigation(subItem.path);
+                                }
+                              }}
+                              className="group flex items-center gap-3 w-full px-3 py-2 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-all duration-200"
                             >
-                              <div className={`flex items-center justify-center w-8 h-8 rounded-lg bg-linear-to-br ${gradientColor} shadow-sm`}>
+                              <div className={`flex items-center justify-center w-8 h-8 rounded-lg bg-gradient-to-br ${gradientColor} shadow-sm`}>
                                 {Icon && <Icon className="w-4 h-4 text-white" />}
                               </div>
                               <span className="group-hover:text-gray-900">

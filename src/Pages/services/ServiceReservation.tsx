@@ -48,7 +48,30 @@ const ServiceReservation: React.FC = () => {
   const { user } = useAuth() as { user: User | null };
   
   // Déterminer le type depuis l'URL ou le state
-  const serviceType = type || location.pathname.split('/')[1] || 'service';
+  // Si on est sur /tourisme/:id/reserver, le type est 'tourisme'
+  // Si on est sur /villas/:id/reserver, le type est 'villa'
+  const pathParts = location.pathname.split('/').filter(Boolean);
+  let detectedType = type;
+  
+  if (!detectedType && pathParts.length >= 2) {
+    const pathType = pathParts[0]; // 'tourisme', 'villas', 'hotels', etc.
+    // Mapper les chemins vers les types de service
+    if (pathType === 'tourisme') {
+      detectedType = 'tourism';
+    } else if (pathType === 'villas') {
+      detectedType = 'villa';
+    } else if (pathType === 'hotels') {
+      detectedType = 'hotel';
+    } else if (pathType === 'appartements') {
+      detectedType = 'apartment';
+    } else if (pathType === 'voitures') {
+      detectedType = 'car';
+    } else {
+      detectedType = pathType;
+    }
+  }
+  
+  const serviceType = detectedType || 'service';
 
   const [service, setService] = useState<ServiceData | null>(null);
   const [isLoading, setIsLoading] = useState(true);

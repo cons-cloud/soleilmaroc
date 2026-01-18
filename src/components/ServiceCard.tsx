@@ -26,6 +26,7 @@ interface ServiceCardProps extends Partial<Omit<Service, 'name'>> {
   className?: string;
   onBook?: () => void;
   onImageClick?: () => void;
+  onViewDetails?: () => void;
   showActions?: boolean;
   price?: number;
   price_per_night?: number;
@@ -130,6 +131,7 @@ const ServiceCard: React.FC<ServiceCardProps> = ({
   className = '',
   onBook,
   onImageClick,
+  onViewDetails,
   showActions = true,
   rating = 0,
   featured = false
@@ -211,172 +213,159 @@ const ServiceCard: React.FC<ServiceCardProps> = ({
       className={`bg-white rounded-xl shadow-md overflow-hidden hover:shadow-xl transition-shadow duration-300 ${className}`}
       whileHover={{ y: -5 }}
     >
-      <Link to={onImageClick ? '#' : `/${servicePath}/${id}`} className="block">
-        <div 
-          className="relative h-48 overflow-hidden group cursor-pointer"
-          onClick={onImageClick ? handleImageClick : undefined}
-        >
-          <ImageSlider 
-            images={images}
-            title={title}
-            onNext={nextImage}
-            onPrev={prevImage}
-          />
-          
-          {featured && (
-            <div className="absolute top-2 left-2 bg-yellow-400 text-yellow-900 text-xs font-bold px-2 py-1 rounded">
-              En vedette
-            </div>
-          )}
-          
-          <button 
-            onClick={toggleFavorite}
-            className="absolute top-2 right-2 p-2 bg-white/90 rounded-full shadow-md hover:bg-red-50 transition-colors z-10"
-            aria-label={isFavorite ? 'Retirer des favoris' : 'Ajouter aux favoris'}
+      {onImageClick ? (
+        <>
+          <div 
+            className="relative h-48 overflow-hidden group cursor-pointer"
+            onClick={handleImageClick}
           >
-            <Heart 
-              className={`w-5 h-5 ${isFavorite ? 'fill-red-500 text-red-500' : 'text-gray-400'}`} 
+            <ImageSlider 
+              images={images}
+              title={title}
+              onNext={nextImage}
+              onPrev={prevImage}
             />
-          </button>
-        </div>
-
-        <div className="p-4">
-          <div className="flex justify-between items-start mb-2">
-            <h3 className="font-bold text-lg text-gray-900 group-hover:text-teal-600 transition-colors line-clamp-1">
-              {title}
-            </h3>
-            <div className="flex items-center">
+            
+            {featured && (
+              <div className="absolute top-2 left-2 bg-yellow-400 text-yellow-900 text-xs font-bold px-2 py-1 rounded">
+                En vedette
+              </div>
+            )}
+            
+            <button 
+              onClick={toggleFavorite}
+              className="absolute top-2 right-2 p-2 bg-white/90 rounded-full shadow-md hover:bg-red-50 transition-colors z-10"
+              aria-label={isFavorite ? 'Retirer des favoris' : 'Ajouter aux favoris'}
+            >
+              <Heart 
+                className={`w-5 h-5 ${isFavorite ? 'fill-red-500 text-red-500' : 'text-gray-400'}`} 
+              />
+            </button>
+          </div>
+          
+          <div className="p-4">
+            <div className="flex justify-between items-start mb-2">
+              <h3 className="font-bold text-lg text-gray-900 line-clamp-1">
+                {title}
+              </h3>
               {rating > 0 && (
-                <div className="flex items-center mr-2">
+                <div className="flex items-center">
                   <StarIcon className="w-4 h-4 text-yellow-400 fill-yellow-400" />
                   <span className="text-sm text-gray-600 ml-1">{rating.toFixed(1)}</span>
                 </div>
               )}
-              <div className="flex items-center bg-teal-100 text-teal-800 text-xs font-semibold px-2 py-1 rounded">
-                {serviceIcon}
-                <span className="capitalize">{type?.replace('_', ' ') || 'service'}</span>
-              </div>
             </div>
-          </div>
-
-          <div className="flex items-center text-sm text-gray-600 mb-3">
-            <MapPin className="w-4 h-4 mr-1 flex-shrink-0" />
-            <span className="line-clamp-1" title={locationText}>{locationText}</span>
-          </div>
-
-          <p className="text-gray-600 text-sm mb-4 line-clamp-2" title={description}>
-            {description}
-          </p>
-
-          {amenities.length > 0 && (
-            <div className="flex flex-wrap gap-2 mb-4">
-              {amenities.slice(0, 3).map((amenity, index) => (
-                <span
-                  key={index}
-                  className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded-full flex items-center"
-                  title={amenity}
-                >
-                  {getAmenityIcon(amenity)}
-                  <span className="truncate max-w-[80px]">{amenity}</span>
-                </span>
-              ))}
-              {amenities.length > 3 && (
-                <span className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded-full">
-                  +{amenities.length - 3} plus
-                </span>
-              )}
-            </div>
-          )}
-
-          <div className="flex justify-between items-center mt-4 pt-4 border-t border-gray-100">
-            <div className="flex items-center">
+            <div className="flex items-center justify-between mt-3 pt-3 border-t border-gray-100">
               <span className="text-lg font-bold text-teal-700">{displayPrice}</span>
-              {(price_per_night || price) && <span className="text-xs text-gray-500 ml-1">/nuit</span>}
-            </div>
-            
-            {showActions && (
               <button
-                onClick={handleBookNow}
-                className="px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white text-sm font-medium rounded-lg transition-colors"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (onViewDetails) {
+                    onViewDetails();
+                  } else {
+                    window.location.href = `/${servicePath}/${id}`;
+                  }
+                }}
+                className="text-sm text-emerald-600 hover:text-emerald-700 font-medium"
               >
-                Réserver
+                Voir détails →
               </button>
-            )}
+            </div>
           </div>
-        </div>
-        <div className="p-4">
-          <div className="flex justify-between items-start mb-2">
-            {onImageClick ? (
-              <Link to={`/${servicePath}/${id}`}>
-                <h3 className="font-bold text-lg text-gray-900 hover:text-teal-600 transition-colors line-clamp-1">
-                  {title}
-                </h3>
-              </Link>
-            ) : (
+        </>
+      ) : (
+        <Link to={`/${servicePath}/${id}`} className="block">
+          <div className="relative h-48 overflow-hidden group cursor-pointer">
+            <ImageSlider 
+              images={images}
+              title={title}
+              onNext={nextImage}
+              onPrev={prevImage}
+            />
+            
+            {featured && (
+              <div className="absolute top-2 left-2 bg-yellow-400 text-yellow-900 text-xs font-bold px-2 py-1 rounded">
+                En vedette
+              </div>
+            )}
+            
+            <button 
+              onClick={toggleFavorite}
+              className="absolute top-2 right-2 p-2 bg-white/90 rounded-full shadow-md hover:bg-red-50 transition-colors z-10"
+              aria-label={isFavorite ? 'Retirer des favoris' : 'Ajouter aux favoris'}
+            >
+              <Heart 
+                className={`w-5 h-5 ${isFavorite ? 'fill-red-500 text-red-500' : 'text-gray-400'}`} 
+              />
+            </button>
+          </div>
+
+          <div className="p-4">
+            <div className="flex justify-between items-start mb-2">
               <h3 className="font-bold text-lg text-gray-900 group-hover:text-teal-600 transition-colors line-clamp-1">
                 {title}
               </h3>
-            )}
-            <div className="flex items-center">
-              {rating > 0 && (
-                <div className="flex items-center mr-2">
-                  <StarIcon className="w-4 h-4 text-yellow-400 fill-yellow-400" />
-                  <span className="text-sm text-gray-600 ml-1">{rating.toFixed(1)}</span>
+              <div className="flex items-center">
+                {rating > 0 && (
+                  <div className="flex items-center mr-2">
+                    <StarIcon className="w-4 h-4 text-yellow-400 fill-yellow-400" />
+                    <span className="text-sm text-gray-600 ml-1">{rating.toFixed(1)}</span>
+                  </div>
+                )}
+                <div className="flex items-center bg-teal-100 text-teal-800 text-xs font-semibold px-2 py-1 rounded">
+                  {serviceIcon}
+                  <span className="capitalize">{type?.replace('_', ' ') || 'service'}</span>
                 </div>
-              )}
-              <div className="flex items-center bg-teal-100 text-teal-800 text-xs font-semibold px-2 py-1 rounded">
-                {serviceIcon}
-                <span className="capitalize">{type?.replace('_', ' ') || 'service'}</span>
               </div>
             </div>
-          </div>
 
-          <div className="flex items-center text-sm text-gray-600 mb-3">
-            <MapPin className="w-4 h-4 mr-1 flex-shrink-0" />
-            <span className="line-clamp-1" title={locationText}>{locationText}</span>
-          </div>
+            <div className="flex items-center text-sm text-gray-600 mb-3">
+              <MapPin className="w-4 h-4 mr-1 flex-shrink-0" />
+              <span className="line-clamp-1" title={locationText}>{locationText}</span>
+            </div>
 
-          <p className="text-gray-600 text-sm mb-4 line-clamp-2" title={description}>
-            {description}
-          </p>
+            <p className="text-gray-600 text-sm mb-4 line-clamp-2" title={description}>
+              {description}
+            </p>
 
-          {amenities.length > 0 && (
-            <div className="flex flex-wrap gap-2 mb-4">
-              {amenities.slice(0, 3).map((amenity, index) => (
-                <span
-                  key={index}
-                  className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded-full flex items-center"
-                  title={amenity}
+            {amenities.length > 0 && (
+              <div className="flex flex-wrap gap-2 mb-4">
+                {amenities.slice(0, 3).map((amenity, index) => (
+                  <span
+                    key={index}
+                    className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded-full flex items-center"
+                    title={amenity}
+                  >
+                    {getAmenityIcon(amenity)}
+                    <span className="truncate max-w-[80px]">{amenity}</span>
+                  </span>
+                ))}
+                {amenities.length > 3 && (
+                  <span className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded-full">
+                    +{amenities.length - 3} plus
+                  </span>
+                )}
+              </div>
+            )}
+
+            <div className="flex justify-between items-center mt-4 pt-4 border-t border-gray-100">
+              <div className="flex items-center">
+                <span className="text-lg font-bold text-teal-700">{displayPrice}</span>
+                {(price_per_night || price) && <span className="text-xs text-gray-500 ml-1">/nuit</span>}
+              </div>
+              
+              {showActions && (
+                <button
+                  onClick={handleBookNow}
+                  className="px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white text-sm font-medium rounded-lg transition-colors"
                 >
-                  {getAmenityIcon(amenity)}
-                  <span className="truncate max-w-[80px]">{amenity}</span>
-                </span>
-              ))}
-              {amenities.length > 3 && (
-                <span className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded-full">
-                  +{amenities.length - 3} plus
-                </span>
+                  Réserver
+                </button>
               )}
             </div>
-          )}
-
-          <div className="flex justify-between items-center mt-4 pt-4 border-t border-gray-100">
-            <div className="flex items-center">
-              <span className="text-lg font-bold text-teal-700">{displayPrice}</span>
-              {(price_per_night || price) && <span className="text-xs text-gray-500 ml-1">/nuit</span>}
-            </div>
-            
-            {showActions && (
-              <button
-                onClick={handleBookNow}
-                className="px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white text-sm font-medium rounded-lg transition-colors"
-              >
-                Réserver
-              </button>
-            )}
           </div>
-        </div>
-      </Link>
+        </Link>
+      )}
 
       <AnimatePresence>
         {isBookingOpen && (

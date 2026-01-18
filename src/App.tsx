@@ -74,7 +74,7 @@ const ServiceReservation = lazy(() => import("./Pages/services/ServiceReservatio
 const Immobilier = lazy(() => import("./Pages/Immobilier"));
 
 // Tableaux de bord
-const AdminDashboard = lazy(() => import('./Pages/dashboards/admin/AdminDashboard'));
+const AdminDashboard = lazy(() => import('./Pages/dashboards/AdminDashboard'));
 const PartnerDashboard = lazy(() => import('./Pages/dashboards/partner/PartnerDashboard'));
 const ClientDashboard = lazy(() => import('./Pages/dashboards/ClientDashboard'));
 
@@ -89,6 +89,8 @@ const PartnerEvents = lazy(() => import("./Pages/dashboards/partner/PartnerEvent
 const PartnerAnnonces = lazy(() => import("./Pages/dashboards/partner/PartnerAnnonces"));
 const PartnerProfile = lazy(() => import("./Pages/dashboards/partner/PartnerProfile"));
 const PartnerSettings = lazy(() => import("./Pages/dashboards/partner/PartnerSettings"));
+const PartnerProducts = lazy(() => import("./Pages/dashboards/partner/PartnerProducts"));
+const ProductForm = lazy(() => import("./Pages/dashboards/partner/ProductForm"));
 
 // Client Pages
 const ClientProfile = lazy(() => import("./Pages/dashboards/client/ClientProfile").then(module => ({ default: module.default })));
@@ -353,6 +355,9 @@ function App() {
                   </RoleGuard>
                 }>
                   <Route index element={<PartnerDashboard />} />
+                  <Route path="products" element={<PartnerProducts />} />
+                  <Route path="products/new" element={<ProductForm />} />
+                  <Route path="products/:id/edit" element={<ProductForm />} />
                   <Route path="evenements" element={<PartnerEvents />} />
                   <Route path="annonces" element={<PartnerAnnonces />} />
                   <Route path="profil" element={<PartnerProfile />} />

@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import SearchBar from '../../components/SearchBar';
 import ServiceHero from '../../components/ServiceHero';
 import ServiceCard from '@/components/ServiceCard';
-import ImageGallery from '../../components/modals/ImageGallery';
+import CircuitDetailsModal from '../../components/modals/CircuitDetailsModal';
 import { supabase } from '../../lib/supabase';
 import toast from 'react-hot-toast';
 import LoadingSpinner from '../../components/LoadingSpinner';
@@ -418,10 +418,12 @@ const Tourisme = () => {
                         tags={Array.isArray(voyage.tags) ? voyage.tags : []}
                         link={`/tourisme/${voyage.id}`}
                         onImageClick={() => {
-                          if (Array.isArray(voyage.images) && voyage.images.length > 0) {
-                            setSelectedCircuit(voyage);
-                            setIsImageGalleryOpen(true);
-                          }
+                          setSelectedCircuit(voyage);
+                          setIsImageGalleryOpen(true);
+                        }}
+                        onViewDetails={() => {
+                          setSelectedCircuit(voyage);
+                          setIsImageGalleryOpen(true);
                         }}
                         className="h-full"
                       />
@@ -487,10 +489,12 @@ const Tourisme = () => {
                     tags={Array.isArray(voyage.tags) ? voyage.tags : []}
                     link={`/tourisme/${voyage.id}`}
                     onImageClick={() => {
-                      if (Array.isArray(voyage.images) && voyage.images.length > 0) {
-                        setSelectedCircuit(voyage);
-                        setIsImageGalleryOpen(true);
-                      }
+                      setSelectedCircuit(voyage);
+                      setIsImageGalleryOpen(true);
+                    }}
+                    onViewDetails={() => {
+                      setSelectedCircuit(voyage);
+                      setIsImageGalleryOpen(true);
                     }}
                     className="h-full"
                   />
@@ -507,16 +511,25 @@ const Tourisme = () => {
         )}
       </div>
 
-      {/* Image Gallery Modal */}
+      {/* Circuit Details Modal */}
       {selectedCircuit && (
-        <ImageGallery
-          images={Array.isArray(selectedCircuit.images) ? selectedCircuit.images : []}
+        <CircuitDetailsModal
+          circuit={{
+            id: selectedCircuit.id,
+            title: selectedCircuit.title || 'Circuit sans titre',
+            description: selectedCircuit.description || '',
+            images: Array.isArray(selectedCircuit.images) ? selectedCircuit.images : [],
+            price: Number(selectedCircuit.price) || 0,
+            rating: Number(selectedCircuit.rating) || 0,
+            duration: selectedCircuit.duration || 'N/A',
+            city: selectedCircuit.city,
+            tags: Array.isArray(selectedCircuit.tags) ? selectedCircuit.tags : [],
+          }}
           isOpen={isImageGalleryOpen}
           onClose={() => {
             setIsImageGalleryOpen(false);
             setSelectedCircuit(null);
           }}
-          initialIndex={0}
         />
       )}
     </div>

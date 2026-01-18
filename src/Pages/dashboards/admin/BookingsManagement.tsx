@@ -67,6 +67,14 @@ const statusOptions = [
   { value: 'completed', label: 'Terminé' }
 ];
 
+const periodOptions = [
+  { value: 'all', label: 'Toutes les périodes' },
+  { value: 'day', label: 'Aujourd\'hui' },
+  { value: 'week', label: 'Cette semaine' },
+  { value: 'month', label: 'Ce mois' },
+  { value: 'year', label: 'Cette année' }
+];
+
 const BookingsManagement: React.FC = () => {
   // Initialisation des états
   void useNavigate; // Suppress unused import warning
@@ -74,6 +82,7 @@ const BookingsManagement: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(true);
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [filterStatus, setFilterStatus] = useState<string>('all');
+  const [filterPeriod, setFilterPeriod] = useState<string>('all'); // all, day, week, month, year
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [deletingBooking, setDeletingBooking] = useState<Booking | null>(null);
   const [isDeleting, setIsDeleting] = useState<boolean>(false);
@@ -148,26 +157,170 @@ const BookingsManagement: React.FC = () => {
       setError(null);
       
       console.log('[BookingsManagement] Exécution de la requête Supabase...');
-      const { data, error } = await supabase
+      // Essayer d'abord avec la relation, puis sans si ça échoue
+      let { data, error } = await supabase
         .from('bookings')
-        .select(`
-          *,
-          client:client_id (*)
-        `)
+        .select('*')
         .order('created_at', { ascending: false });
-
+      
+      // Si l'erreur indique un problème de relation, réessayer sans relation
+      if (error && error.code === 'PGRST116') {
+        console.warn('[BookingsManagement] Relation non disponible, réessai sans relation...');
+        const retry = await supabase
+          .from('bookings')
+          .select('*')
+          .order('created_at', { ascending: false });
+        data = retry.data;
+        error = retry.error;
+      }
+      
+      // Gérer l'erreur 403 (permission refusée) - essayer une approche alternative
+      if (error && (error.code === '42501' || error.message?.includes('permission denied') || error.message?.includes('new row violates row-level security') || error.code === 'PGRST301' || error.code === 'PGRST302' || error.status === 403)) {
+        console.warn('[BookingsManagement] Erreur RLS détectée, tentative alternative...');
+        
+        // Essayer de charger seulement les champs de base
+        const retry = await supabase
+          .from('bookings')
+          .select('id, created_at, start_date, end_date, total_amount, status, client_id, service_id, service_type')
+          .order('created_at', { ascending: false })
+          .limit(100);
+        
+        if (!retry.error) {
+          console.log('[BookingsManagement] Chargement partiel réussi');
+          data = retry.data;
+          error = null;
+        } else {
+          // Si ça échoue aussi, afficher un message d'erreur clair
+          const message = 'Accès refusé: les politiques de sécurité RLS bloquent l\'accès. Veuillez exécuter le script SQL "fix-rls-final-no-errors.sql" dans Supabase SQL Editor pour corriger les permissions admin.';
+          console.error('[BookingsManagement] Erreur de permission RLS:', error);
+          console.error('[BookingsManagement] Détails de l\'erreur:', JSON.stringify(error, null, 2));
+          setError(message);
+          throw new Error(message);
+        }
+      }
+      
+      // Gérer l'erreur 404 (table non trouvée)
+      if (error && (error.code === '42P01' || error.code === 'PGRST116' || error.message?.includes('does not exist') || error.message?.includes('not found'))) {
+        const message = 'La table "bookings" n\'existe pas dans la base de données. Veuillez créer la table dans Supabase.';
+        console.error('[BookingsManagement] Table non trouvée:', error);
+        setError(message);
+        throw new Error(message);
+      }
+      
+      // Si erreur autre que relation, lever l'exception
       if (error) {
         console.error('[BookingsManagement] Erreur Supabase:', error);
+        const errorMessage = error.message || 'Erreur lors du chargement des réservations';
+        setError(errorMessage);
         throw error;
       }
       
+      // Si on a des données mais pas de relations, essayer de charger les clients séparément
+      if (data && data.length > 0) {
+        try {
+          const clientIds = [...new Set(data.map((b: any) => b.client_id).filter(Boolean))];
+          if (clientIds.length > 0) {
+            const { data: clientsData } = await supabase
+              .from('profiles')
+              .select('id, first_name, last_name, email, phone, company_name')
+              .in('id', clientIds);
+            
+            // Créer un map pour accéder rapidement aux clients
+            const clientsMap = new Map(
+              (clientsData || []).map((client: any) => [client.id, client])
+            );
+            
+            // Enrichir les réservations avec les données des clients
+            data = data.map((booking: any) => ({
+              ...booking,
+              client: clientsMap.get(booking.client_id) || {
+                id: booking.client_id,
+                company_name: booking.client_name || booking.client_email || 'Client inconnu',
+                email: booking.client_email || '',
+                phone: booking.client_phone || ''
+              }
+            }));
+          }
+        } catch (relationError) {
+          console.warn('[BookingsManagement] Impossible de charger les clients:', relationError);
+        }
+      }
+      
       console.log(`[BookingsManagement] ${data?.length || 0} réservations chargées`);
-      setBookings(data || []);
+      
+      // Charger les informations des services si nécessaire
+      const serviceMap = new Map();
+      
+      if (data && data.length > 0) {
+        try {
+          // Collecter tous les service_id uniques
+          const serviceIds = [...new Set(data.map((b: any) => b.service_id).filter(Boolean))];
+          
+          if (serviceIds.length > 0) {
+            // Essayer différentes tables de services
+            const tables = ['hotels', 'villas', 'appartements', 'locations_voitures', 'circuits_touristiques', 'services'];
+            
+            for (const table of tables) {
+              try {
+                const { data: servicesData } = await supabase
+                  .from(table)
+                  .select('id, title, name, price, price_per_night, price_per_day, price_per_person')
+                  .in('id', serviceIds);
+                
+                if (servicesData) {
+                  servicesData.forEach((service: any) => {
+                    serviceMap.set(service.id, {
+                      id: service.id,
+                      title: service.title || service.name || 'Service',
+                      price: service.price || service.price_per_night || service.price_per_day || service.price_per_person || 0,
+                      type: table
+                    });
+                  });
+                }
+              } catch (err: any) {
+                // Ignorer les erreurs de table non trouvée ou RLS
+                if (err?.code !== 'PGRST116' && err?.code !== '42501') {
+                  console.warn(`[BookingsManagement] Erreur lors du chargement depuis ${table}:`, err);
+                }
+              }
+            }
+          }
+        } catch (serviceError) {
+          console.warn('[BookingsManagement] Erreur lors du chargement des services:', serviceError);
+        }
+      }
+      
+      // Normaliser les données pour gérer les différents formats
+      const normalizedBookings = (data || []).map((booking: any) => {
+        const serviceInfo = serviceMap.get(booking.service_id) || {
+          id: booking.service_id,
+          title: booking.service_title || booking.service_name || booking.service?.title || 'Service inconnu',
+          price: booking.total_amount || booking.service?.price || 0,
+          type: booking.service_type || booking.service?.type || 'service'
+        };
+        
+        return {
+          ...booking,
+          client: booking.client || {
+            id: booking.client_id,
+            company_name: booking.client_name || booking.client_email || booking.client?.company_name || booking.client?.first_name + ' ' + booking.client?.last_name || 'Client inconnu',
+            phone: booking.client_phone || booking.client?.phone || '',
+            email: booking.client_email || booking.client?.email || ''
+          },
+          service: serviceInfo
+        };
+      });
+      
+      setBookings(normalizedBookings);
       
       return Promise.resolve();
-    } catch (error) {
+    } catch (error: any) {
       console.error('[BookingsManagement] Erreur lors du chargement des réservations:', error);
-      setError('Impossible de charger les réservations. Veuillez réessayer.');
+      // Si l'erreur n'a pas déjà été définie avec un message spécifique, utiliser un message par défaut
+      if (!error?.message?.includes('Accès refusé') && !error?.message?.includes('n\'existe pas')) {
+        const errorMessage = error?.message || 'Impossible de charger les réservations. Veuillez réessayer plus tard.';
+        setError(errorMessage);
+      }
       toast.error('Erreur lors du chargement des réservations');
       return Promise.reject(error);
     } finally {
@@ -292,14 +445,47 @@ const BookingsManagement: React.FC = () => {
         !searchTerm ||
         booking.client?.company_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         booking.service?.title?.toLowerCase().includes(searchTerm.toLowerCase());
-      
+        
       const matchesStatus = 
         filterStatus === 'all' || 
         booking.status === filterStatus;
       
-      return matchesSearch && matchesStatus;
+      // Filtrage par période
+      let matchesPeriod = true;
+      if (filterPeriod !== 'all') {
+        const bookingDate = new Date(booking.created_at);
+        const now = new Date();
+        
+        switch (filterPeriod) {
+          case 'day':
+            matchesPeriod = 
+              bookingDate.getDate() === now.getDate() &&
+              bookingDate.getMonth() === now.getMonth() &&
+              bookingDate.getFullYear() === now.getFullYear();
+            break;
+          case 'week':
+            const weekStart = new Date(now);
+            weekStart.setDate(now.getDate() - now.getDay()); // Dimanche
+            weekStart.setHours(0, 0, 0, 0);
+            const weekEnd = new Date(weekStart);
+            weekEnd.setDate(weekStart.getDate() + 6);
+            weekEnd.setHours(23, 59, 59, 999);
+            matchesPeriod = bookingDate >= weekStart && bookingDate <= weekEnd;
+            break;
+          case 'month':
+            matchesPeriod = 
+              bookingDate.getMonth() === now.getMonth() &&
+              bookingDate.getFullYear() === now.getFullYear();
+            break;
+          case 'year':
+            matchesPeriod = bookingDate.getFullYear() === now.getFullYear();
+            break;
+        }
+      }
+        
+      return matchesSearch && matchesStatus && matchesPeriod;
     });
-  }, [bookings, searchTerm, filterStatus]);
+  }, [bookings, searchTerm, filterStatus, filterPeriod]);
 
   // Calcul du nombre total de pages
   const totalPages = Math.ceil(filteredBookings.length / ITEMS_PER_PAGE);
@@ -362,7 +548,7 @@ const BookingsManagement: React.FC = () => {
   // Réinitialisation de la page lors du filtrage
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchTerm, filterStatus]);
+  }, [searchTerm, filterStatus, filterPeriod]);
 
   if (loading) {
     return (
@@ -427,6 +613,20 @@ const BookingsManagement: React.FC = () => {
             onChange={(e) => setFilterStatus(e.target.value)}
           >
             {statusOptions.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
+        </div>
+        
+        <div className="w-full sm:w-1/4">
+          <select
+            className="block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md"
+            value={filterPeriod}
+            onChange={(e) => setFilterPeriod(e.target.value)}
+          >
+            {periodOptions.map((option) => (
               <option key={option.value} value={option.value}>
                 {option.label}
               </option>

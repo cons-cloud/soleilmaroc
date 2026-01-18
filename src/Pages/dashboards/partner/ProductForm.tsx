@@ -4,7 +4,7 @@ import { supabase } from '../../../lib/supabase';
 import { useAuth } from '../../../contexts/AuthContext';
 import { 
   ArrowLeft, Save, X, Plus, Trash2, 
-  Check, MapPin, DollarSign, Home, Car, Hotel, Building, Route
+  Check, MapPin, DollarSign
 } from 'lucide-react';
 import { v4 as uuidv4 } from 'uuid';
 import toast from 'react-hot-toast';
@@ -297,25 +297,54 @@ const ProductForm: React.FC = () => {
       setLoading(true);
       
       // Préparer les données du produit
-      const productData = {
-        title: formData.title,
-        description: formData.description,
+      // Préparer les données du produit en nettoyant les valeurs null/undefined
+      const featuresObj = formData.features
+        .filter(f => f.name && f.value)
+        .reduce((acc, { name, value }) => ({ ...acc, [name]: value }), {});
+      
+      // Préparer les données du produit
+      // Note: max_guests sera stocké dans features si la colonne n'existe pas
+      const productData: any = {
+        title: formData.title || null,
+        description: formData.description || null,
         product_type: formData.product_type,
-        price: formData.price,
-        price_type: formData.price_type,
-        city: formData.city,
-        address: formData.address,
-        location_lat: formData.location_lat,
-        location_lng: formData.location_lng,
-        max_guests: formData.max_guests,
-        available: formData.available,
-        features: formData.features
-          .filter(f => f.name && f.value)
-          .reduce((acc, { name, value }) => ({ ...acc, [name]: value }), {}),
-        amenities: formData.amenities,
+        price: Number(formData.price) || 0,
+        price_type: formData.price_type || 'per_night',
+        city: formData.city || null,
+        address: formData.address || null,
+        available: Boolean(formData.available),
         partner_id: user.id,
-        // Les images seront mises à jour après l'upload
       };
+      
+      // Ajouter max_guests dans features si défini (pour compatibilité)
+      if (formData.max_guests) {
+        productData.max_guests = Number(formData.max_guests);
+        // Également ajouter dans features pour compatibilité
+        (featuresObj as any).max_guests = String(formData.max_guests);
+      }
+      
+      // Ajouter bedrooms, bathrooms, surface dans features si définis
+      if (formData.bedrooms) (featuresObj as any).bedrooms = String(formData.bedrooms);
+      if (formData.bathrooms) (featuresObj as any).bathrooms = String(formData.bathrooms);
+      if (formData.surface) (featuresObj as any).surface = String(formData.surface);
+      
+      productData.features = Object.keys(featuresObj).length > 0 ? featuresObj : null;
+      productData.amenities = Array.isArray(formData.amenities) && formData.amenities.length > 0 ? formData.amenities : null;
+      
+      // Ajouter les coordonnées GPS seulement si elles sont définies
+      if (formData.location_lat !== null && formData.location_lat !== undefined) {
+        productData.location_lat = Number(formData.location_lat);
+      }
+      if (formData.location_lng !== null && formData.location_lng !== undefined) {
+        productData.location_lng = Number(formData.location_lng);
+      }
+      
+      // Nettoyer les valeurs undefined (Supabase ne les accepte pas)
+      Object.keys(productData).forEach(key => {
+        if (productData[key] === undefined) {
+          delete productData[key];
+        }
+      });
       
       let productId = id;
       
@@ -338,14 +367,26 @@ const ProductForm: React.FC = () => {
         }
       } else {
         // Créer un nouveau produit
+        console.log('[ProductForm] Données à insérer:', productData);
+        
         const { data, error: insertError } = await supabase
           .from('partner_products')
           .insert([productData])
           .select()
           .single();
           
-        if (insertError) throw insertError;
+        if (insertError) {
+          console.error('[ProductForm] Erreur d\'insertion:', insertError);
+          console.error('[ProductForm] Détails de l\'erreur:', JSON.stringify(insertError, null, 2));
+          throw insertError;
+        }
+        
+        if (!data || !data.id) {
+          throw new Error('Le produit a été créé mais aucun ID n\'a été retourné');
+        }
+        
         productId = data.id;
+        console.log('[ProductForm] Produit créé avec succès, ID:', productId);
       }
       
       // S'assurer que productId est une chaîne de caractères
@@ -454,26 +495,11 @@ const ProductForm: React.FC = () => {
                     onChange={handleChange}
                     required
                   >
-                    <option value="appartement">
-                      <Home className="w-4 h-4 mr-2" />
-                      Appartement
-                    </option>
-                    <option value="villa">
-                      <Building className="w-4 h-4 mr-2" />
-                      Villa
-                    </option>
-                    <option value="hotel">
-                      <Hotel className="w-4 h-4 mr-2" />
-                      Hôtel
-                    </option>
-                    <option value="voiture">
-                      <Car className="w-4 h-4 mr-2" />
-                      Voiture
-                    </option>
-                    <option value="circuit">
-                      <Route className="w-4 h-4 mr-2" />
-                      Circuit
-                    </option>
+                    <option value="appartement">🏠 Appartement</option>
+                    <option value="villa">🏡 Villa</option>
+                    <option value="hotel">🏨 Hôtel</option>
+                    <option value="voiture">🚗 Voiture</option>
+                    <option value="circuit">🗺️ Circuit touristique</option>
                   </select>
                 </div>
               </div>
@@ -858,7 +884,7 @@ const ProductForm: React.FC = () => {
             <button
               type="submit"
               disabled={loading || uploading}
-              className={`inline-flex justify-center px-4 py-2 ml-3 text-sm font-medium text-white border border-transparent rounded-md shadow-sm bg-primary hover:bg-primary-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary ${
+              className={`inline-flex justify-center px-6 py-3 ml-3 text-base font-semibold text-white border border-transparent rounded-lg shadow-lg bg-emerald-600 hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 transition-all duration-200 ${
                 loading || uploading ? 'opacity-70 cursor-not-allowed' : ''
               }`}
             >

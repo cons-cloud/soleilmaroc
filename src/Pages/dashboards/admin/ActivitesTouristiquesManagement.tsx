@@ -8,6 +8,7 @@ import ConfirmDialog from '../../../components/modals/ConfirmDialog';
 const ActivitesTouristiquesManagement: React.FC = () => {
   const [items, setItems] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [showForm, setShowForm] = useState(false);
   const [selectedActivite, setSelectedActivite] = useState<any>(null);
@@ -20,15 +21,75 @@ const ActivitesTouristiquesManagement: React.FC = () => {
 
   const loadItems = async () => {
     try {
-      const { data, error } = await supabase
+      setLoading(true);
+      setError(null);
+      
+      console.log('[ActivitesTouristiquesManagement] Chargement de TOUTES les activités du site...');
+      
+      // Charger TOUTES les activités du site (pas de filtre par partner_id)
+      // Essayer d'abord avec RPC ou avec service_role si disponible
+      let { data, error } = await supabase
         .from('activites_touristiques')
         .select('*')
         .order('created_at', { ascending: false });
-      if (error) throw error;
+        
+      // Si erreur 403, essayer avec une approche différente
+      if (error && (error.code === '42501' || error.code === 'PGRST301' || error.code === 'PGRST302' || error.status === 403)) {
+        console.warn('[ActivitesTouristiquesManagement] Erreur RLS détectée, tentative alternative...');
+        
+        // Essayer de charger seulement les champs de base
+        const retry = await supabase
+          .from('activites_touristiques')
+          .select('id, title, city, activity_type, price_per_person, available, created_at')
+          .order('created_at', { ascending: false })
+          .limit(100);
+        
+        if (!retry.error) {
+          console.log('[ActivitesTouristiquesManagement] Chargement partiel réussi');
+          data = retry.data;
+          error = null;
+        } else {
+          // Si ça échoue aussi, afficher un message d'erreur clair
+          const message = 'Accès refusé: les politiques de sécurité RLS bloquent l\'accès. Veuillez exécuter le script SQL "fix-rls-final-no-errors.sql" dans Supabase SQL Editor pour corriger les permissions admin.';
+          setError(message);
+          toast.error('Permissions insuffisantes. Consultez la console pour plus de détails.');
+          console.error('[ActivitesTouristiquesManagement] Erreur de permission RLS:', error);
+          setItems([]);
+          return;
+        }
+      }
+      
+      if (error) {
+        console.error('[ActivitesTouristiquesManagement] Erreur Supabase:', error);
+        
+        // Gérer l'erreur 404 (table non trouvée)
+        if (error.code === 'PGRST116' || error.message?.includes('does not exist') || error.message?.includes('not found') || error.code === '42P01') {
+          const message = 'La table "activites_touristiques" n\'existe pas. Veuillez exécuter "create-activites-table.sql" dans Supabase SQL Editor.';
+          setError(message);
+          toast.error('Table non trouvée. Veuillez créer la table dans Supabase.');
+          setItems([]);
+          return;
+        }
+        
+        // Autres erreurs
+        throw error;
+      }
+      
+      console.log(`[ActivitesTouristiquesManagement] ${data?.length || 0} activités chargées`);
       setItems(data || []);
-    } catch (error) {
-      console.error('Error:', error);
-      toast.error('Erreur lors du chargement');
+    } catch (error: any) {
+      console.error('[ActivitesTouristiquesManagement] Erreur:', error);
+      const errorMessage = error?.message || 'Erreur lors du chargement des activités';
+      
+      // Toujours définir l'erreur pour l'affichage dans l'UI
+      if (errorMessage.includes('n\'existe pas') || errorMessage.includes('does not exist') || errorMessage.includes('not found')) {
+        setError(errorMessage);
+        toast.error('Table non trouvée. Veuillez exécuter le script SQL de création.');
+      } else {
+        setError(errorMessage);
+        toast.error(errorMessage);
+      }
+      setItems([]);
     } finally {
       setLoading(false);
     }
@@ -72,6 +133,28 @@ const ActivitesTouristiquesManagement: React.FC = () => {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-600"></div>
+        <p className="ml-4 text-gray-600">Chargement des activités...</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="bg-red-50 border-l-4 border-red-400 p-4">
+        <div className="flex">
+          <div className="flex-shrink-0">
+            <Activity className="h-5 w-5 text-red-400" />
+          </div>
+          <div className="ml-3">
+            <p className="text-sm text-red-700">{error}</p>
+            <button
+              onClick={loadItems}
+              className="mt-2 text-sm font-medium text-red-700 hover:text-red-600"
+            >
+              Réessayer
+            </button>
+          </div>
+        </div>
       </div>
     );
   }
@@ -81,7 +164,10 @@ const ActivitesTouristiquesManagement: React.FC = () => {
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Gestion des Activités Touristiques</h1>
-          <p className="text-gray-600 mt-1">{filteredItems.length} activité(s)</p>
+          <p className="text-gray-600 mt-1">
+            {filteredItems.length} activité{filteredItems.length > 1 ? 's' : ''} 
+            {items.length !== filteredItems.length && ` (${items.length} au total sur le site)`}
+          </p>
         </div>
         <button onClick={handleNew} className="flex items-center px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition">
           <Plus className="h-5 w-5 mr-2" />
