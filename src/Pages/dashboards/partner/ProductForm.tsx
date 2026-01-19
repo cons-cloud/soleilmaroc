@@ -8,6 +8,7 @@ import {
 } from 'lucide-react';
 import { v4 as uuidv4 } from 'uuid';
 import toast from 'react-hot-toast';
+import type { Product } from '../../../types';
 
 type ProductType = 'appartement' | 'villa' | 'hotel' | 'voiture' | 'circuit';
 type PriceType = 'per_night' | 'per_day' | 'per_person';
@@ -40,7 +41,26 @@ interface ProductFormData {
   deletedImages: (string | undefined)[];
 }
 
-const defaultFeature = { id: uuidv4(), name: '', value: '' };
+const createEmptyFeature = (): Feature => ({ id: uuidv4(), name: '', value: '' });
+
+const parseFeatures = (input: any): Feature[] => {
+  if (!input) return [createEmptyFeature()];
+  if (Array.isArray(input)) {
+    return input.map((f: any) => ({
+      id: uuidv4(),
+      name: String(f?.name ?? ''),
+      value: String(f?.value ?? '')
+    }));
+  }
+  if (typeof input === 'object') {
+    return Object.entries(input).map(([name, value]) => ({
+      id: uuidv4(),
+      name,
+      value: String(value ?? '')
+    }));
+  }
+  return [createEmptyFeature()];
+};
 
 const amenitiesList = [
   'wifi', 'piscine', 'parking', 'climatisation', 'chauffage',
@@ -48,11 +68,18 @@ const amenitiesList = [
   'jardin', 'vue_mer', 'vue_montagne', 'acces_plage', 'piscine_chauffee'
 ];
 
-const ProductForm: React.FC = () => {
+interface ProductFormProps {
+  onClose: () => void;
+  onCreate?: () => void;
+  editingProduct?: Product | null;
+}
+
+const ProductForm: React.FC<ProductFormProps> = ({ onClose, onCreate, editingProduct }) => {
   const { id } = useParams<{ id?: string }>();
   const { user } = useAuth();
   const navigate = useNavigate();
-  const isEditing = !!id;
+  const isRouteEditing = !!id;
+  const isEditing = isRouteEditing || !!editingProduct?.id;
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [previewUrls, setPreviewUrls] = useState<string[]>([]);
@@ -72,17 +99,17 @@ const ProductForm: React.FC = () => {
     bathrooms: 1,
     surface: 0,
     available: true,
-    features: [defaultFeature],
+    features: [createEmptyFeature()],
     amenities: [],
     images: [],
     existingImages: [],
     deletedImages: []
   } as ProductFormData);
 
-  // Charger le produit existant en mode édition
+  // Charger le produit existant en mode édition (route)
   useEffect(() => {
-    if (!isEditing) return;
-
+    if (!isRouteEditing) return;
+ 
     const loadProduct = async () => {
       try {
         setLoading(true);
@@ -98,13 +125,7 @@ const ProductForm: React.FC = () => {
 
         setFormData({
           ...data,
-          features: data.features && Object.keys(data.features).length > 0 
-            ? Object.entries(data.features).map(([name, value]) => ({
-                id: uuidv4(),
-                name,
-                value: String(value)
-              }))
-            : [defaultFeature],
+          features: parseFeatures(data.features),
           amenities: data.amenities || [],
           existingImages: data.images || [],
           images: [],
@@ -122,16 +143,47 @@ const ProductForm: React.FC = () => {
     };
 
     loadProduct();
-  }, [id, isEditing, user?.id, navigate]);
+  }, [id, isRouteEditing, user?.id, navigate]);
+ 
+  // Si editingProduct est passé depuis le parent (modal), initialiser le formulaire depuis cette prop
+  useEffect(() => {
+    if (!editingProduct) return;
+    if (isRouteEditing) return;
+
+    setFormData({
+      title: editingProduct.title ?? '',
+      description: (editingProduct as any).description ?? '',
+      product_type: (editingProduct.product_type as ProductType) ?? 'appartement',
+      price: Number(editingProduct.price ?? 0),
+      price_type: (editingProduct as any).price_type ?? 'per_night',
+      city: editingProduct.city ?? '',
+      address: (editingProduct as any).address ?? '',
+      location_lat: (editingProduct as any).location_lat ?? null,
+      location_lng: (editingProduct as any).location_lng ?? null,
+      max_guests: Number((editingProduct as any).max_guests ?? 1),
+      bedrooms: Number((editingProduct as any).bedrooms ?? 1),
+      bathrooms: Number((editingProduct as any).bathrooms ?? 1),
+      surface: Number((editingProduct as any).surface ?? 0),
+      available: editingProduct.available ?? true,
+      features: parseFeatures((editingProduct as any).features),
+      amenities: (editingProduct as any).amenities ?? [],
+      images: [],
+      existingImages: (editingProduct as any).images ?? [],
+      deletedImages: []
+    } as ProductFormData);
+
+    setPreviewUrls((editingProduct as any).images ?? []);
+  }, [editingProduct, isRouteEditing]);
 
   // Gérer les changements des champs de formulaire
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-    const { name, value, type } = e.target as HTMLInputElement;
+    const target = e.target as HTMLInputElement;
+    const { name, value, type } = target;
     
     setFormData(prev => ({
       ...prev,
       [name]: type === 'number' ? parseFloat(value) || 0 :
-              type === 'checkbox' ? (e.target as HTMLInputElement).checked :
+              type === 'checkbox' ? target.checked :
               value
     }));
   };
@@ -150,16 +202,16 @@ const ProductForm: React.FC = () => {
   const addFeature = () => {
     setFormData(prev => ({
       ...prev,
-      features: [...prev.features, { id: uuidv4(), name: '', value: '' }]
+      features: [...prev.features, createEmptyFeature()]
     }));
   };
 
   // Supprimer une caractéristique
   const removeFeature = (id: string) => {
-    setFormData(prev => ({
-      ...prev,
-      features: prev.features.filter(f => f.id !== id)
-    }));
+    setFormData(prev => {
+      const newFeatures = prev.features.filter(f => f.id !== id);
+      return { ...prev, features: newFeatures.length ? newFeatures : [createEmptyFeature()] };
+    });
   };
 
   // Gérer la sélection des équipements
@@ -201,8 +253,12 @@ const ProductForm: React.FC = () => {
         setPreviewUrls(prev => prev.filter((_, i) => i !== index));
       }
     } else {
+      // index is index in previewUrls; non-existing images start after existingImages.length
+      const existingCount = formData.existingImages?.length || 0;
+      const fileIndex = index - existingCount;
+      if (fileIndex < 0) return; // safety
       const newImages = [...formData.images];
-      newImages.splice(index - (formData.existingImages?.length || 0), 1);
+      newImages.splice(fileIndex, 1);
       
       setFormData(prev => ({
         ...prev,
@@ -212,10 +268,8 @@ const ProductForm: React.FC = () => {
       setPreviewUrls(prev => {
         const newUrls = [...prev];
         const urlToRemove = newUrls[index];
-        if (urlToRemove) {
-          if (typeof urlToRemove === 'string' && urlToRemove.startsWith('blob:')) {
-            URL.revokeObjectURL(urlToRemove);
-          }
+        if (urlToRemove && urlToRemove.startsWith('blob:')) {
+          URL.revokeObjectURL(urlToRemove);
         }
         newUrls.splice(index, 1);
         return newUrls;
@@ -242,10 +296,11 @@ const ProductForm: React.FC = () => {
           
         if (uploadError) throw uploadError;
         
-        const { data: { publicUrl } } = await supabase.storage
+        const { data } = await supabase.storage
           .from('services')
           .getPublicUrl(filePath);
         
+        const publicUrl = (data && (data as any).publicUrl) || (data as any)?.publicUrl;
         if (publicUrl) {
           uploadedUrls.push(publicUrl);
         }
@@ -268,15 +323,34 @@ const ProductForm: React.FC = () => {
       for (const url of urls) {
         if (!url) continue;
         
-        // Extraire le chemin du fichier à partir de l'URL
-        const path = url.split('/').pop();
+        // Tentative robuste d'extraction du path stocké en storage:
+        // public URL pattern includes '/storage/v1/object/public/services/<path>'
+        const marker = '/storage/v1/object/public/services/';
+        let path = '';
+        const idx = url.indexOf(marker);
+        if (idx !== -1) {
+          path = url.substring(idx + marker.length);
+        } else {
+          // fallback: try after '/services/'
+          const marker2 = '/services/';
+          const idx2 = url.indexOf(marker2);
+          if (idx2 !== -1) {
+            path = url.substring(idx2 + marker2.length);
+          } else {
+            // last resort: take last 3 segments to reconstruct 'products/<id>/<file>'
+            const parts = url.split('/').filter(Boolean);
+            path = parts.slice(-3).join('/');
+          }
+        }
+
         if (path) {
-          const filePath = `products/${path}`;
           const { error } = await supabase.storage
             .from('services')
-            .remove([filePath]);
+            .remove([path]);
             
           if (error) console.error(`Erreur lors de la suppression de l'image ${path}:`, error);
+        } else {
+          console.warn('Impossible d\'extraire le chemin de suppression pour', url);
         }
       }
     } catch (error) {
@@ -296,14 +370,10 @@ const ProductForm: React.FC = () => {
     try {
       setLoading(true);
       
-      // Préparer les données du produit
-      // Préparer les données du produit en nettoyant les valeurs null/undefined
       const featuresObj = formData.features
         .filter(f => f.name && f.value)
         .reduce((acc, { name, value }) => ({ ...acc, [name]: value }), {});
       
-      // Préparer les données du produit
-      // Note: max_guests sera stocké dans features si la colonne n'existe pas
       const productData: any = {
         title: formData.title || null,
         description: formData.description || null,
@@ -316,14 +386,11 @@ const ProductForm: React.FC = () => {
         partner_id: user.id,
       };
       
-      // Ajouter max_guests dans features si défini (pour compatibilité)
       if (formData.max_guests) {
         productData.max_guests = Number(formData.max_guests);
-        // Également ajouter dans features pour compatibilité
         (featuresObj as any).max_guests = String(formData.max_guests);
       }
       
-      // Ajouter bedrooms, bathrooms, surface dans features si définis
       if (formData.bedrooms) (featuresObj as any).bedrooms = String(formData.bedrooms);
       if (formData.bathrooms) (featuresObj as any).bathrooms = String(formData.bathrooms);
       if (formData.surface) (featuresObj as any).surface = String(formData.surface);
@@ -331,7 +398,6 @@ const ProductForm: React.FC = () => {
       productData.features = Object.keys(featuresObj).length > 0 ? featuresObj : null;
       productData.amenities = Array.isArray(formData.amenities) && formData.amenities.length > 0 ? formData.amenities : null;
       
-      // Ajouter les coordonnées GPS seulement si elles sont définies
       if (formData.location_lat !== null && formData.location_lat !== undefined) {
         productData.location_lat = Number(formData.location_lat);
       }
@@ -339,26 +405,25 @@ const ProductForm: React.FC = () => {
         productData.location_lng = Number(formData.location_lng);
       }
       
-      // Nettoyer les valeurs undefined (Supabase ne les accepte pas)
       Object.keys(productData).forEach(key => {
         if (productData[key] === undefined) {
           delete productData[key];
         }
       });
       
-      let productId = id;
+      let productId = id || editingProduct?.id;
       
       if (isEditing) {
+        if (!productId) throw new Error('Aucun ID de produit pour la mise à jour');
         // Mise à jour d'un produit existant
         const { error: updateError } = await supabase
           .from('partner_products')
           .update(productData)
-          .eq('id', id)
+          .eq('id', productId)
           .eq('partner_id', user.id);
           
         if (updateError) throw updateError;
         
-        // Supprimer les images marquées pour suppression
         if (formData.deletedImages && formData.deletedImages.length > 0) {
           const validUrls = formData.deletedImages.filter((url): url is string => !!url);
           if (validUrls.length > 0) {
@@ -367,8 +432,6 @@ const ProductForm: React.FC = () => {
         }
       } else {
         // Créer un nouveau produit
-        console.log('[ProductForm] Données à insérer:', productData);
-        
         const { data, error: insertError } = await supabase
           .from('partner_products')
           .insert([productData])
@@ -377,7 +440,6 @@ const ProductForm: React.FC = () => {
           
         if (insertError) {
           console.error('[ProductForm] Erreur d\'insertion:', insertError);
-          console.error('[ProductForm] Détails de l\'erreur:', JSON.stringify(insertError, null, 2));
           throw insertError;
         }
         
@@ -386,17 +448,15 @@ const ProductForm: React.FC = () => {
         }
         
         productId = data.id;
-        console.log('[ProductForm] Produit créé avec succès, ID:', productId);
       }
       
-      // S'assurer que productId est une chaîne de caractères
-      const productIdStr = productId || '';
+      const productIdStr = String(productId || '');
       
       // Téléverser les nouvelles images
       const uploadedImageUrls = await uploadImages(productIdStr);
       
       // Mettre à jour le produit avec les URLs des images
-      const allImageUrls = [...formData.existingImages, ...uploadedImageUrls].filter((url): url is string => !!url);
+      const allImageUrls = [...(formData.existingImages || []), ...uploadedImageUrls].filter((url): url is string => !!url);
       
       const { error: updateImagesError } = await supabase
         .from('partner_products')
@@ -404,12 +464,12 @@ const ProductForm: React.FC = () => {
           images: allImageUrls,
           main_image: allImageUrls[0] || null
         })
-        .eq('id', productId);
+        .eq('id', productIdStr);
         
       if (updateImagesError) throw updateImagesError;
       
-      // Rediriger vers la liste des produits avec un message de succès
       toast.success(`Produit ${isEditing ? 'mis à jour' : 'créé'} avec succès`);
+      if (onCreate) onCreate();
       navigate('/dashboard/partner/products');
       
     } catch (error) {
@@ -922,6 +982,11 @@ const ProductForm: React.FC = () => {
           </div>
         </div>
       </form>
+
+      <button type="button" onClick={onClose} className="mt-4 inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary">
+        <X className="w-5 h-5 mr-2" />
+        Fermer
+      </button>
     </div>
   );
 };
