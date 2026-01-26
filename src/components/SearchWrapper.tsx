@@ -31,6 +31,6 @@ const SearchWrapper: React.FC<{
       )}
     </div>
   );
-};
+}; 
 
 export default SearchWrapper;
