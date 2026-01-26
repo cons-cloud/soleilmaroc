@@ -213,7 +213,7 @@ const UniversalBookingForm: React.FC<UniversalBookingFormProps> = ({ serviceType
 
       // 1. Créer la réservation dans Supabase
       const bookingData: any = {
-        user_id: user.id, // 🔑 IMPORTANT : Lier la réservation à l'utilisateur
+        client_id: user.id, // 🔑 IMPORTANT : Lier la réservation au client (cohérent avec ServiceReservation/Payment)
         service_type: serviceType,
         service_id: service.id,
         service_title: service.title,

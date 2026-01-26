@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
@@ -8,6 +8,7 @@ import { Search, Filter, MapPin, Car, Building, Plane, Loader } from 'lucide-rea
 interface SearchResult {
   id: string;
   type: 'tourism' | 'car' | 'property';
+  path: string;
   title: string;
   subtitle: string;
   price: number;
@@ -16,6 +17,7 @@ interface SearchResult {
 }
 
 const Recherche = () => {
+  const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const [searchQuery, setSearchQuery] = useState(searchParams.get('q') || '');
   const [results, setResults] = useState<SearchResult[]>([]);
@@ -38,137 +40,267 @@ const Recherche = () => {
 
     setLoading(true);
     try {
-      const searchTerm = `%${query}%`;
+      const term = query.trim();
+      const searchTerm = `%${term}%`;
       const allResults: SearchResult[] = [];
 
       // Recherche dans les circuits touristiques
       if (selectedFilters.includes('all') || selectedFilters.includes('tourism')) {
-        const { data: circuits } = await supabase
+        const { data: circuits, error: circuitsError } = await supabase
           .from('circuits_touristiques')
           .select('*')
-          .or(`title.ilike.${searchTerm},destination.ilike.${searchTerm},description.ilike.${searchTerm}`)
-          .eq('status', 'active')
+          .or(`title.ilike.${searchTerm},city.ilike.${searchTerm},description.ilike.${searchTerm}`)
+          .eq('available', true)
           .limit(20);
+
+        if (circuitsError) {
+          console.warn('[Recherche] circuits_touristiques search error:', circuitsError);
+        }
 
         if (circuits) {
           allResults.push(...circuits.map((c: any) => ({
             id: c.id,
             type: 'tourism' as const,
+            path: `/tourisme/${c.id}`,
             title: c.title,
-            subtitle: c.destination,
-            price: c.price,
+            subtitle: c.city || c.destination || 'Circuit',
+            price: Number(c.price_per_person ?? c.price ?? 0),
             image: c.images?.[0] || '/placeholder.jpg',
-            location: c.destination
+            location: c.city || c.destination || ''
           })));
         }
 
         // Recherche dans les activités touristiques
-        const { data: activities } = await supabase
+        const { data: activities, error: activitiesError } = await supabase
           .from('activites_touristiques')
           .select('*')
-          .or(`title.ilike.${searchTerm},location.ilike.${searchTerm},description.ilike.${searchTerm}`)
-          .eq('status', 'active')
+          .or(`title.ilike.${searchTerm},city.ilike.${searchTerm},description.ilike.${searchTerm}`)
+          .eq('available', true)
           .limit(20);
+
+        if (activitiesError) {
+          console.warn('[Recherche] activites_touristiques search error:', activitiesError);
+        }
 
         if (activities) {
           allResults.push(...activities.map((a: any) => ({
             id: a.id,
             type: 'tourism' as const,
+            path: `/services/activites`,
             title: a.title,
-            subtitle: a.location,
-            price: a.price,
+            subtitle: a.city || a.location || 'Activité',
+            price: Number(a.price_per_person ?? a.price ?? 0),
             image: a.images?.[0] || '/placeholder.jpg',
-            location: a.location
+            location: a.city || a.location || ''
           })));
+        }
+
+        // Recherche dans les circuits partenaires
+        const { data: partnerCircuits, error: partnerCircuitsError } = await supabase
+          .from('partner_products')
+          .select('*')
+          .eq('available', true)
+          .eq('product_type', 'circuit')
+          .or(`title.ilike.${searchTerm},name.ilike.${searchTerm},city.ilike.${searchTerm},description.ilike.${searchTerm}`)
+          .limit(20);
+
+        if (partnerCircuitsError) {
+          console.warn('[Recherche] partner_products(circuit) search error:', partnerCircuitsError);
+        }
+
+        if (partnerCircuits) {
+          allResults.push(
+            ...partnerCircuits.map((p: any) => ({
+              id: p.id,
+              type: 'tourism' as const,
+              path: `/tourisme/${p.id}`,
+              title: p.title || p.name || 'Circuit',
+              subtitle: p.city || 'Circuit',
+              price: Number(p.price_per_person ?? p.price ?? 0),
+              image: (Array.isArray(p.images) && p.images[0]) || p.main_image || '/placeholder.jpg',
+              location: p.city || ''
+            }))
+          );
         }
       }
 
       // Recherche dans les voitures
       if (selectedFilters.includes('all') || selectedFilters.includes('car')) {
-        const { data: cars } = await supabase
+        const { data: cars, error: carsError } = await supabase
           .from('locations_voitures')
           .select('*')
-          .or(`brand.ilike.${searchTerm},model.ilike.${searchTerm},city.ilike.${searchTerm}`)
-          .eq('status', 'active')
+          .or(`marque.ilike.${searchTerm},modele.ilike.${searchTerm},ville.ilike.${searchTerm}`)
+          .eq('disponible', true)
           .limit(20);
+
+        if (carsError) {
+          console.warn('[Recherche] locations_voitures search error:', carsError);
+        }
 
         if (cars) {
           allResults.push(...cars.map((c: any) => ({
             id: c.id,
             type: 'car' as const,
-            title: `${c.brand} ${c.model}`,
-            subtitle: `${c.year} • ${c.fuel_type}`,
-            price: c.price_per_day,
+            path: `/voitures/${c.id}`,
+            title: `${c.marque || ''} ${c.modele || ''}`.trim() || 'Voiture',
+            subtitle: `${c.annee || ''}${c.type_carburant ? ` • ${c.type_carburant}` : ''}`.trim(),
+            price: Number(c.prix_jour ?? c.prix ?? 0),
             image: c.images?.[0] || '/placeholder.jpg',
-            location: c.city
+            location: c.ville || ''
           })));
+        }
+
+        const { data: partnerCars, error: partnerCarsError } = await supabase
+          .from('partner_products')
+          .select('*')
+          .eq('available', true)
+          .eq('product_type', 'voiture')
+          .or(`title.ilike.${searchTerm},name.ilike.${searchTerm},city.ilike.${searchTerm},description.ilike.${searchTerm},marque.ilike.${searchTerm},modele.ilike.${searchTerm}`)
+          .limit(20);
+
+        if (partnerCarsError) {
+          console.warn('[Recherche] partner_products(voiture) search error:', partnerCarsError);
+        }
+
+        if (partnerCars) {
+          allResults.push(
+            ...partnerCars.map((p: any) => ({
+              id: p.id,
+              type: 'car' as const,
+              path: `/voitures/${p.id}`,
+              title: `${p.marque || ''} ${p.modele || ''}`.trim() || p.title || p.name || 'Voiture',
+              subtitle: `${p.annee || ''}`.trim(),
+              price: Number(p.price_per_day ?? p.price ?? 0),
+              image: (Array.isArray(p.images) && p.images[0]) || p.main_image || '/placeholder.jpg',
+              location: p.city || ''
+            }))
+          );
         }
       }
 
       // Recherche dans les propriétés
       if (selectedFilters.includes('all') || selectedFilters.includes('property')) {
         // Appartements
-        const { data: apartments } = await supabase
+        const { data: apartments, error: apartmentsError } = await supabase
           .from('appartements')
           .select('*')
           .or(`title.ilike.${searchTerm},city.ilike.${searchTerm},description.ilike.${searchTerm}`)
-          .eq('status', 'active')
+          .eq('available', true)
           .limit(20);
+
+        if (apartmentsError) {
+          console.warn('[Recherche] appartements search error:', apartmentsError);
+        }
 
         if (apartments) {
           allResults.push(...apartments.map((a: any) => ({
             id: a.id,
             type: 'property' as const,
+            path: `/appartements/${a.id}`,
             title: a.title,
             subtitle: `Appartement • ${a.bedrooms} chambres`,
-            price: a.price_per_night,
+            price: Number(a.price_per_night ?? 0),
             image: a.images?.[0] || '/placeholder.jpg',
             location: a.city
           })));
         }
 
         // Villas
-        const { data: villas } = await supabase
+        const { data: villas, error: villasError } = await supabase
           .from('villas')
           .select('*')
           .or(`title.ilike.${searchTerm},city.ilike.${searchTerm},description.ilike.${searchTerm}`)
-          .eq('status', 'active')
+          .eq('available', true)
           .limit(20);
+
+        if (villasError) {
+          console.warn('[Recherche] villas search error:', villasError);
+        }
 
         if (villas) {
           allResults.push(...villas.map((v: any) => ({
             id: v.id,
             type: 'property' as const,
+            path: `/villas/${v.id}`,
             title: v.title,
             subtitle: `Villa • ${v.bedrooms} chambres`,
-            price: v.price_per_night,
+            price: Number(v.price_per_night ?? 0),
             image: v.images?.[0] || '/placeholder.jpg',
             location: v.city
           })));
         }
 
         // Hôtels
-        const { data: hotels } = await supabase
+        const { data: hotels, error: hotelsError } = await supabase
           .from('hotels')
           .select('*')
           .or(`name.ilike.${searchTerm},city.ilike.${searchTerm},description.ilike.${searchTerm}`)
-          .eq('status', 'active')
+          .eq('available', true)
           .limit(20);
+
+        if (hotelsError) {
+          console.warn('[Recherche] hotels search error:', hotelsError);
+        }
 
         if (hotels) {
           allResults.push(...hotels.map((h: any) => ({
             id: h.id,
             type: 'property' as const,
+            path: `/hotels/${h.id}`,
             title: h.name,
             subtitle: `Hôtel ${h.stars}★`,
-            price: h.price_per_night,
+            price: Number(h.price_per_night ?? 0),
             image: h.images?.[0] || '/placeholder.jpg',
             location: h.city
           })));
         }
+
+        // Produits partenaires (appartement / villa / hotel)
+        const { data: partnerProps, error: partnerPropsError } = await supabase
+          .from('partner_products')
+          .select('*')
+          .eq('available', true)
+          .in('product_type', ['appartement', 'villa', 'hotel'])
+          .or(`title.ilike.${searchTerm},name.ilike.${searchTerm},city.ilike.${searchTerm},description.ilike.${searchTerm}`)
+          .limit(30);
+
+        if (partnerPropsError) {
+          console.warn('[Recherche] partner_products(property) search error:', partnerPropsError);
+        }
+
+        if (partnerProps) {
+          allResults.push(
+            ...partnerProps.map((p: any) => {
+              const basePath =
+                p.product_type === 'hotel'
+                  ? '/hotels'
+                  : p.product_type === 'villa'
+                  ? '/villas'
+                  : '/appartements';
+              const label =
+                p.product_type === 'hotel' ? 'Hôtel' : p.product_type === 'villa' ? 'Villa' : 'Appartement';
+              const price = Number(p.price_per_night ?? p.price ?? 0);
+              return {
+                id: p.id,
+                type: 'property' as const,
+                path: `${basePath}/${p.id}`,
+                title: p.title || p.name || label,
+                subtitle: `${label} • Partenaire`,
+                price,
+                image: (Array.isArray(p.images) && p.images[0]) || p.main_image || '/placeholder.jpg',
+                location: p.city || ''
+              };
+            })
+          );
+        }
       }
 
-      setResults(allResults);
+      // Dédupliquer (au cas où un item match plusieurs sources)
+      const deduped = Array.from(
+        new Map(allResults.map((r) => [`${r.type}:${r.id}:${r.path}`, r])).values()
+      );
+
+      setResults(deduped);
     } catch (error) {
       console.error('Erreur lors de la recherche:', error);
     } finally {
@@ -363,7 +495,10 @@ const Recherche = () => {
                               {result.type === 'car' ? '/jour' : result.type === 'property' ? '/nuit' : ''}
                             </span>
                           </p>
-                          <button className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors text-sm">
+                          <button
+                            className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors text-sm"
+                            onClick={() => navigate(result.path)}
+                          >
                             Voir détails
                           </button>
                         </div>

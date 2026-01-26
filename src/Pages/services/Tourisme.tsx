@@ -413,6 +413,7 @@ const Tourisme = () => {
                         description={voyage.description || ''}
                         images={Array.isArray(voyage.images) ? voyage.images : []}
                         price={Number(voyage.price) || 0}
+                        type="circuit_touristiques"
                         rating={Number(voyage.rating) || 0}
                         duration={voyage.duration || 'N/A'}
                         tags={Array.isArray(voyage.tags) ? voyage.tags : []}
@@ -484,6 +485,7 @@ const Tourisme = () => {
                     description={voyage.description || ''}
                     images={Array.isArray(voyage.images) ? voyage.images : []}
                     price={Number(voyage.price) || 0}
+                    type="circuit_touristiques"
                     rating={Number(voyage.rating) || 0}
                     duration={voyage.duration || 'N/A'}
                     tags={Array.isArray(voyage.tags) ? voyage.tags : []}

@@ -125,7 +125,7 @@ const CircuitBookingForm: React.FC<CircuitBookingFormProps> = ({ circuit, onClos
       const { data: booking, error: bookingError } = await supabase
         .from('bookings')
         .insert({
-          user_id: user.id, // 🔑 IMPORTANT : Lier la réservation à l'utilisateur
+          client_id: user.id, // 🔑 IMPORTANT : Lier la réservation au client (cohérent avec ServiceReservation/Payment)
           circuit_id: circuit.id,
           circuit_title: circuit.title,
           client_name: formData.fullName,

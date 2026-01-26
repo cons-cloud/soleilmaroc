@@ -172,16 +172,43 @@ const ServiceCard: React.FC<ServiceCardProps> = ({
 
   const handleBookingSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Normaliser le type pour le système de réservation (Login -> ServiceReservation)
+    const normalizedBookingType = (() => {
+      switch (type) {
+        case 'hotels':
+          return 'hotel';
+        case 'apartments':
+          return 'appartement';
+        case 'villas':
+          return 'villa';
+        case 'car_rentals':
+          return 'voiture';
+        case 'circuit_touristiques':
+          return 'circuit';
+        default:
+          return 'service';
+      }
+    })();
+
+    // Stocker une réservation en attente (prioritaire) pour reprise après login
+    sessionStorage.setItem(
+      'pendingReservation',
+      JSON.stringify({
+        formData: {
+          startDate: bookingData.startDate,
+          endDate: bookingData.endDate,
+          guests: bookingData.guests
+        },
+        serviceId: id,
+        serviceType: normalizedBookingType
+      })
+    );
+
     navigate('/login', {
       state: {
         from: window.location.pathname,
-        reservationData: {
-          serviceType: type,
-          serviceId: id,
-          serviceTitle: title,
-          servicePrice: price_per_night,
-          ...bookingData
-        }
+        fromReservation: true
       }
     });
   };

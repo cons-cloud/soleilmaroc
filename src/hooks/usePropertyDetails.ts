@@ -41,11 +41,31 @@ export const usePropertyDetails = (type: string, id?: string) => {
             tableName = 'services';
         }
 
+        // Mapping type -> partner_products.product_type
+        const partnerProductType = (() => {
+          switch (type) {
+            case 'hotel':
+              return 'hotel';
+            case 'apartment':
+              return 'appartement';
+            case 'villa':
+              return 'villa';
+            case 'car':
+              return 'voiture';
+            case 'tourism':
+            case 'circuit':
+            case 'tour':
+              return 'circuit';
+            default:
+              return null;
+          }
+        })();
+
         // Utiliser maybeSingle() au lieu de single() pour éviter l'erreur 406
         // quand aucun résultat n'est trouvé
         console.log(`usePropertyDetails: Recherche ${type} (id: ${id}) dans table ${tableName}`);
         
-        const { data, error: queryError } = await supabase
+        let { data, error: queryError } = await supabase
           .from(tableName)
           .select('*')
           .eq('id', id)
@@ -54,6 +74,23 @@ export const usePropertyDetails = (type: string, id?: string) => {
         if (queryError) {
           console.error(`Erreur lors de la récupération ${type}:`, queryError);
           throw new Error(`Erreur lors de la récupération: ${queryError.message}`);
+        }
+
+        // Fallback: si pas trouvé dans la table principale, essayer partner_products
+        if (!data && partnerProductType) {
+          console.log(`usePropertyDetails: Fallback partner_products (type: ${partnerProductType}, id: ${id})`);
+          const partnerRes = await supabase
+            .from('partner_products')
+            .select('*')
+            .eq('id', id)
+            .eq('product_type', partnerProductType)
+            .maybeSingle();
+
+          if (partnerRes.error) {
+            console.warn(`usePropertyDetails: Erreur fallback partner_products:`, partnerRes.error);
+          } else {
+            data = partnerRes.data;
+          }
         }
         
         // Normaliser les données pour un format cohérent

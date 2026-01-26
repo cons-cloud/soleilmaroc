@@ -75,6 +75,17 @@ const Navbar: React.FC<NavbarProps> = () => {
     'Hôtels': 'from-indigo-500 to-green-500',
   };
 
+  // Ordre fixe des sous‑menus pour desktop / mobile / tablette
+  const servicesOrder = ['Tourisme', 'Location de voitures', 'Appartements', 'Villas', 'Hôtels'];
+  const orderSubmenu = (submenu?: Array<{ name: string; path: string }>) => {
+    if (!submenu) return [];
+    return submenu.slice().sort((a, b) => {
+      const ia = servicesOrder.indexOf(a.name);
+      const ib = servicesOrder.indexOf(b.name);
+      return (ia === -1 ? 999 : ia) - (ib === -1 ? 999 : ib);
+    });
+  };
+
   const navLinks: NavLink[] = [
     { name: 'Accueil', path: '/' },
     {
@@ -125,13 +136,19 @@ const Navbar: React.FC<NavbarProps> = () => {
                     {servicesOpen && (
                       <div className="absolute left-0 mt-2 w-72 rounded-xl shadow-2xl bg-linear-to-br from-gray-900 via-gray-800 to-gray-900 ring-1 ring-gray-700 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200 backdrop-blur-lg">
                         <div className="p-2">
-                          {item.submenu.map((subItem) => {
+                          {item.submenu.map((_subItem) => {
+                            // ordered mapping handled below (no-op here)
+                            return null;
+                          })}
+                          {orderSubmenu(item.submenu).map((subItem) => {
                             const Icon = serviceIcons[subItem.name];
                             const gradientColor = serviceColors[subItem.name];
                             return (
                               <Link
                                 key={subItem.path}
                                 to={subItem.path}
+                                onPointerDown={() => { setIsOpen(false); setServicesOpen(false); }}
+                                onClick={() => { setIsOpen(false); setServicesOpen(false); }}
                                 className="group flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-200 hover:bg-white/10 transition-all duration-200 hover:shadow-lg hover:shadow-yellow-200/20"
                               >
                                 <div className={`flex items-center justify-center w-10 h-10 rounded-lg bg-linear-to-br ${gradientColor} shadow-lg group-hover:scale-110 group-hover:shadow-xl transition-transform duration-200`}>
@@ -239,19 +256,16 @@ const Navbar: React.FC<NavbarProps> = () => {
                     </button>
                     {servicesOpen && (
                       <div className="pl-2 py-2 space-y-2">
-                        {item.submenu.map((subItem) => {
+                        {orderSubmenu(item.submenu).map((subItem) => {
                           const Icon = serviceIcons[subItem.name];
                           const gradientColor = serviceColors[subItem.name];
                           return (
                             <button
                               key={subItem.path}
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                if (subItem.path) {
-                                  handleNavigation(subItem.path);
-                                }
-                              }}
-                              className="group flex items-center gap-3 w-full px-3 py-2 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-all duration-200"
+                              type="button"
+                              onPointerDown={() => handleNavigation(subItem.path)}
+                              onClick={() => handleNavigation(subItem.path)}
+                              className="group flex items-center gap-3 w-full px-3 py-2 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-all duration-200 text-left"
                             >
                               <div className={`flex items-center justify-center w-8 h-8 rounded-lg bg-gradient-to-br ${gradientColor} shadow-sm`}>
                                 {Icon && <Icon className="w-4 h-4 text-white" />}
@@ -287,3 +301,5 @@ const Navbar: React.FC<NavbarProps> = () => {
 };
 
 export default Navbar;
+
+

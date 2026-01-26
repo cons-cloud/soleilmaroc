@@ -83,13 +83,17 @@ export const useHotels = () => {
       }
 
       // Formater les hôtels de la table principale
-      const formattedHotels: Hotel[] = Array.isArray(hotelsData) 
-        ? hotelsData.map(hotel => ({
-            ...hotel,
-            rooms_count: 'rooms_count' in hotel ? hotel.rooms_count : 1,
-            amenities: Array.isArray(hotel.amenities) ? hotel.amenities : [],
-            images: Array.isArray(hotel.images) ? hotel.images : []
-          }))
+      const formattedHotels: Hotel[] = Array.isArray(hotelsData)
+        ? (hotelsData as any[]).map((h: any) => {
+            const rcRaw = h?.rooms_count;
+            const rooms_count =
+              typeof rcRaw === 'number'
+                ? rcRaw
+                : rcRaw != null && !isNaN(Number(rcRaw))
+                ? Number(rcRaw)
+                : undefined;
+            return { ...h, rooms_count } as Hotel;
+          })
         : [];
 
       // Formater les hôtels des partenaires

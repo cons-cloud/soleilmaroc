@@ -26,6 +26,8 @@ interface ServiceData {
   price: number;
   images?: string[];
   type: string;
+  source?: 'admin' | 'partner';
+  partner_id?: string;
   [key: string]: any;
 }
 
@@ -172,41 +174,94 @@ const ServiceReservation: React.FC = () => {
         .from(tableName)
         .select('*')
         .eq('id', id)
-        .single();
+        .maybeSingle();
 
-      if (error) throw error;
-      if (!data) {
-        throw new Error('Service non trouvé');
+      // Fallback: si pas trouvé dans la table principale, tenter partner_products
+      let finalData: any = data;
+      let source: 'admin' | 'partner' = 'admin';
+
+      if (!finalData) {
+        const partnerProductType = (() => {
+          switch (tableName) {
+            case 'hotels':
+              return 'hotel';
+            case 'appartements':
+              return 'appartement';
+            case 'villas':
+              return 'villa';
+            case 'locations_voitures':
+              return 'voiture';
+            case 'circuits_touristiques':
+              return 'circuit';
+            default:
+              return null;
+          }
+        })();
+
+        if (partnerProductType) {
+          const partnerRes = await supabase
+            .from('partner_products')
+            .select('*')
+            .eq('id', id)
+            .eq('product_type', partnerProductType)
+            .maybeSingle();
+
+          if (partnerRes.data) {
+            finalData = partnerRes.data;
+            source = 'partner';
+          } else if (partnerRes.error) {
+            // Non bloquant: si on ne trouve pas côté partner, on garde la logique "non trouvé"
+            console.warn('[ServiceReservation] partner_products fallback error:', partnerRes.error);
+          }
+        }
       }
+
+      if (error && !finalData) throw error;
+      if (!finalData) throw new Error('Service non trouvé');
 
       // Mapper les données du service selon le type
       let title = '';
       let price = 0;
       
-      if (tableName === 'hotels') {
-        title = data.name || 'Sans titre';
-        price = data.price_per_night || 0;
-      } else if (tableName === 'appartements' || tableName === 'villas') {
-        title = data.title || 'Sans titre';
-        price = data.price_per_night || 0;
-      } else if (tableName === 'locations_voitures') {
-        title = `${data.brand || ''} ${data.model || ''} ${data.year ? data.year : ''}`.trim();
-        price = data.price_per_day || 0;
-      } else if (tableName === 'circuits_touristiques') {
-        title = data.title || 'Sans titre';
-        price = data.price_per_person || 0;
+      if (source === 'partner') {
+        // Données provenant de partner_products
+        title = finalData.title || finalData.name || 'Sans titre';
+        // partner_products utilise souvent "price"
+        price =
+          finalData.price_per_night ||
+          finalData.price_per_day ||
+          finalData.price_per_person ||
+          finalData.price ||
+          0;
       } else {
-        title = data.nom || data.titre || data.name || data.title || 'Sans titre';
-        price = data.prix || data.prix_nuit || data.prix_jour || data.price_per_night || data.price_per_day || data.price_per_person || data.price || 0;
+        // Données provenant des tables admin
+        if (tableName === 'hotels') {
+          title = finalData.name || 'Sans titre';
+          price = finalData.price_per_night || 0;
+        } else if (tableName === 'appartements' || tableName === 'villas') {
+          title = finalData.title || 'Sans titre';
+          price = finalData.price_per_night || 0;
+        } else if (tableName === 'locations_voitures') {
+          title = `${finalData.brand || ''} ${finalData.model || ''} ${finalData.year ? finalData.year : ''}`.trim();
+          price = finalData.price_per_day || 0;
+        } else if (tableName === 'circuits_touristiques') {
+          title = finalData.title || 'Sans titre';
+          price = finalData.price_per_person || 0;
+        } else {
+          title = finalData.nom || finalData.titre || finalData.name || finalData.title || 'Sans titre';
+          price = finalData.prix || finalData.prix_nuit || finalData.prix_jour || finalData.price_per_night || finalData.price_per_day || finalData.price_per_person || finalData.price || 0;
+        }
       }
 
       setService({
-        id: data.id,
+        id: finalData.id,
         title: title,
-        description: data.description || data.details || '',
+        description: finalData.description || finalData.details || '',
         price: price,
-        images: data.images || (data.image_url ? [data.image_url] : []) || [],
-        type: currentType
+        images: finalData.images || (finalData.image_url ? [finalData.image_url] : []) || (finalData.main_image ? [finalData.main_image] : []) || [],
+        type: currentType,
+        source,
+        partner_id: source === 'partner' ? finalData.partner_id : undefined
       });
 
       // Pré-remplir les champs si l'utilisateur est connecté
@@ -319,13 +374,23 @@ const ServiceReservation: React.FC = () => {
         totalPrice = basePrice + breakfastPrice;
       }
 
+      // Normaliser le service_type pour la table bookings
+      let normalizedType = currentType;
+      if (['appartement', 'apartment', 'appartements'].includes(currentType)) normalizedType = 'appartement';
+      else if (['villa', 'villas'].includes(currentType)) normalizedType = 'villa';
+      else if (['voiture', 'car', 'voitures', 'cars'].includes(currentType)) normalizedType = 'voiture';
+      else if (['circuit', 'tourism', 'tour', 'circuits'].includes(currentType)) normalizedType = 'circuit';
+      else if (['hotel', 'hotels'].includes(currentType)) normalizedType = 'hotel';
+
       // Créer la réservation dans la table bookings
       const { data: reservation, error } = await supabase
         .from('bookings')
         .insert([{
           client_id: user.id,
-          service_type: currentType,
+          service_type: normalizedType,
           service_id: service?.id,
+          // Important pour les produits partenaire
+          ...(service?.source === 'partner' && service?.partner_id ? { partner_id: service.partner_id } : {}),
           start_date: formData.startDate,
           end_date: formData.endDate,
           guests: formData.guests,
@@ -349,9 +414,9 @@ const ServiceReservation: React.FC = () => {
         state: {
           bookingId: reservation.id,
           reservationId: reservation.id,
-          bookingType: currentType,
+          bookingType: normalizedType,
           serviceId: service?.id,
-          serviceType: currentType,
+          serviceType: normalizedType,
           serviceTitle: service?.title,
           totalPrice: totalPrice,
           startDate: formData.startDate,

@@ -175,7 +175,8 @@ const BookingsManagement: React.FC = () => {
       }
       
       // Gérer l'erreur 403 (permission refusée) - essayer une approche alternative
-      if (error && (error.code === '42501' || error.message?.includes('permission denied') || error.message?.includes('new row violates row-level security') || error.code === 'PGRST301' || error.code === 'PGRST302' || error.status === 403)) {
+      const errStatus = (error as any)?.status as number | undefined;
+      if (error && (error.code === '42501' || error.message?.includes('permission denied') || error.message?.includes('new row violates row-level security') || error.code === 'PGRST301' || error.code === 'PGRST302' || errStatus === 403)) {
         console.warn('[BookingsManagement] Erreur RLS détectée, tentative alternative...');
         
         // Essayer de charger seulement les champs de base

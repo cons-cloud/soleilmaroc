@@ -1,72 +1,63 @@
-const CACHE_NAME = 'marocsoleil-cache-v1';
-const urlsToCache = [
+const CACHE_NAME = 'my-app-cache-v1';
+const resourcesToCache = [
   '/',
   '/index.html',
-  '/manifest.json',
   '/favicon.ico',
   '/logo192.png',
   '/logo512.png',
   'https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap'
 ];
 
-// Installation du Service Worker
-self.addEventListener('install', event => {
-  event.waitUntil(
-    caches.open(CACHE_NAME)
-      .then(cache => {
-        console.log('Cache ouvert');
-        return cache.addAll(urlsToCache);
-      })
-  );
-});
-
-// Gestion des requêtes réseau
-self.addEventListener('fetch', event => {
-  event.respondWith(
-    caches.match(event.request)
-      .then(response => {
-        // Cache hit - return response
-        if (response) {
-          return response;
+// Installation du Service Worker (tolérant aux erreurs)
+self.addEventListener('install', (event) => {
+  event.waitUntil((async () => {
+    const cache = await caches.open(CACHE_NAME);
+    const results = await Promise.allSettled(
+      resourcesToCache.map(async (url) => {
+        try {
+          const response = await fetch(url, { cache: 'no-cache' });
+          if (!response.ok) throw new Error(`HTTP ${response.status}`);
+          await cache.put(url, response.clone());
+          return { url, ok: true };
+        } catch (err) {
+          console.warn('[sw] Failed to cache', url, err);
+          return { url, ok: false, error: String(err) };
         }
-
-        // Clone de la requête
-        const fetchRequest = event.request.clone();
-
-        return fetch(fetchRequest).then(
-          response => {
-            // Vérification de la réponse
-            if(!response || response.status !== 200 || response.type !== 'basic') {
-              return response;
-            }
-
-            // Clone de la réponse
-            const responseToCache = response.clone();
-
-            caches.open(CACHE_NAME)
-              .then(cache => {
-                cache.put(event.request, responseToCache);
-              });
-
-            return response;
-          }
-        );
       })
     );
+    const failed = results
+      .filter(r => r.status === 'fulfilled' && r.value && !r.value.ok)
+      .map(r => r.value.url)
+      .filter(Boolean);
+    if (failed.length) {
+      console.warn('[sw] Some resources failed to cache:', failed);
+    }
+    // termine l'installation même si certains fichiers ont échoué
+    // @ts-ignore
+    await self.skipWaiting();
+  })());
+});
+
+// Gestion des requêtes réseau (basic cache-first fallback)
+self.addEventListener('fetch', (event) => {
+  event.respondWith((async () => {
+    try {
+      const cached = await caches.match(event.request);
+      if (cached) return cached;
+      const response = await fetch(event.request);
+      return response;
+    } catch (err) {
+      return new Response('Service Worker fetch error', { status: 503 });
+    }
+  })());
 });
 
 // Nettoyage des anciens caches
-self.addEventListener('activate', event => {
-  const cacheWhitelist = [CACHE_NAME];
-  event.waitUntil(
-    caches.keys().then(cacheNames => {
-      return Promise.all(
-        cacheNames.map(cacheName => {
-          if (cacheWhitelist.indexOf(cacheName) === -1) {
-            return caches.delete(cacheName);
-          }
-        })
-      );
-    })
-  );
+self.addEventListener('activate', (event) => {
+  event.waitUntil((async () => {
+    const keys = await caches.keys();
+    await Promise.all(keys.map(k => (k !== CACHE_NAME ? caches.delete(k) : Promise.resolve())));
+    // @ts-ignore
+    await self.clients.claim();
+  })());
 });

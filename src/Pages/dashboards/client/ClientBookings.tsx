@@ -8,7 +8,7 @@ import { Link } from 'react-router-dom';
 // Interface pour les réservations
 interface Booking {
   id: string;
-  user_id: string;
+  client_id: string;
   service_id: string;
   status: 'pending' | 'confirmed' | 'cancelled' | 'completed' | 'refunded';
   start_date: string;
@@ -50,7 +50,7 @@ const ClientBookings = () => {
       const { data: bookingsData, error: bookingsError } = await supabase
         .from('bookings')
         .select('*')
-        .eq('user_id', user.id)
+        .eq('client_id', user.id)
         .order('created_at', { ascending: false });
 
       console.log('Résultats de la requête bookings:', { bookingsData, bookingsError });
@@ -91,6 +91,34 @@ const ClientBookings = () => {
 
       // 3. Récupérer les services depuis les bonnes tables
       const servicesMap = new Map();
+
+      // Helper: mapping service_type -> partner_products.product_type
+      const mapToPartnerProductType = (serviceType: string) => {
+        switch (serviceType) {
+          case 'hotels':
+          case 'hotel':
+            return 'hotel';
+          case 'appartement':
+          case 'apartment':
+          case 'appartements':
+            return 'appartement';
+          case 'villa':
+          case 'villas':
+            return 'villa';
+          case 'voiture':
+          case 'car':
+          case 'voitures':
+          case 'cars':
+            return 'voiture';
+          case 'circuit':
+          case 'tourism':
+          case 'tour':
+          case 'circuits':
+            return 'circuit';
+          default:
+            return null;
+        }
+      };
       
       for (const [serviceType, bookings] of Object.entries(bookingsByType)) {
         const serviceIds = bookings
@@ -136,7 +164,7 @@ const ClientBookings = () => {
 
           if (servicesError) {
             console.error(`Erreur lors de la récupération des ${serviceType}:`, servicesError);
-            continue;
+            // On continue : on tentera partner_products en fallback
           }
 
           if (services) {
@@ -148,6 +176,36 @@ const ClientBookings = () => {
                 type: serviceType
               });
             });
+          }
+
+          // Fallback: si certains ids ne sont pas trouvés (produits partenaires),
+          // tenter de charger depuis partner_products.
+          const missingIds = serviceIds.filter((id) => !servicesMap.has(id));
+          const partnerProductType = mapToPartnerProductType(serviceType);
+          if (missingIds.length > 0 && partnerProductType) {
+            const { data: partnerProducts, error: partnerError } = await supabase
+              .from('partner_products')
+              .select('*')
+              .in('id', missingIds)
+              .eq('product_type', partnerProductType);
+
+            if (partnerError) {
+              // Non bloquant
+              console.warn(`Erreur lors de la récupération partner_products (${serviceType}):`, partnerError);
+            }
+
+            if (partnerProducts) {
+              partnerProducts.forEach((p: any) => {
+                servicesMap.set(p.id, {
+                  ...p,
+                  title: p.title || p.name || 'Sans titre',
+                  image_url: (Array.isArray(p.images) && p.images.length > 0 ? p.images[0] : p.main_image) || null,
+                  type: serviceType,
+                  is_partner: true,
+                  partner_id: p.partner_id
+                });
+              });
+            }
           }
         } catch (err) {
           console.error(`Erreur lors du chargement des ${serviceType}:`, err);
@@ -226,7 +284,7 @@ const ClientBookings = () => {
           updated_at: new Date().toISOString()
         })
         .eq('id', bookingId)
-        .eq('user_id', user?.id); // S'assurer que l'utilisateur ne peut annuler que ses propres réservations
+        .eq('client_id', user?.id); // S'assurer que l'utilisateur ne peut annuler que ses propres réservations
 
       if (error) throw error;
       

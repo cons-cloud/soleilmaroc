@@ -33,8 +33,9 @@ const ActivitesTouristiquesManagement: React.FC = () => {
         .select('*')
         .order('created_at', { ascending: false });
         
-      // Si erreur 403, essayer avec une approche différente
-      if (error && (error.code === '42501' || error.code === 'PGRST301' || error.code === 'PGRST302' || error.status === 403)) {
+      // Si erreur 403/RLS, essayer avec une approche différente
+      const errStatus = (error as any)?.status as number | undefined;
+      if (error && (error.code === '42501' || error.code === 'PGRST301' || error.code === 'PGRST302' || errStatus === 403)) {
         console.warn('[ActivitesTouristiquesManagement] Erreur RLS détectée, tentative alternative...');
         
         // Essayer de charger seulement les champs de base
