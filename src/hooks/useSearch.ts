@@ -1,5 +1,6 @@
 import { useEffect, useState, useRef } from 'react';
-import { searchTable, SearchOptions } from '../lib/search';
+import { searchTable } from '../lib/search';
+import type { SearchOptions } from '../types';
 
 export function useSearch(initialQuery = '', opts: SearchOptions = {}, debounceMs = 300) {
   const [query, setQuery] = useState(initialQuery);
@@ -19,7 +20,12 @@ export function useSearch(initialQuery = '', opts: SearchOptions = {}, debounceM
     setLoading(true);
     timer.current = window.setTimeout(async () => {
       try {
-        const data = await searchTable(query, opts);
+        // ensure partnerId is a string (searchTable expects string | null | undefined)
+        const searchOpts = {
+          ...opts,
+          partnerId: typeof opts.partnerId === 'number' ? String(opts.partnerId) : opts.partnerId,
+        };
+        const data = await searchTable(query, searchOpts);
         setResults(Array.isArray(data) ? data : []);
         setError(null);
       } catch (err) {

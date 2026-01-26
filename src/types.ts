@@ -41,3 +41,10 @@ export interface Booking {
   created_at: string;
   earning_status: string;
 }
+
+export interface SearchOptions {
+  table?: string;
+  fields?: string[];
+  onlyAvailable?: boolean;
+  partnerId?: string | number | undefined;
+}
