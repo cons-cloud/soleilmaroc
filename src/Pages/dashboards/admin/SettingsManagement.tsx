@@ -110,7 +110,7 @@ const SettingsManagement: React.FC = () => {
         <div className="flex justify-between items-center">
           <div>
             <h1 className="text-2xl font-bold text-gray-900">Paramètres</h1>
-            <p className="text-gray-600 mt-1">Configuration générale du site</p>
+            <p className="text-gray-600 mt-1">Configuration  du site</p>
           </div>
           <button
             onClick={handleSave}
