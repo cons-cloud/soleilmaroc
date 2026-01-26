@@ -26,7 +26,7 @@ const SearchWrapper: React.FC<{
               <div className="text-sm text-gray-600">{r.description || r.city}</div>
             </li>
           ))}
-          {results.length === 0 && <li className="text-gray-500">Toujours aucun résultat</li>}
+          {results.length === 0 && <li className="text-gray-500">Vous n'avez aucun résultat</li>}
         </ul>
       )}
     </div>
