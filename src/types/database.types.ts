@@ -1,13 +1,6 @@
-// Types générés automatiquement par Supabase
-// Ce fichier sera mis à jour avec les types de votre base de données
+// Auto-generated types from Supabase
 
-export type Json =
-  | string
-  | number
-  | boolean
-  | null
-  | { [key: string]: Json | undefined }
-  | Json[];
+export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[];
 
 export interface Database {
   public: {
@@ -116,18 +109,18 @@ export interface Database {
       };
     };
     Views: {
-      // Définir les vues si nécessaire
+      // Define views here if needed
     };
     Functions: {
-      // Définir les fonctions si nécessaire
+      // Define functions here if needed
     };
     Enums: {
-      // Définir les énumérations si nécessaire
+      // Define enums here if needed
     };
   };
 }
 
-// Types utilitaires
+// Utility types
 export type Tables<T extends keyof Database['public']['Tables']> = Database['public']['Tables'][T]['Row'];
 export type TablesInsert<T extends keyof Database['public']['Tables']> = Database['public']['Tables'][T]['Insert'];
 export type TablesUpdate<T extends keyof Database['public']['Tables']> = Database['public']['Tables'][T]['Update'];
