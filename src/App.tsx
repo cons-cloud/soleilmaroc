@@ -11,7 +11,7 @@ import { ROUTES } from "./config/routes";
 import { SEO } from "./components/SEO";
 
 // Configuration de la maintenance
-export const MAINTENANCE_MODE = true; // Mode maintenance activé
+export const MAINTENANCE_MODE = false; // Mode maintenance désactivé
 export const MAINTENANCE_BYPASS_SECRET = 'maroc-soleil-2026'; // Mot de passe pour accéder au site en mode maintenance
 
 // Fonction utilitaire pour vérifier si on peut contourner la maintenance

@@ -2,7 +2,7 @@ import { Phone, Mail, MapPin, Clock3 as Clock, Zap } from 'lucide-react';
 
 const Maintenance = () => {
   return (
-    <div className="min-h-screen bg-gray-900 flex items-center justify-center p-4 relative overflow-hidden">
+    <div className="min-h-screen bg-gray-900 flex items-center justify-center p-4 relative overflow-hidden py-8">
       {/* Arrière-plan avec image et overlay */}
       <div className="absolute inset-0 z-0">
         <img 
@@ -14,61 +14,61 @@ const Maintenance = () => {
       </div>
       
       {/* Carte de contenu */}
-      <div className="max-w-4xl w-full bg-white/90 backdrop-blur-sm rounded-2xl shadow-2xl overflow-hidden z-10 transform transition-all duration-500 hover:scale-[1.01]">
+      <div className="max-w-3xl w-full bg-white/90 backdrop-blur-sm rounded-2xl shadow-2xl overflow-hidden z-10 transform transition-all duration-300">
         {/* En-tête avec dégradé */}
-        <div className="bg-gradient-to-r from-blue-600 to-blue-800 p-8 text-center relative overflow-hidden">
+        <div className="bg-gradient-to-r from-blue-600 to-blue-800 p-6 text-center relative overflow-hidden">
           <div className="absolute inset-0 bg-[url('/assets/APT/AGADIR/APPART1/6.jpg')] opacity-10 mix-blend-overlay"></div>
           <div className="relative z-10">
-            <div className="inline-flex items-center justify-center mb-4">
-              <Zap className="h-8 w-8 text-yellow-300 animate-pulse mr-3" />
-              <h1 className="text-4xl md:text-5xl font-bold text-white mb-2 bg-clip-text text-transparent bg-gradient-to-r from-yellow-300 to-white">
+            <div className="inline-flex items-center justify-center mb-2">
+              <Zap className="h-6 w-6 text-yellow-300 animate-pulse mr-2" />
+              <h1 className="text-2xl md:text-3xl font-bold text-white bg-clip-text text-transparent bg-gradient-to-r from-yellow-300 to-white">
                 Site en maintenance
               </h1>
             </div>
-            <p className="text-blue-100 text-xl font-light">
+            <p className="text-blue-100 text-base">
               Nous travaillons dur pour améliorer votre expérience
             </p>
-            <div className="mt-4 flex justify-center space-x-2">
-              <span className="h-2 w-2 rounded-full bg-yellow-300 animate-bounce"></span>
-              <span className="h-2 w-2 rounded-full bg-yellow-300 animate-bounce" style={{ animationDelay: '0.2s' }}></span>
-              <span className="h-2 w-2 rounded-full bg-yellow-300 animate-bounce" style={{ animationDelay: '0.4s' }}></span>
+            <div className="mt-2 flex justify-center space-x-1">
+              <span className="h-1.5 w-1.5 rounded-full bg-yellow-300 animate-bounce"></span>
+              <span className="h-1.5 w-1.5 rounded-full bg-yellow-300 animate-bounce" style={{ animationDelay: '0.2s' }}></span>
+              <span className="h-1.5 w-1.5 rounded-full bg-yellow-300 animate-bounce" style={{ animationDelay: '0.4s' }}></span>
             </div>
           </div>
         </div>
 
         {/* Contenu principal */}
-        <div className="p-8 md:p-12">
+        <div className="p-6 md:p-8">
           <div className="text-center mb-12">
-            <div className="relative inline-flex items-center justify-center mb-8">
+            <div className="relative inline-flex items-center justify-center mb-4">
               <div className="absolute inset-0 bg-blue-100 rounded-full animate-ping opacity-20"></div>
-              <div className="relative w-28 h-28 bg-gradient-to-br from-blue-600 to-blue-800 rounded-full flex items-center justify-center shadow-lg">
-                <Clock className="h-14 w-14 text-white" />
+              <div className="relative w-20 h-20 bg-gradient-to-br from-blue-600 to-blue-800 rounded-full flex items-center justify-center shadow-md">
+                <Clock className="h-10 w-10 text-white" />
               </div>
             </div>
-            <h2 className="text-3xl font-bold text-gray-900 mb-4 bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-blue-800">
+            <h2 className="text-xl font-bold text-gray-900 mb-2">
               Nous serons bientôt de retour !
             </h2>
-            <p className="text-gray-700 text-lg max-w-2xl mx-auto leading-relaxed">
-              Notre site est en cours de maintenance pour des améliorations majeures qui rendront votre expérience encore plus exceptionnelle.
-              <span className="block mt-3 text-blue-600 font-medium">
-                Merci de votre compréhension et à très bientôt !
+            <p className="text-gray-700 text-sm max-w-2xl mx-auto">
+              Notre site est en cours de maintenance pour des améliorations majeures.
+              <span className="block mt-1 text-blue-600 font-medium text-sm">
+                Merci de votre compréhension.
               </span>
             </p>
             
             {/* Barre de progression */}
-            <div className="mt-8 max-w-md mx-auto">
-              <div className="flex justify-between text-sm text-gray-600 mb-2">
+            <div className="mt-4 max-w-md mx-auto">
+              <div className="flex justify-between text-xs text-gray-600 mb-1">
                 <span>Chargement...</span>
                 <span>85%</span>
               </div>
-              <div className="w-full bg-gray-200 rounded-full h-2.5">
-                <div className="bg-gradient-to-r from-blue-500 to-blue-700 h-2.5 rounded-full w-[85%] transition-all duration-1000 ease-out"></div>
+              <div className="w-full bg-gray-200 rounded-full h-1.5">
+                <div className="bg-gradient-to-r from-blue-500 to-blue-700 h-1.5 rounded-full w-[85%] transition-all duration-1000 ease-out"></div>
               </div>
             </div>
           </div>
 
           {/* Informations de contact */}
-          <div className="mt-16 space-y-8">
+          <div className="mt-8 space-y-4">
             <div className="text-center">
               <h3 className="text-2xl font-bold text-gray-800 mb-2 relative inline-block">
                 <span className="relative z-10 px-4 bg-white">
@@ -85,10 +85,10 @@ const Maintenance = () => {
                   <Phone className="h-5 w-5 text-blue-600" />
                 </div>
                 <div className="ml-4">
-                  <p className="text-sm font-medium text-gray-900">Téléphone</p>
-                  <div className="mt-1 space-y-1">
-                    <a href="tel:+212522123456" className="text-blue-600 hover:text-blue-800">+212 522 123 456</a>
-                    <p className="text-sm text-gray-500">Lun-Ven: 9h-18h</p>
+                  <p className="text-xs font-medium text-gray-900">Téléphone</p>
+                  <div className="mt-0.5 space-y-0.5">
+                    <a href="tel:contact@marocsoleil.com" className="text-blue-600 hover:text-blue-800 text-sm">contact@marocsoleil.com</a>
+                    <p className="text-xs text-gray-500">Réponse sous 24h</p>
                   </div>
                 </div>
               </div>
@@ -98,10 +98,8 @@ const Maintenance = () => {
                   <Mail className="h-5 w-5 text-blue-600" />
                 </div>
                 <div className="ml-4">
-                  <p className="text-sm font-medium text-gray-900">Email</p>
-                  <a href="mailto:contact@marocsoleil.com" className="text-blue-600 hover:text-blue-800 block mt-1">
-                    contact@marocsoleil.com
-                  </a>
+                  <p className="text-xs font-medium text-gray-900">Email</p>
+                  <a href="mailto:contact@marocsoleil.com" className="text-blue-600 hover:text-blue-800 text-sm">contact@marocsoleil.com</a>
                 </div>
               </div>
 
@@ -110,16 +108,16 @@ const Maintenance = () => {
                   <MapPin className="h-5 w-5 text-blue-600" />
                 </div>
                 <div className="ml-4">
-                  <p className="text-sm font-medium text-gray-900">Adresse</p>
-                  <p className="text-gray-600 mt-1">123 Avenue Mohammed V, Casablanca, Maroc</p>
+                  <p className="text-xs font-medium text-gray-900">Adresse</p>
+                  <p className="text-gray-600 text-sm">123 Avenue Mohammed V, Casablanca, Maroc</p>
                 </div>
               </div>
             </div>
 
             {/* Réseaux sociaux */}
-            <div className="pt-4 mt-6 border-t border-gray-200">
-              <p className="text-sm font-medium text-gray-900 mb-4">Suivez-nous :</p>
-              <div className="flex justify-center space-x-6 mb-4">
+            <div className="pt-3 mt-4 border-t border-gray-200">
+              <p className="text-xs font-medium text-gray-900 mb-2 text-center">Suivez-nous :</p>
+              <div className="flex justify-center space-x-4 mb-2">
                 <a href="https://facebook.com/marocsoleil" target="_blank" rel="noopener noreferrer" 
                    className="text-blue-600 hover:text-blue-800 transition-colors">
                   <svg className="h-6 w-6" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
@@ -152,9 +150,9 @@ const Maintenance = () => {
 
         {/* Pied de page */}
         <div className="bg-gradient-to-r from-blue-50 to-gray-50 px-8 py-6 text-center border-t border-gray-100">
-          <p className="text-gray-500 text-sm">
-            &copy; {new Date().getFullYear()} Maroc Soleil. Tous droits réservés.
-          </p>
+            <p className="text-center text-xs text-gray-500 mt-4">
+              &copy; {new Date().getFullYear()} Maroc Soleil. Tous droits réservés.
+            </p>
         </div>
       </div>
     </div>
