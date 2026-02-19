@@ -277,7 +277,7 @@ function App() {
               <Suspense fallback={<LoadingFallback />}>
                 <Toaster position="top-center" />
                 <Routes>
-                  {/* Route de maintenance explicite */}
+                  {/* Route de maintenance - Doit être au niveau racine */}
                   <Route path="/maintenance" element={
                     <div className="min-h-screen flex items-center justify-center bg-gray-50">
                       <Maintenance />
