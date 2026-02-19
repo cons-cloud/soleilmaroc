@@ -68,6 +68,15 @@ if (!container) {
   throw new Error("L'élément racine 'root' est introuvable dans le DOM");
 }
 
+// Nettoyage des anciens Service Workers
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.getRegistrations().then(registrations => {
+    registrations.forEach(registration => {
+      registration.unregister();
+    });
+  });
+}
+
 // Création de la racine de rendu
 const root = createRoot(container);
 

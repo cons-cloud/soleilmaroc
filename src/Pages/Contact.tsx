@@ -138,7 +138,7 @@ const Contact = () => {
         <div className="container mx-auto px-4">
           <div className="max-w-6xl mx-auto">
             <div className="text-center mb-16">
-              <h2 className="text-4xl font-bold text-gray-900 mb-4">{settings?.site_name || 'Marocsoleil'} - Restons en contact</h2>
+              <h2 className="text-4xl font-bold text-gray-900 mb-4">Maroc Soleil - Restons en contact</h2>
               <div className="w-20 h-1 bg-primary mx-auto mb-6"></div>
               <p className="text-xl text-gray-600 max-w-3xl mx-auto">
                 Que vous ayez des questions sur nos services ou que vous souhaitiez en savoir plus sur nos offres, n'hésitez pas à nous contacter.

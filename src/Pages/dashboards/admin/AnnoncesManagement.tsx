@@ -20,15 +20,40 @@ const AnnoncesManagement: React.FC = () => {
 
   const loadItems = async () => {
     try {
-      const { data, error } = await supabase
+      console.log('Chargement des annonces...');
+      
+      // Vérifier la session utilisateur
+      const { data: { session } } = await supabase.auth.getSession();
+      console.log('Session utilisateur:', session);
+      
+      // Vérifier le profil utilisateur
+      if (session?.user) {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('role')
+          .eq('id', session.user.id)
+          .single();
+        console.log('Profil utilisateur:', profile);
+      }
+      
+      // Récupérer les annonces
+      const { data, error, status } = await supabase
         .from('annonces')
         .select('*')
         .order('created_at', { ascending: false });
-      if (error) throw error;
+      
+      console.log('Statut de la réponse:', status);
+      
+      if (error) {
+        console.error('Erreur lors du chargement des annonces:', error);
+        throw error;
+      }
+      
+      console.log('Annonces chargées:', data);
       setItems(data || []);
     } catch (error) {
-      console.error('Error:', error);
-      toast.error('Erreur lors du chargement');
+      console.error('Erreur dans loadItems:', error);
+      toast.error('Erreur lors du chargement des annonces');
     } finally {
       setLoading(false);
     }
@@ -51,15 +76,57 @@ const AnnoncesManagement: React.FC = () => {
 
   const handleDeleteConfirm = async () => {
     if (!annonceToDelete) return;
+    
     try {
-      const { error } = await supabase.from('annonces').delete().eq('id', annonceToDelete.id);
-      if (error) throw error;
-      toast.success('Annonce supprimée');
+      console.log('Tentative de suppression de l\'annonce:', annonceToDelete.id);
+      
+      // Vérifier la session utilisateur
+      const { data: { session } } = await supabase.auth.getSession();
+      console.log('Session utilisateur lors de la suppression:', session);
+      
+      if (!session) {
+        toast.error('Vous devez être connecté pour supprimer une annonce');
+        return;
+      }
+      
+      // Vérifier si l'utilisateur est admin
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', session.user.id)
+        .single();
+        
+      if (profileError) {
+        console.error('Erreur lors de la récupération du profil:', profileError);
+        throw profileError;
+      }
+      
+      console.log('Profil utilisateur (rôle):', profile?.role);
+      
+      if (profile?.role !== 'admin') {
+        toast.error('Seuls les administrateurs peuvent supprimer des annonces');
+        return;
+      }
+      
+      // Supprimer l'annonce avec les en-têtes d'authentification
+      const { error: deleteError } = await supabase
+        .from('annonces')
+        .delete()
+        .eq('id', annonceToDelete.id);
+        
+      if (deleteError) {
+        console.error('Erreur de suppression:', deleteError);
+        throw deleteError;
+      }
+      
+      toast.success('Annonce supprimée avec succès');
       setShowConfirm(false);
       setAnnonceToDelete(null);
-      loadItems();
-    } catch (error) {
-      toast.error('Erreur lors de la suppression');
+      await loadItems(); // Recharger la liste des annonces
+      
+    } catch (error: any) {
+      console.error('Erreur lors de la suppression de l\'annonce:', error);
+      toast.error(`Erreur lors de la suppression: ${error?.message || 'Veuillez réessayer'}`);
     }
   };
 

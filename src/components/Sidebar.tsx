@@ -1,5 +1,14 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
+import { 
+  LayoutDashboard, 
+  Megaphone, 
+  Users, 
+  Briefcase, 
+  Calendar, 
+  Heart, 
+  User 
+} from 'lucide-react';
 
 type SidebarProps = {
   role?: 'admin' | 'partner' | 'client';
@@ -14,12 +23,14 @@ const Sidebar: React.FC<SidebarProps> = ({ role = 'client' }) => {
 
   const adminLinks = [
     { to: '/dashboard/admin', label: 'Tableau de bord', icon: 'dashboard' },
+    { to: '/dashboard/admin/annonces', label: 'Annonces', icon: 'announcement' },
     { to: '/dashboard/admin/users', label: 'Utilisateurs', icon: 'people' },
     { to: '/dashboard/admin/services', label: 'Services', icon: 'business' },
   ];
 
   const partnerLinks = [
     { to: '/dashboard/partner', label: 'Tableau de bord', icon: 'dashboard' },
+    { to: '/dashboard/partner/annonces', label: 'Mes annonces', icon: 'announcement' },
     { to: '/dashboard/partner/services', label: 'Mes services', icon: 'business' },
     { to: '/dashboard/partner/bookings', label: 'Réservations', icon: 'event' },
     { to: '/dashboard/partner/profile', label: 'Profil', icon: 'person' },
@@ -27,6 +38,7 @@ const Sidebar: React.FC<SidebarProps> = ({ role = 'client' }) => {
 
   const clientLinks = [
     { to: '/dashboard/client', label: 'Tableau de bord', icon: 'dashboard' },
+    { to: '/dashboard/client/annonces', label: 'Annonces', icon: 'announcement' },
     { to: '/dashboard/client/bookings', label: 'Mes réservations', icon: 'event' },
     { to: '/dashboard/client/favorites', label: 'Favoris', icon: 'favorite' },
     { to: '/dashboard/client/profile', label: 'Profil', icon: 'person' },
@@ -43,17 +55,29 @@ const Sidebar: React.FC<SidebarProps> = ({ role = 'client' }) => {
       </div>
       <nav className="p-2">
         <ul className="space-y-1">
-          {links.map((link) => (
+          {links.map((link) => {
+            const iconMap: Record<string, React.ReactNode> = {
+              dashboard: <LayoutDashboard className="w-5 h-5 mr-3" />,
+              announcement: <Megaphone className="w-5 h-5 mr-3" />,
+              people: <Users className="w-5 h-5 mr-3" />,
+              business: <Briefcase className="w-5 h-5 mr-3" />,
+              event: <Calendar className="w-5 h-5 mr-3" />,
+              favorite: <Heart className="w-5 h-5 mr-3" />,
+              person: <User className="w-5 h-5 mr-3" />,
+            };
+            
+            return (
             <li key={link.to}>
               <Link
                 to={link.to}
-                className={`flex items-center px-4 py-3 rounded-lg transition-colors ${isActive(link.to)} hover:bg-gray-100`}
+                className={`flex items-center px-4 py-3 rounded-lg transition-colors ${isActive(link.to)} hover:bg-gray-100}`}
               >
-                <span className="material-icons-outlined mr-3">{link.icon}</span>
+                {iconMap[link.icon] || <div className="w-5 h-5 mr-3" />}
                 <span>{link.label}</span>
               </Link>
             </li>
-          ))}
+          );
+          })}
         </ul>
       </nav>
     </div>

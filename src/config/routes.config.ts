@@ -23,6 +23,9 @@ const PageNotFound = lazy(() => import('../components/common/PageNotFound'));
 
 // Tableaux de bord
 const Dashboard = () => React.createElement('div', null, 'Tableau de bord');
+const AnnoncesManagement = lazy(() => import('../Pages/dashboards/admin/AnnoncesManagement'));
+const PartnerAnnonces = lazy(() => import('../Pages/dashboards/partner/annonces/PartnerAnnonces'));
+const ClientAnnonces = lazy(() => import('../Pages/dashboards/client/annonces/ClientAnnonces'));
 
 // Fonction utilitaire pour créer des routes avec typage fort
 // const createRoute = (config: RouteConfig): RouteConfig => ({
@@ -56,6 +59,7 @@ export const protectedRoutes: RouteConfig[] = [
     element: React.createElement(DashboardLayout, { role: 'admin' }),
     children: [
       { index: true, element: React.createElement(Dashboard) },
+      { path: 'annonces', element: React.createElement(AnnoncesManagement) },
     ],
   },
   // Partenaire
@@ -64,6 +68,7 @@ export const protectedRoutes: RouteConfig[] = [
     element: React.createElement(DashboardLayout, { role: 'partner' }),
     children: [
       { index: true, element: React.createElement(Dashboard) },
+      { path: 'annonces', element: React.createElement(PartnerAnnonces) },
       { path: 'evenements', element: React.createElement(Dashboard) },
       { path: 'profil', element: React.createElement(Dashboard) },
     ],
@@ -74,6 +79,7 @@ export const protectedRoutes: RouteConfig[] = [
     element: React.createElement(DashboardLayout, { role: 'client' }),
     children: [
       { index: true, element: React.createElement(Dashboard) },
+      { path: 'annonces', element: React.createElement(ClientAnnonces) },
       { path: 'reservations', element: React.createElement(Dashboard) },
       { path: 'profil', element: React.createElement(Dashboard) },
     ],

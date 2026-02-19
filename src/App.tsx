@@ -9,14 +9,38 @@ import RoleGuard from "./components/RoleGuard";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { ROUTES } from "./config/routes";
 import { SEO } from "./components/SEO";
-// Import des composants de gestion des propriétés
-// import PropertiesManagement from './components/PropertiesManagement';
+
+// Configuration de la maintenance
+export const MAINTENANCE_MODE = true; // Mode maintenance activé
+export const MAINTENANCE_BYPASS_SECRET = 'maroc-soleil-2026'; // Mot de passe pour accéder au site en mode maintenance
+
+// Fonction utilitaire pour vérifier si on peut contourner la maintenance
+const checkMaintenanceBypass = () => {
+  if (!MAINTENANCE_MODE) return true;
+  
+  // Vérifier le paramètre d'URL
+  if (typeof window !== 'undefined') {
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('maintenance') === MAINTENANCE_BYPASS_SECRET) {
+      sessionStorage.setItem('bypassMaintenance', 'true');
+      return true;
+    }
+    
+    // Vérifier le stockage de session
+    if (sessionStorage.getItem('bypassMaintenance') === 'true') {
+      return true;
+    }
+  }
+  
+  return false;
+};
 
 
 
 
 
 // Composants de pages
+const Maintenance = lazy(() => import("./Pages/Maintenance"));
 const DevenirHote = lazy(() => import("./Pages/DevenirHote"));
 
 // Composants de mise en page
@@ -157,11 +181,23 @@ const PublicLayout = () => {
 
 // Composant de mise en page pour l'authentification (sans navbar ni footer)
 const AuthLayout = ({ children }: { children?: React.ReactNode }) => {
+  // Vérifier si le mode maintenance est actif et si l'utilisateur a le mot de passe
+  let bypassMaintenance = false;
+  
+  if (typeof window !== 'undefined') {
+    const urlParams = new URLSearchParams(window.location.search);
+    bypassMaintenance = urlParams.get('maintenance') === MAINTENANCE_BYPASS_SECRET;
+  }
+  
+  if (MAINTENANCE_MODE && !bypassMaintenance) {
+    return <Maintenance />;
+  }
+
   return (
-    <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4">
-      <div className="w-full max-w-md">
-        {children || <Outlet />}
-      </div>
+    <div className="min-h-screen bg-gray-50 flex flex-col">
+      <main className="flex-1">
+        {children}
+      </main>
     </div>
   );
 };
@@ -184,7 +220,53 @@ const Dashboard404 = ({ role = 'admin' }: { role?: 'admin' | 'partner' | 'client
   );
 };
 
+
 function App() {
+  // Vérifier le mode maintenance
+  if (MAINTENANCE_MODE && !checkMaintenanceBypass()) {
+    // Si on est déjà sur la page de maintenance, on l'affiche
+    if (typeof window !== 'undefined' && window.location.pathname === '/maintenance') {
+      return (
+        <HelmetProvider>
+          <ErrorBoundary>
+            <div className="min-h-screen flex items-center justify-center bg-gray-50">
+              <Maintenance />
+            </div>
+          </ErrorBoundary>
+        </HelmetProvider>
+      );
+    }
+    
+    // Redirection côté client vers la page de maintenance
+    if (typeof window !== 'undefined') {
+      // Éviter la boucle de redirection
+      if (window.location.pathname !== '/maintenance') {
+        // Utiliser replaceState pour éviter d'ajouter à l'historique
+        window.history.replaceState({}, '', '/maintenance');
+        // Forcer le rechargement pour s'assurer que tout est propre
+        window.location.reload();
+      }
+      
+      // Afficher un spinner pendant la redirection
+      return (
+        <div className="flex items-center justify-center min-h-screen bg-gray-50">
+          <LoadingSpinner size="xl" />
+        </div>
+      );
+    }
+    
+    // Fallback pour le rendu côté serveur
+    return (
+      <HelmetProvider>
+        <ErrorBoundary>
+          <div className="min-h-screen flex items-center justify-center bg-gray-50">
+            <Maintenance />
+          </div>
+        </ErrorBoundary>
+      </HelmetProvider>
+    );
+  }
+
   return (
     <HelmetProvider>
       <SEO />
@@ -194,25 +276,31 @@ function App() {
             <div className="min-h-screen flex flex-col">
               <Suspense fallback={<LoadingFallback />}>
                 <Toaster position="top-center" />
-              
-              <Routes>
-                {/* Routes d'authentification - Utilisation d'un layout sans navbar ni footer */}
-                <Route element={<AuthLayout />}>
-                  <Route path={ROUTES.LOGIN} element={<Login />} />
-                  <Route path={ROUTES.SIGNUP} element={<Inscription />} />
-                  <Route path={ROUTES.BECOME_HOST} element={<DevenirHote />} />
-                </Route>
-
-                {/* Routes publiques avec navbar et footer */}
-                <Route element={<PublicLayout />}>
-                  <Route path={ROUTES.HOME} element={
-                    <Home onOpenBooking={() => {}} />
+                <Routes>
+                  {/* Route de maintenance explicite */}
+                  <Route path="/maintenance" element={
+                    <div className="min-h-screen flex items-center justify-center bg-gray-50">
+                      <Maintenance />
+                    </div>
                   } />
                   
-                  {/* Routes des services */}
-                  <Route path={ROUTES.SERVICES} element={<Services />} />
-                  <Route path={ROUTES.TOURISM} element={<Tourisme />} />
-                  <Route path={ROUTES.CARS} element={<Voitures />} />
+                  {/* Routes d'authentification - Utilisation d'un layout sans navbar ni footer */}
+                  <Route element={<AuthLayout />}>
+                    <Route path={ROUTES.LOGIN} element={<Login />} />
+                    <Route path={ROUTES.SIGNUP} element={<Inscription />} />
+                    <Route path={ROUTES.BECOME_HOST} element={<DevenirHote />} />
+                  </Route>
+
+                  {/* Routes publiques avec navbar et footer */}
+                  <Route element={<PublicLayout />}>
+                    <Route path={ROUTES.HOME} element={
+                      <Home onOpenBooking={() => {}} />
+                    } />
+                    
+                    {/* Routes des services */}
+                    <Route path={ROUTES.SERVICES} element={<Services />} />
+                    <Route path={ROUTES.TOURISM} element={<Tourisme />} />
+                    <Route path={ROUTES.CARS} element={<Voitures />} />
                   <Route path={ROUTES.APARTMENTS} element={<Appartements />} />
                   <Route path={ROUTES.VILLAS} element={<Villas />} />
                   <Route path={ROUTES.HOTELS} element={<Hotels />} />
@@ -284,9 +372,10 @@ function App() {
                   <Route path="payments" element={<PaymentsManagement />} />
                   <Route path="services">
                     <Route index element={<ServicesManagement />} />
-                    <Route path="new" element={<ServiceForm />} />
                     <Route path=":id/edit" element={<ServiceForm />} />
+                    <Route path="*" element={<PageNotFound />} />
                   </Route>
+                  
                   
                   {/* Routes pour la création de services spécifiques */}
                   {/* Gestion des services */}

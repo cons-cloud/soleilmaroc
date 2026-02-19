@@ -70,7 +70,7 @@ const Annonces = () => {
       setLoading(true);
       
       // 1. Charger les annonces principales
-      const { data: mainAnnonces, error: mainError } = await supabase
+      const { data: mainAnnonces = [], error: mainError } = await supabase
         .from('annonces')
         .select('*')
         .eq('available', true)
@@ -78,18 +78,29 @@ const Annonces = () => {
 
       if (mainError) {
         console.error('Erreur annonces principales:', mainError);
+        // Afficher un message à l'utilisateur
+        // Vous pouvez utiliser un état pour afficher ce message dans l'UI
+        return;
       }
 
-      // 2. Charger les annonces des partenaires
-      const { data: partnerAnnonces, error: partnerError } = await supabase
-        .from('partner_products')
-        .select('*, partner:profiles(company_name)')
-        .eq('available', true)
-        .eq('product_type', 'annonce')
-        .order('created_at', { ascending: false });
+      // 2. Charger les annonces des partenaires (sans la jointure qui cause des problèmes)
+      let partnerAnnonces = [];
+      try {
+        const { data, error } = await supabase
+          .from('partner_products')
+          .select('*')
+          .eq('available', true)
+          .eq('product_type', 'annonce')
+          .order('created_at', { ascending: false });
 
-      if (partnerError) {
-        console.warn('Erreur annonces partenaires (non bloquant):', partnerError);
+        if (!error && data) {
+          partnerAnnonces = data;
+        } else if (error) {
+          console.warn('Erreur lors du chargement des annonces partenaires:', error);
+          // Continuer avec une liste vide pour les annonces partenaires
+        }
+      } catch (err) {
+        console.error('Erreur inattendue lors du chargement des annonces partenaires:', err);
       }
 
       // 3. Formater les annonces partenaires

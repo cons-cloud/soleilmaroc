@@ -111,11 +111,13 @@ const Evenements = () => {
       setIsLoading(true);
       
       // 1. Charger les événements principaux
-      const { data: mainEvents, error: mainError } = await supabase
+      const { data: mainEvents = [], error: mainError } = await supabase
         .from('evenements')
         .select('*')
         .eq('available', true)
-        .order('event_date', { ascending: true });
+        .order('end_date', { ascending: true });
+
+      console.log('Événements chargés depuis Supabase:', mainEvents);
 
       if (mainError) {
         console.warn('Erreur événements principaux:', mainError);
@@ -152,19 +154,23 @@ const Evenements = () => {
       }));
 
       // 4. Combiner tous les événements
-      const allEvents = [...(mainEvents || []), ...formattedPartnerEvents]
-        .sort((a, b) => {
-          const dateA = a.event_date || a.date || '';
-          const dateB = b.event_date || b.date || '';
-          return dateA.localeCompare(dateB);
-        });
+      const allEvents = [...(mainEvents || []), ...formattedPartnerEvents];
+      
+      // Trier uniquement si on a des dates à comparer
+      const sortedEvents = allEvents.sort((a, b) => {
+        const dateA = a.end_date || a.event_date || a.date || '';
+        const dateB = b.end_date || b.event_date || b.date || '';
+        return dateA.localeCompare(dateB);
+      });
 
-      if (allEvents.length === 0 && mainError) {
-        // Si aucune donnée et erreur, utiliser les données statiques
+      console.log('Tous les événements combinés:', sortedEvents);
+
+      if (sortedEvents.length > 0) {
+        setEvents(sortedEvents);
+      } else {
+        // Si aucun événement n'est trouvé, utiliser les données statiques
         console.warn('Aucun événement trouvé, utilisation des données statiques');
         setEvents(staticEvents);
-      } else {
-        setEvents(allEvents);
       }
     } catch (error: any) {
       console.error('Erreur lors du chargement des événements:', error);
