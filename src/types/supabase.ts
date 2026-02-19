@@ -1,136 +1,198 @@
-import type { Database } from './database.types';
+import { Database } from './database.types';
 
-export type Tables<T extends keyof Database['public']['Tables']> = Database['public']['Tables'][T]['Row'];
-export type Enums<T extends keyof Database['public']['Enums']> = Database['public']['Enums'][T];
+// =============================================
+// Types utilitaires
+// =============================================
+type Tables<T extends keyof Database['public']['Tables']> = Database['public']['Tables'][T]['Row'];
+type TablesInsert<T extends keyof Database['public']['Tables']> = Database['public']['Tables'][T]['Insert'];
+type TablesUpdate<T extends keyof Database['public']['Tables']> = Database['public']['Tables'][T]['Update'];
 
-export type Profile = Tables<'profiles'>;
+// =============================================
+// Types de base
+// =============================================
 
-export type ServiceType = 'hotel' | 'restaurant' | 'activity' | 'transport' | 'guide' | 'evenement' | 'activite' | 'appartement' | 'villa' | 'voiture';
+export type ServiceStatus = 'draft' | 'published' | 'archived';
 
-// Extension du type Service pour inclure toutes les propriétés nécessaires
-export interface ServiceBase {
-  id: string;
-  created_at: string;
-  updated_at: string;
-  user_id: string;
-  title: string;
-  description?: string;
+export type ServiceType = 
+  | 'hotel' 
+  | 'restaurant' 
+  | 'activity' 
+  | 'transport' 
+  | 'guide' 
+  | 'evenement' 
+  | 'activite' 
+  | 'appartement' 
+  | 'villa' 
+  | 'voiture';
+
+// =============================================
+// Interfaces principales
+// =============================================
+
+export interface Profile extends Tables<'profiles'> {
+  // Propriétés étendues du profil
+  services?: Service[];
+  ratings?: number;
+}
+
+export interface Service extends Omit<Tables<'services'>, 'description' | 'category'> {
+  // Propriétés de base
+  type: ServiceType;
+  status: ServiceStatus;
+  
+  // Métadonnées
+  rating?: number;
+  reviews_count?: number;
+  
+  // Relations
+  partner?: Profile;
+  
+  // Autres propriétés
+  name: string;
+  images: string[];
   price: number;
   location: string;
-  rating?: number;
-  type: ServiceType;
-  images: string[];
+  category: string;
+  description?: string;
+  
+  // Propriétés optionnelles
   available?: boolean;
   capacity?: number;
   duration?: number;
   features?: string[];
   rules?: string[];
   cancellation_policy?: string;
+  
+  // Localisation
   latitude?: number;
   longitude?: number;
   address?: string;
   city?: string;
   country?: string;
   postal_code?: string;
+  
+  // Contact
   phone?: string;
   email?: string;
   website?: string;
-  amenities?: string[];
-  is_featured?: boolean;
-  is_verified?: boolean;
+  
+  // Métadonnées SEO
   slug?: string;
   meta_title?: string;
   meta_description?: string;
   meta_keywords?: string[];
-  status?: 'draft' | 'published' | 'archived';
+  
+  // Statistiques
   views_count?: number;
   favorites_count?: number;
   bookings_count?: number;
   average_rating?: number;
-  reviews_count?: number;
-  partner_id?: string;
-  partner?: Partner;
+  
+  // Catégories et tags
   category_id?: string;
   subcategory_id?: string;
   tags?: string[];
+  
+  // Disponibilité
   start_date?: string;
   end_date?: string;
-  time_slots?: Array<{
-    id: string;
-    start_time: string;
-    end_time: string;
-    is_available: boolean;
-  }>;
-  availability?: {
-    monday: boolean;
-    tuesday: boolean;
-    wednesday: boolean;
-    thursday: boolean;
-    friday: boolean;
-    saturday: boolean;
-    sunday: boolean;
-  };
-  pricing_options?: Array<{
-    id: string;
-    name: string;
-    description?: string;
-    price: number;
-    duration?: number;
-    is_popular?: boolean;
-  }>;
-  faqs?: Array<{
-    id: string;
-    question: string;
-    answer: string;
-  }>;
-  reviews?: Array<{
-    id: string;
-    user_id: string;
-    rating: number;
-    comment: string;
-    created_at: string;
-    user: {
-      id: string;
-      full_name: string;
-      avatar_url?: string;
-    };
-  }>;
+  time_slots?: TimeSlot[];
+  availability?: Availability;
+  
+  // Options de tarification
+  pricing_options?: PricingOption[];
+  
+  // FAQ et avis
+  faqs?: FAQ[];
+  reviews?: Review[];
 }
 
-export type Partner = Profile & {
-  services?: Service[];
-  ratings?: number;
-};
+export interface Booking extends Tables<'bookings'> {
+  service?: Service;
+  user?: Profile;
+}
 
-// Type de base pour les services
-export type Service = Omit<ServiceBase, keyof Tables<'services'>> & Tables<'services'> & {
-  // Propriétés spécifiques qui peuvent être ajoutées ou surchargées
-  name: string;
-  title: string;
+// =============================================
+// Types d'insertion
+// =============================================
+
+export type ProfileInsert = TablesInsert<'profiles'>;
+
+export interface ServiceInsert extends Omit<TablesInsert<'services'>, 'status' | 'type'> {
   type: ServiceType;
-  price: number;
-  location: string;
-  images: string[];
-  created_at: string;
-  updated_at: string;
-  user_id: string;
-  description?: string;
-  rating?: number;
-};
+  status?: ServiceStatus;
+  // Autres propriétés optionnelles pour l'insertion
+}
 
-export type Booking = Tables<'bookings'> & {
+export type BookingInsert = TablesInsert<'bookings'>;
+
+// =============================================
+// Types de mise à jour
+// =============================================
+
+export type ProfileUpdate = TablesUpdate<'profiles'>;
+
+export interface ServiceUpdate extends Omit<TablesUpdate<'services'>, 'status' | 'type'> {
+  type?: ServiceType;
+  status?: ServiceStatus;
+  // Autres propriétés optionnelles pour la mise à jour
+}
+
+export type BookingUpdate = TablesUpdate<'bookings'>;
+
+// =============================================
+// Types utilitaires étendus
+// =============================================
+
+export interface TimeSlot {
   id: string;
-  service_id: string;
-  user_id: string;
-  start_date: string;
-  end_date: string;
-  status: 'pending' | 'confirmed' | 'cancelled';
-  total_price: number;
-  created_at: string;
-  updated_at: string;
-};
+  start_time: string;
+  end_time: string;
+  is_available: boolean;
+}
 
+export interface Availability {
+  monday: boolean;
+  tuesday: boolean;
+  wednesday: boolean;
+  thursday: boolean;
+  friday: boolean;
+  saturday: boolean;
+  sunday: boolean;
+}
+
+export interface PricingOption {
+  id: string;
+  name: string;
+  description?: string;
+  price: number;
+  duration?: number;
+  is_popular?: boolean;
+}
+
+export interface FAQ {
+  id: string;
+  question: string;
+  answer: string;
+}
+
+export interface Review {
+  id: string;
+  user_id: string;
+  rating: number;
+  comment: string;
+  created_at: string;
+  user: {
+    id: string;
+    full_name: string;
+    avatar_url?: string;
+  };
+}
+
+// =============================================
 // Types pour les formulaires
+// =============================================
+
 export interface PartnerFormData {
   company_name: string;
   email: string;
@@ -141,10 +203,28 @@ export interface PartnerFormData {
   bank_account?: string;
   iban?: string;
 }
+
+// =============================================
+// Autres types
+// =============================================
+
+export type Partner = Profile & {
+  services?: Service[];
+  ratings?: number;
+};
+
 export interface ServiceWithPartner extends Service {
-  partner?: Partner;
+  partner?: Profile;
 }
 
 export interface BookingWithService extends Booking {
-  service?: ServiceWithPartner;
+  service?: Service;
 }
+
+export interface BookingWithRelations extends Booking {
+  service?: Service;
+  user?: Profile;
+}
+
+// Alias pour la rétrocompatibilité
+export type { Service as ServiceBase };

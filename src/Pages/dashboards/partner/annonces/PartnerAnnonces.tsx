@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { supabase } from '../../../../lib/supabase';
-import { uploadMultipleImages, deleteImage } from '../../../../lib/storage';
-import { Plus, Edit, Trash2, Loader } from 'lucide-react';
+import { Plus, Edit, Loader } from 'lucide-react';
 import toast from 'react-hot-toast';
 import AnnonceForm from '../../../../components/forms/AnnonceForm';
 

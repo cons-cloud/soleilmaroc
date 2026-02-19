@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { supabase } from '../../../../lib/supabase';
-import { Heart, MapPin, Clock, Calendar } from 'lucide-react';
+import { Heart, MapPin, Calendar } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import toast from 'react-hot-toast';
 

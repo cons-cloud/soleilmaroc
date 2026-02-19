@@ -1,5 +1,4 @@
-import React from 'react';
-import { Phone, Mail, MapPin, Clock, Loader2, Zap } from 'lucide-react';
+import { Phone, Mail, MapPin, Clock3 as Clock, Zap } from 'lucide-react';
 
 const Maintenance = () => {
   return (
