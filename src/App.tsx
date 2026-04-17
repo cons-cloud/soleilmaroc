@@ -180,7 +180,7 @@ const PublicLayout = () => {
 };
 
 // Composant de mise en page pour l'authentification (sans navbar ni footer)
-const AuthLayout = ({ children }: { children?: React.ReactNode }) => {
+const AuthLayout = () => {
   // Vérifier si le mode maintenance est actif et si l'utilisateur a le mot de passe
   let bypassMaintenance = false;
   
@@ -196,7 +196,7 @@ const AuthLayout = ({ children }: { children?: React.ReactNode }) => {
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
       <main className="flex-1">
-        {children}
+        <Outlet />
       </main>
     </div>
   );
@@ -275,8 +275,9 @@ function App() {
           <SiteContentProvider>
             <div className="min-h-screen flex flex-col">
               <Suspense fallback={<LoadingFallback />}>
-                <Toaster position="top-center" />
-                <Routes>
+                <ErrorBoundary>
+                  <Toaster position="top-center" />
+                  <Routes>
                   {/* Route de maintenance - Doit être au niveau racine */}
                   <Route path="/maintenance" element={
                     <div className="min-h-screen flex items-center justify-center bg-gray-50">
@@ -500,7 +501,8 @@ function App() {
                     <Footer />
                   </div>
                 } />
-              </Routes>
+                </Routes>
+              </ErrorBoundary>
             </Suspense>
           </div>
         </SiteContentProvider>
