@@ -31,12 +31,11 @@
     <link rel="icon" href="/public/about/1.jpeg" type="image/jpeg" sizes="64x64">
     <link rel="shortcut icon" href="/public/about/1.jpeg" type="image/jpeg">
     <link rel="apple-touch-icon" href="/public/about/1.jpeg">
-    <link rel="icon" type="image/png" sizes="192x192" href="/logo192.png" />
-    <link rel="icon" type="image/png" sizes="512x512" href="/logo512.png" />
-    <link rel="apple-touch-icon" href="/logo192.png" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <link rel="apple-touch-icon" href="/vite.svg" />
     <link rel="manifest" href="/manifest.json" />
     <meta name="msapplication-TileColor" content="#0ea5e9" />
-    <meta name="msapplication-TileImage" content="/logo192.png" />
+    <meta name="msapplication-TileImage" content="/vite.svg" />
 
     <!-- Preconnect to important origins -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -75,31 +74,6 @@
       /* Ajoutez ici d'autres styles critiques si nécessaire */
     </style>
     
-    <!-- Chargement différé du CSS non critique -->
-    <link 
-      rel="preload" 
-      href="/src/index.css" 
-      as="style" 
-      onload="this.onload=null;this.rel='stylesheet'"
-    />
-    <noscript><link rel="stylesheet" href="/src/index.css" /></noscript>
-    <script>
-      // Script de secours si le chargement échoue
-      const loadCSS = function(href, before, media) {
-        const ss = window.document.createElement('link');
-        ss.rel = 'stylesheet';
-        ss.href = href;
-        ss.media = 'only x';
-        if (before) document.head.insertBefore(ss, before);
-        else document.head.appendChild(ss);
-        setTimeout(function() { ss.media = media || 'all'; });
-        return ss;
-      };
-      
-      // Charger le CSS de manière asynchrone
-      loadCSS('/src/index.css');
-    </script>
-
     <title>MarocSoleil - Votre guide de voyage au Maroc</title>
   </head>
   <body>

@@ -2,9 +2,8 @@ const CACHE_NAME = 'maroc-soleil-v1';
 const ASSETS_TO_CACHE = [
   '/',
   '/index.html',
-  '/src/main.tsx',
-  '/src/App.tsx',
-  '/src/index.css',
+  '/manifest.json',
+  '/vite.svg',
 ];
 
 // Installation
