@@ -9,6 +9,7 @@ import RoleGuard from "./components/RoleGuard";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { ROUTES } from "./config/routes";
 import { SEO } from "./components/SEO";
+import LoadingSpinner from "./components/LoadingSpinner";
 
 // Configuration de la maintenance
 export const MAINTENANCE_MODE = false; // Mode maintenance désactivé
@@ -43,12 +44,11 @@ const checkMaintenanceBypass = () => {
 const Maintenance = lazy(() => import("./Pages/Maintenance"));
 const DevenirHote = lazy(() => import("./Pages/DevenirHote"));
 
-// Composants de mise en page
+// Composants de mise en page (imports statiques pour éviter les problèmes Suspense)
 import DashboardLayout from './components/DashboardLayout';
 import ClientPageLayout from './components/ClientPageLayout';
 const Navbar = lazy(() => import("./components/Navbar"));
 const Footer = lazy(() => import("./components/Footer"));
-const LoadingSpinner = lazy(() => import("./components/LoadingSpinner"));
 const BookingForm = lazy(() => import("./components/BookingForm"));
 
 // Pages publiques
@@ -137,10 +137,10 @@ const EvenementsManagement = lazy(() => import("./Pages/dashboards/admin/Eveneme
 const AnnoncesManagement = lazy(() => import("./Pages/dashboards/admin/AnnoncesManagement"));
 const GuidesManagement = lazy(() => import("./Pages/dashboards/admin/GuidesTouristiquesManagement"));
 
-// Composant de chargement pour le Suspense
+// Composant de chargement pour le Suspense (inline spinner pour éviter la dépendance circulaire)
 const LoadingFallback = () => (
-  <div className="flex items-center justify-center min-h-screen">
-    <LoadingSpinner size="lg" />
+  <div className="flex items-center justify-center min-h-screen bg-white">
+    <div className="animate-spin rounded-full h-8 w-8 border-2 border-emerald-500 border-t-transparent" aria-hidden="true"></div>
   </div>
 );
 

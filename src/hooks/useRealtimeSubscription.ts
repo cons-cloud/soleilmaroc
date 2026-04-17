@@ -24,94 +24,50 @@ export function useRealtimeSubscription<T extends Record<string, any>>({
   enabled = true,
 }: RealtimeSubscriptionOptions<T>) {
   const channelRef = useRef<RealtimeChannel | null>(null);
+  const callbackRef = useRef(callback);
+
+  // Mettre à jour la ref du callback pour éviter de recréer la souscription à chaque changement de fonction
+  useEffect(() => {
+    callbackRef.current = callback;
+  }, [callback]);
 
   useEffect(() => {
     if (!enabled) return;
 
-    console.log(`[useRealtimeSubscription] Initializing subscription for table: ${table}`);
+    // Créer un canal de souscription avec un nom déterministe par table/filtre
+    const channelName = `realtime:${schema}:${table}:${filter || 'all'}`;
     
-    // Créer un canal de souscription avec un ID unique
-    const channelName = `db-changes-${table}-${Date.now()}`;
-    channelRef.current = supabase.channel(channelName, {
-      config: {
-        broadcast: { self: true },
-      },
-    });
-    
-    if (!channelRef.current) {
-      console.error('[useRealtimeSubscription] Failed to create channel');
-      return;
+    // Nettoyer l'ancien canal s'il existe
+    if (channelRef.current) {
+      supabase.removeChannel(channelRef.current);
     }
 
-    // Configurer l'écoute des changements
-    const subscription = channelRef.current
+    channelRef.current = supabase.channel(channelName);
+    
+    channelRef.current
       .on(
         'postgres_changes' as any,
-        {
-          event,
-          schema,
-          table,
-          filter,
-        },
+        { event, schema, table, filter },
         (payload: RealtimePostgresChangesPayload<T>) => {
-          console.log(`[useRealtimeSubscription] Received ${payload.eventType} event for ${table}`, payload);
-          try {
-            callback(payload);
-          } catch (error) {
-            console.error('[useRealtimeSubscription] Error in callback:', error);
-          }
+          callbackRef.current(payload);
         }
       )
-      .subscribe((status, err) => {
-        if (err) {
-          console.error('[useRealtimeSubscription] Subscription error:', err);
-          return;
+      .subscribe((status) => {
+        if (status === 'CHANNEL_ERROR') {
+          console.error(`[Realtime] Error subscribing to ${table}`);
         }
-        console.log(`[useRealtimeSubscription] Subscription status: ${status}`);
       });
 
-    // Gestion des erreurs de connexion
-    const handleError = (event: any) => {
-      console.error('[useRealtimeSubscription] Channel error:', event);
-      // Tentative de reconnexion après un délai
-      setTimeout(() => {
-        console.log('[useRealtimeSubscription] Attempting to resubscribe...');
-        subscription && subscription.unsubscribe();
-        channelRef.current?.subscribe();
-      }, 1000);
-    };
-
-    channelRef.current.on('broadcast', { event: 'error' }, handleError);
-
-    // Nettoyage lors du démontage du composant
     return () => {
-      console.log('[useRealtimeSubscription] Cleaning up subscription for table:', table);
       if (channelRef.current) {
-        try {
-          channelRef.current.unsubscribe();
-          supabase.removeChannel(channelRef.current);
-        } catch (error) {
-          console.error('[useRealtimeSubscription] Error during cleanup:', error);
-        }
-        channelRef.current = null;
-      }
-    };
-  }, [table, filter, callback, event, schema, enabled]);
-
-  // Retourner des méthodes pour gérer manuellement l'abonnement si nécessaire
-  return {
-    unsubscribe: () => {
-      if (channelRef.current) {
-        channelRef.current.unsubscribe();
         supabase.removeChannel(channelRef.current);
         channelRef.current = null;
       }
-    },
-    resubscribe: () => {
-      if (!channelRef.current) return;
-      channelRef.current.unsubscribe();
-      channelRef.current.subscribe();
-    },
+    };
+  }, [table, filter, event, schema, enabled]);
+
+  return {
+    isActive: !!channelRef.current
   };
 }
 

@@ -1,34 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useQueries, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '../lib/supabase';
-
-// Interface pour les données brutes d'un appartement partenaire
-interface PartnerProduct {
-  id: string;
-  title?: string;
-  name?: string;
-  description?: string;
-  price?: number;
-  price_per_night?: number;
-  city?: string;
-  region?: string;
-  address?: string;
-  bedrooms?: number;
-  bathrooms?: number;
-  
-  
-  amenities?: any;
-  contact_phone?: string;
-  available?: boolean;
-  featured?: boolean;
-  images?: string[];
-  main_image?: string;
-  created_at: string;
-  updated_at?: string;
-  partner_id?: string;
-  partner?: {
-    company_name?: string;
-  };
-}
+import { useRealtimeSubscription } from './useRealtimeSubscription';
 
 export interface Apartment {
   id: string;
@@ -40,8 +12,6 @@ export interface Apartment {
   address: string;
   bedrooms?: number;
   bathrooms?: number;
-  surface_area?: number;
-  
   amenities: string[];
   contact_phone?: string;
   available: boolean;
@@ -49,156 +19,137 @@ export interface Apartment {
   images: string[];
   created_at: string;
   updated_at?: string;
-  
   product_type?: string;
-  partner?: {
-    company_name?: string;
-  };
+  partner?: { company_name?: string };
+}
+
+const formatAmenities = (amenities: any): string[] => {
+  if (!amenities) return [];
+  if (Array.isArray(amenities)) return amenities.filter(Boolean);
+  if (typeof amenities === 'object') return Object.values(amenities).filter(Boolean) as string[];
+  return [];
+};
+
+const formatImages = (images: any, mainImage?: string): string[] => {
+  if (Array.isArray(images)) return images.filter(Boolean);
+  if (mainImage) return [mainImage];
+  return [];
+};
+
+async function fetchMainApartments(): Promise<Apartment[]> {
+  const { data, error } = await supabase
+    .from('appartements')
+    .select('id, title, description, price_per_night, city, region, address, bedrooms, bathrooms, amenities, contact_phone, available, featured, images, created_at, updated_at')
+    .eq('available', true)
+    .order('featured', { ascending: false })
+    .order('created_at', { ascending: false });
+
+  if (error) throw error;
+  return (data || []).map((apt: any) => ({
+    id: apt.id,
+    title: apt.title || '',
+    description: apt.description || '',
+    price_per_night: apt.price_per_night || 0,
+    city: apt.city || '',
+    region: apt.region || '',
+    address: apt.address || '',
+    bedrooms: apt.bedrooms,
+    bathrooms: apt.bathrooms,
+    amenities: formatAmenities(apt.amenities),
+    contact_phone: apt.contact_phone,
+    available: Boolean(apt.available),
+    featured: Boolean(apt.featured),
+    images: formatImages(apt.images),
+    created_at: apt.created_at,
+    updated_at: apt.updated_at,
+    product_type: 'appartement',
+  }));
+}
+
+async function fetchPartnerApartments(): Promise<Apartment[]> {
+  const { data, error } = await supabase
+    .from('partner_products')
+    .select('id, title, name, description, price, price_per_night, city, region, address, bedrooms, bathrooms, amenities, contact_phone, available, featured, images, main_image, created_at, updated_at, partner_id')
+    .eq('available', true)
+    .eq('product_type', 'appartement')
+    .order('created_at', { ascending: false });
+
+  if (error) {
+    console.warn('partner_products fetch error (non-fatal):', error.message);
+    return [];
+  }
+  return (data || []).map((p: any) => ({
+    id: p.id,
+    title: p.title || p.name || 'Appartement partenaire',
+    description: p.description || '',
+    price_per_night: p.price || p.price_per_night || 0,
+    city: p.city || '',
+    region: p.region || '',
+    address: p.address || '',
+    bedrooms: p.bedrooms,
+    bathrooms: p.bathrooms,
+    amenities: formatAmenities(p.amenities),
+    contact_phone: p.contact_phone,
+    available: Boolean(p.available),
+    featured: Boolean(p.featured),
+    images: formatImages(p.images, p.main_image),
+    created_at: p.created_at,
+    updated_at: p.updated_at,
+    product_type: 'appartement',
+  }));
 }
 
 export const useApartments = () => {
-  const [apartments, setApartments] = useState<Apartment[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const queryClient = useQueryClient();
 
-  const formatAmenities = (amenities: any): string[] => {
-    if (!amenities) return [];
-    if (Array.isArray(amenities)) return amenities.filter(Boolean);
-    if (typeof amenities === 'object') {
-      return Object.values(amenities).filter(Boolean) as string[];
+  // Deux requêtes en PARALLÈLE (plus rapide) avec cache partagé
+  const [mainQuery, partnerQuery] = useQueries({
+    queries: [
+      {
+        queryKey: ['apartments', 'main'],
+        queryFn: fetchMainApartments,
+        staleTime: 5 * 60 * 1000,
+        gcTime: 30 * 60 * 1000,
+        retry: 2,
+      },
+      {
+        queryKey: ['apartments', 'partner'],
+        queryFn: fetchPartnerApartments,
+        staleTime: 5 * 60 * 1000,
+        gcTime: 30 * 60 * 1000,
+        retry: 1,
+      },
+    ],
+  });
+
+  // REAL-TIME SYNC
+  useRealtimeSubscription({
+    table: 'appartements',
+    callback: () => {
+      queryClient.invalidateQueries({ queryKey: ['apartments', 'main'] });
     }
-    return [];
-  };
+  });
 
-  const formatImages = (images: any, mainImage?: string): string[] => {
-    if (Array.isArray(images)) return images.filter(Boolean);
-    if (mainImage) return [mainImage];
-    return [];
-  };
-
-  const fetchApartments = async () => {
-    try {
-      console.log('Fetching apartments...');
-      setLoading(true);
-      setError(null);
-      
-      // 1. Load from appartements table
-      const { data: apartmentsData, error: apartmentsError } = await supabase
-  .from('appartements')
-  .select(`
-    id,
-    title,
-    description,
-    price_per_night,
-    city,
-    region,
-    address,
-    bedrooms,
-    bathrooms,
-    amenities,
-    contact_phone,
-    available,
-    featured,
-    images,
-    created_at,
-    updated_at
-  `)
-  .eq('available', true)
-  .order('featured', { ascending: false })
-  .order('created_at', { ascending: false });
-
-      if (apartmentsError) throw apartmentsError;
-
-      // 2. Load from partner_products
-      const { data: partnerProducts, error: partnerError } = await supabase
-        .from('partner_products')
-        .select('*')
-        .eq('available', true)
-        .eq('product_type', 'appartement')
-        .order('created_at', { ascending: false });
-
-      if (partnerError) {
-        console.error('Supabase error (partner_products):', partnerError);
-        // Continue even if there's an error with partner products
-      }
-
-      // 3. Format main apartments
-      const formattedApartments: Apartment[] = (apartmentsData || []).map((apartment: any) => ({
-        id: apartment.id,
-        title: apartment.title || '',
-        description: apartment.description || '',
-        price_per_night: apartment.price_per_night || 0,
-        city: apartment.city || '',
-        region: apartment.region || '',
-        address: apartment.address || '',
-        bedrooms: apartment.bedrooms,
-        bathrooms: apartment.bathrooms,
-        
-        type: apartment.type || 'appartement',
-        amenities: formatAmenities(apartment.amenities),
-        contact_phone: apartment.contact_phone,
-        available: Boolean(apartment.available),
-        featured: Boolean(apartment.featured),
-        images: formatImages(apartment.images),
-        created_at: apartment.created_at,
-        updated_at: apartment.updated_at,
-       
-        product_type: 'appartement'
-      }));
-
-      // 4. Format partner apartments
-      const formattedPartnerApartments: Apartment[] = (partnerProducts || []).map((product: PartnerProduct) => ({
-        id: product.id,
-        title: product.title || product.name || 'Appartement partenaire',
-        description: product.description || '',
-        price_per_night: product.price || product.price_per_night || 0,
-        city: product.city || 'Ville non spécifiée',
-        region: product.region || '',
-        address: product.address || '',
-        bedrooms: product.bedrooms,
-        bathrooms: product.bathrooms,
-        
-        
-        amenities: formatAmenities(product.amenities),
-        contact_phone: product.contact_phone,
-        available: Boolean(product.available),
-        featured: Boolean(product.featured),
-        images: formatImages(product.images, product.main_image),
-        created_at: product.created_at,
-        updated_at: product.updated_at,
-        
-        product_type: 'appartement',
-        partner: product.partner
-      }));
-
-      // 5. Combine and sort
-      const allApartments = [...formattedApartments, ...formattedPartnerApartments]
-        .sort((a, b) => {
-          if (a.featured && !b.featured) return -1;
-          if (!a.featured && b.featured) return 1;
-          return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
-        });
-
-      console.log('All apartments loaded:', allApartments);
-      setApartments(allApartments);
-
-    } catch (err: any) {
-      console.error('Error in fetchApartments:', err);
-      setError(err.message || 'Une erreur est survenue lors du chargement des appartements');
-      setApartments([]);
-    } finally {
-      setLoading(false);
+  useRealtimeSubscription({
+    table: 'partner_products',
+    callback: () => {
+      queryClient.invalidateQueries({ queryKey: ['apartments', 'partner'] });
     }
-  };
+  });
 
-  useEffect(() => {
-    fetchApartments();
-  }, []);
+  const apartments = [
+    ...(mainQuery.data ?? []),
+    ...(partnerQuery.data ?? []),
+  ].sort((a, b) => {
+    if (a.featured && !b.featured) return -1;
+    if (!a.featured && b.featured) return 1;
+    return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+  });
 
-  return { 
-    apartments, 
-    loading, 
-    error, 
-    refetch: fetchApartments 
+  return {
+    apartments,
+    loading: mainQuery.isLoading,
+    error: mainQuery.error?.message ?? partnerQuery.error?.message ?? null,
+    refetch: () => { mainQuery.refetch(); partnerQuery.refetch(); },
   };
 };

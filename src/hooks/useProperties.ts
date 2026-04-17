@@ -1,7 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '../lib/supabase';
+import { useRealtimeSubscription } from './useRealtimeSubscription';
 
-// Définir le type pour une propriété
 interface Property {
   id: string;
   property_type: string;
@@ -13,50 +13,38 @@ interface Property {
   bathrooms?: number;
   area?: number;
   created_at: string;
-  // Ajoutez d'autres champs selon votre schéma
 }
 
 export const useProperties = (propertyType: string) => {
-  const [properties, setProperties] = useState<Property[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const queryClient = useQueryClient();
 
-  useEffect(() => {
-    const fetchProperties = async () => {
-      try {
-        setLoading(true);
-        console.log(`Fetching properties of type: ${propertyType}`);
-        
-        const { data, error } = await supabase
-          .from('properties')
-          .select('*')
-          .eq('property_type', propertyType)
-          .order('created_at', { ascending: false });
+  const { data, isLoading, error } = useQuery<Property[], Error>({
+    queryKey: ['properties', propertyType],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('properties')
+        .select('id, property_type, title, description, price, location, bedrooms, bathrooms, area, created_at')
+        .eq('property_type', propertyType)
+        .order('created_at', { ascending: false });
 
-        if (error) throw error;
-        
-        console.log('Fetched properties:', data);
-        setProperties(data || []);
-      } catch (err) {
-        console.error('Error fetching properties:', err);
-        
-        // Gestion des erreurs de manière plus sûre
-        if (err instanceof Error) {
-          setError(err.message);
-        } else if (typeof err === 'string') {
-          setError(err);
-        } else if (err && typeof err === 'object' && 'message' in err) {
-          setError(String(err.message));
-        } else {
-          setError('Une erreur inconnue est survenue');
-        }
-      } finally {
-        setLoading(false);
-      }
-    };
+      if (error) throw error;
+      return data || [];
+    },
+    staleTime: 5 * 60 * 1000,
+    gcTime: 30 * 60 * 1000,
+  });
 
-    fetchProperties();
-  }, [propertyType]);
+  // REAL-TIME SYNC
+  useRealtimeSubscription({
+    table: 'properties',
+    callback: () => {
+      queryClient.invalidateQueries({ queryKey: ['properties', propertyType] });
+    }
+  });
 
-  return { properties, loading, error, setProperties };
+  return {
+    properties: data ?? [],
+    loading: isLoading,
+    error: error?.message ?? null,
+  };
 };

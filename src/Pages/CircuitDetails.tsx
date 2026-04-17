@@ -1,69 +1,29 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { supabase } from '../lib/supabase';
 import { loadStripe } from '@stripe/stripe-js';
 import { Elements } from '@stripe/react-stripe-js';
-import toast from 'react-hot-toast';
 import { Users, Clock, MapPin, Star, Check } from 'lucide-react';
 import CircuitBookingForm from '../components/CircuitBookingForm';
 import AuthGuard from '../components/AuthGuard';
 import LoadingSpinner from '../components/LoadingSpinner';
 import { STRIPE_PUBLIC_KEY } from '../config/stripe';
+import { useCircuitDetails } from '../hooks/useCircuitDetails';
 
 const stripePromise = loadStripe(STRIPE_PUBLIC_KEY);
 
-interface Circuit {
-  id: string;
-  title: string;
-  description: string;
-  images: string[];
-  price_per_person: number;
-  duration_days: number;
-  city: string;
-  highlights: string[];
-  included: string[];
-  not_included: string[];
-  itinerary: any[];
-  max_participants: number;
-  available: boolean;
-}
 
 const CircuitDetails = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const [circuit, setCircuit] = useState<Circuit | null>(null);
-  const [loading, setLoading] = useState(true);
+  const { circuit, loading, error } = useCircuitDetails(id);
   const [showBookingForm, setShowBookingForm] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
-  useEffect(() => {
-    if (id) {
-      loadCircuit();
-    }
-  }, [id]);
-
-  const loadCircuit = async () => {
-    try {
-      setLoading(true);
-      const { data, error } = await supabase
-        .from('circuits_touristiques')
-        .select('*')
-        .eq('id', id)
-        .single();
-
-      if (error) throw error;
-      setCircuit(data);
-    } catch (error: any) {
-      console.error('Erreur:', error);
-      toast.error('Circuit non trouvé');
-      navigate('/services/tourisme');
-    } finally {
-      setLoading(false);
-    }
-  };
-
   if (loading) return <LoadingSpinner />;
-  if (!circuit) return null;
+  if (error || !circuit) {
+    if (error) navigate('/services/tourisme');
+    return null;
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 pt-20">

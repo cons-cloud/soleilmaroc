@@ -2,6 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { Loader, Plus, UserPlus, Users, Bell, Search, Megaphone, Calendar, DollarSign } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useRealtimeSubscription } from '../../hooks/useRealtimeSubscription';
 import toast from 'react-hot-toast';
 
 // Alias pour l'icône d'événement
@@ -36,82 +38,33 @@ interface BookingItem {
 const AdminDashboard: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
   
-  // État pour les statistiques
-  const [stats, setStats] = useState({
-    totalUsers: 0,
-    totalBookings: 0,
-    totalRevenue: 0,
-    activeServices: 0,
-    pendingBookings: 0,
-    totalEvents: 0,
-    totalAnnouncements: 0,
-  });
+  // Dashboard Stats Query
+  const { data: stats, isLoading: statsLoading } = useQuery({
+    queryKey: ['admin-stats'],
+    queryFn: async () => {
+      const [
+        { count: usersCount },
+        { count: bookingsCount },
+        { count: pendingCount },
+        { data: paymentsData },
+        { count: servicesCount },
+        { count: eventsCount },
+        { count: announcementsCount }
+      ] = await Promise.all([
+        supabase.from('profiles').select('*', { count: 'exact', head: true }),
+        supabase.from('bookings').select('*', { count: 'exact', head: true }),
+        supabase.from('bookings').select('*', { count: 'exact', head: true }).eq('status', 'pending'),
+        supabase.from('payments').select('amount').eq('status', 'paid'),
+        supabase.from('services').select('*', { count: 'exact', head: true }).eq('available', true),
+        supabase.from('evenements').select('*', { count: 'exact', head: true }),
+        supabase.from('annonces').select('*', { count: 'exact', head: true })
+      ]);
 
-  const [recentBookings, setRecentBookings] = useState<BookingItem[]>([]);
+      const totalRevenue = paymentsData?.reduce((sum, payment: any) => sum + (payment.amount || 0), 0) || 0;
 
-  // Fonction pour charger les statistiques
-  const loadStats = async () => {
-    try {
-      setLoading(true);
-      
-      // Récupérer le nombre d'utilisateurs
-      const { count: usersCount, error: usersError } = await supabase
-        .from('profiles')
-        .select('*', { count: 'exact', head: true });
-      
-      if (usersError) console.error('Erreur utilisateurs:', usersError);
-      
-      // Récupérer les statistiques des réservations
-      const { count: bookingsCount, error: bookingsError } = await supabase
-        .from('bookings')
-        .select('*', { count: 'exact', head: true });
-      
-      if (bookingsError) console.error('Erreur réservations:', bookingsError);
-      
-      // Récupérer les réservations en attente
-      const { count: pendingCount, error: pendingError } = await supabase
-        .from('bookings')
-        .select('*', { count: 'exact', head: true })
-        .eq('status', 'pending');
-      
-      if (pendingError) console.error('Erreur réservations en attente:', pendingError);
-      
-      // Récupérer le chiffre d'affaires total
-      const { data: paymentsData, error: paymentsError } = await supabase
-        .from('payments')
-        .select('amount')
-        .eq('status', 'paid');
-      
-      if (paymentsError) console.error('Erreur paiements:', paymentsError);
-      
-      const totalRevenue = paymentsData?.reduce((sum: number, payment: any) => sum + (payment.amount || 0), 0) || 0;
-      
-      // Récupérer le nombre de services actifs
-      const { count: servicesCount, error: servicesError } = await supabase
-        .from('services')
-        .select('*', { count: 'exact', head: true })
-        .eq('available', true);
-      
-      if (servicesError) console.error('Erreur services:', servicesError);
-      
-      // Récupérer le nombre d'événements
-      const { count: eventsCount, error: eventsError } = await supabase
-        .from('evenements')
-        .select('*', { count: 'exact', head: true });
-      
-      if (eventsError) console.error('Erreur événements:', eventsError);
-      
-      // Récupérer le nombre d'annonces
-      const { count: announcementsCount, error: announcementsError } = await supabase
-        .from('annonces')
-        .select('*', { count: 'exact', head: true });
-      
-      if (announcementsError) console.error('Erreur annonces:', announcementsError);
-      
-      // Mettre à jour l'état avec les données récupérées
-      setStats({
+      return {
         totalUsers: usersCount || 0,
         totalBookings: bookingsCount || 0,
         totalRevenue,
@@ -119,47 +72,23 @@ const AdminDashboard: React.FC = () => {
         pendingBookings: pendingCount || 0,
         totalEvents: eventsCount || 0,
         totalAnnouncements: announcementsCount || 0,
-      });
-      
-    } catch (error) {
-      console.error('Erreur lors du chargement des statistiques:', error);
-      toast.error('Erreur lors du chargement des statistiques');
-    } finally {
-      setLoading(false);
-    }
-  };
-  
+      };
+    },
+    staleTime: 60 * 1000,
+  });
 
-  // Fonction pour vérifier si un onglet est actif
-  const isActive = (path: string) => {
-    if (path === '/admin' || path === '') {
-      // Pour la route par défaut, vérifier si on est exactement sur /dashboard/admin
-      return location.pathname === '/dashboard/admin' || location.pathname === '/dashboard/admin/';
-    }
-    return location.pathname === `/dashboard/admin${path}` || 
-           location.pathname.startsWith(`/dashboard/admin${path}/`);
-  };
-  
-  // Vérifier si on est sur la page principale du dashboard
-  const isDashboardHome = location.pathname === '/dashboard/admin' || location.pathname === '/dashboard/admin/';
-
-  // Fonction pour charger les réservations récentes
-  const fetchRecentBookings = async () => {
-    try {
+  // Recent Bookings Query
+  const { data: recentBookings = [], isLoading: bookingsLoading } = useQuery<BookingItem[]>({
+    queryKey: ['admin-recent-bookings'],
+    queryFn: async () => {
       const { data, error } = await supabase
         .from('bookings')
         .select('*')
         .order('created_at', { ascending: false })
         .limit(5);
 
-      if (error) {
-        console.error('Erreur réservations récentes:', error);
-        setRecentBookings([]);
-        return;
-      }
-
-      // Formater les réservations
-      const formattedBookings = (data || []).map((booking: any) => ({
+      if (error) throw error;
+      return (data || []).map((booking: any) => ({
         id: booking.id,
         user_id: booking.user_id,
         service_id: booking.service_id,
@@ -169,44 +98,52 @@ const AdminDashboard: React.FC = () => {
         user: booking.user || null,
         service: booking.service || { title: booking.service_title || booking.service_name || 'Service inconnu' }
       }));
-
-      setRecentBookings(formattedBookings);
-    } catch (error) {
-      console.error('Error fetching recent bookings:', error);
-      setRecentBookings([]);
     }
+  });
+
+  // REAL-TIME SYNCRONIZATION
+  // Écouter les changements sur les tables clés et rafraîchir les queries
+  useRealtimeSubscription({
+    table: 'bookings',
+    callback: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-stats'] });
+      queryClient.invalidateQueries({ queryKey: ['admin-recent-bookings'] });
+    }
+  });
+
+  useRealtimeSubscription({
+    table: 'payments',
+    callback: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-stats'] });
+    }
+  });
+
+  // Fonction pour vérifier si un onglet est actif
+  const isActive = (path: string) => {
+    if (path === '/admin' || path === '') {
+      return location.pathname === '/dashboard/admin' || location.pathname === '/dashboard/admin/';
+    }
+    return location.pathname === `/dashboard/admin${path}` || 
+           location.pathname.startsWith(`/dashboard/admin${path}/`);
   };
+  
+  const isDashboardHome = location.pathname === '/dashboard/admin' || location.pathname === '/dashboard/admin/';
 
-  // Charger les données au montage du composant
-  useEffect(() => {
-    const loadData = async () => {
-      await Promise.all([loadStats(), fetchRecentBookings()]);
-    };
-    
-    loadData();
-  }, []);
+  // Formattage
+  const formatNumber = (num: number) => num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+  const formatCurrency = (amount: number) => new Intl.NumberFormat('fr-MA', {
+    style: 'currency', currency: 'MAD', minimumFractionDigits: 0
+  }).format(amount);
 
-  // Fonction pour formater un nombre avec des espaces comme séparateurs de milliers
-  const formatNumber = (num: number) => {
-    return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
-  };
-
-  // Fonction pour formater le montant en devise
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('fr-MA', {
-      style: 'currency',
-      currency: 'MAD',
-      minimumFractionDigits: 0
-    }).format(amount);
-  };
-
-  if (loading) {
+  if (statsLoading || bookingsLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <Loader className="animate-spin h-8 w-8 text-blue-500" />
       </div>
     );
   }
+
+  if (!stats) return null;
 
   return (
     <div className="bg-gray-50 min-h-screen">

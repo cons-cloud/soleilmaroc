@@ -6,15 +6,17 @@ export type SearchOptions = {
   limit?: number;
   partnerId?: string | null;
   onlyAvailable?: boolean;
+  selectColumns?: string;
 };
 
 export async function searchTable(q: string, opts: SearchOptions = {}) {
-  const table = opts.table || 'partner_products';
+  const table = opts.table || 'products';
   const fields = opts.fields || ['title', 'description'];
   const limit = opts.limit ?? 50;
+  const select = opts.selectColumns || '*';
 
   const term = (q || '').trim();
-  let sb: any = supabase.from(table).select('*').limit(limit);
+  let sb: any = supabase.from(table).select(select).limit(limit);
 
   if (opts.onlyAvailable) sb = sb.eq('available', true);
   if (opts.partnerId) sb = sb.eq('partner_id', opts.partnerId);

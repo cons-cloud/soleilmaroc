@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
 import { ArrowLeft, Loader2, User, Mail, Phone, Building, Home, Car, Compass, ArrowLeftCircle } from 'lucide-react';
@@ -19,11 +19,6 @@ interface FormData {
 const DevenirHote: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
-  
-  // Rediriger vers la page d'inscription
-  useEffect(() => {
-    navigate('/inscription');
-  }, [navigate]);
 
   const [formData, setFormData] = useState<FormData>({
     nom: '',

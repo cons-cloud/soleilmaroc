@@ -113,8 +113,8 @@ export const SiteSettingsProvider: React.FC<{ children: ReactNode }> = ({ childr
   useEffect(() => {
     loadSettings();
 
-    // Rafraîchir toutes les 5 minutes
-    const interval = setInterval(loadSettings, 5 * 60 * 1000);
+    // Rafraîchir toutes les 30 minutes (le contenu statique change rarement)
+    const interval = setInterval(loadSettings, 30 * 60 * 1000);
     return () => clearInterval(interval);
   }, []);
 

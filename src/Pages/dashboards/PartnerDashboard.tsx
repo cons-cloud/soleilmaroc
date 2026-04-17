@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from 'react';
-import { useLocation } from 'react-router-dom';
+import React, { useState } from 'react';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../contexts/AuthContext';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useRealtimeSubscription } from '../../hooks/useRealtimeSubscription';
 import ProductForm from '../../components/forms/ProductForm';
 import toast from 'react-hot-toast';
 import { Package, Home, Building2, Car, Palmtree, Plus } from 'lucide-react';
@@ -29,84 +30,56 @@ type Product = Omit<Service, 'type'> & {
   rating: number;
 };
 
-// Type de réservation (commenté car non utilisé pour le moment)
-// type Booking = BookingType & {
-//   service_title: string;
-//   client_name: string;
-//   client_email: string;
-//   client_phone: string;
-//   amount: number;
-//   payment_status: 'pending' | 'paid' | 'failed' | 'refunded';
-//   booking_status: 'pending' | 'confirmed' | 'cancelled' | 'completed';
-//   partner_paid: boolean;
-//   partner_paid_at: string | null;
-//   earning_status: 'pending' | 'available' | 'paid';
-// };
-
 const PartnerDashboard: React.FC = () => {
   const { user, profile } = useAuth();
-  const location = useLocation();
-  const [loading, setLoading] = useState(true);
-  const [stats, setStats] = useState<PartnerStats | null>(null);
-  const [products, setProducts] = useState<Product[]>([]);
-  // État pour les réservations (commenté car non utilisé pour le moment)
-  // const [bookings, setBookings] = useState<Booking[]>([]);
+  const queryClient = useQueryClient();
   const [showProductForm, setShowProductForm] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
-  // Gestion des onglets et filtres
-  const [_, setActiveTab] = useState<'overview' | 'products' | 'bookings' | 'earnings' | 'profile'>('overview');
   const [productFilter, setProductFilter] = useState<string>('all');
 
-  // Fonction utilitaire pour obtenir l'onglet actif depuis l'URL
-  const getActiveTabFromPath = (): 'overview' | 'products' | 'bookings' | 'earnings' | 'profile' => {
-    const path = location.pathname;
-    if (path.includes('/services') || path.includes('/cars') || path.includes('/properties') || path.includes('/tours')) return 'products';
-    if (path.includes('/bookings')) return 'bookings';
-    if (path.includes('/stats')) return 'earnings';
-    if (path.includes('/profile') || path.includes('/announcements')) return 'profile';
-    return 'overview';
-  };
+  // Stats Query
+  const { data: stats, isLoading: statsLoading } = useQuery({
+    queryKey: ['partner-stats', user?.id],
+    queryFn: async () => {
+      if (!user) return null;
+      const { data, error } = await supabase.rpc('get_partner_stats', { partner_id: user.id });
+      if (error) throw error;
+      return data as PartnerStats;
+    },
+    enabled: !!user,
+  });
 
-  // Charger les données au montage du composant
-  useEffect(() => {
-    setActiveTab(getActiveTabFromPath());
-    loadDashboardData();
-  }, [location.pathname]);
-
-  const loadDashboardData = async () => {
-    if (!user) return;
-    
-    try {
-      setLoading(true);
-      
-      // Charger les statistiques
-      const { data: statsData } = await supabase
-        .rpc('get_partner_stats', { partner_id: user.id });
-      
-      // Charger les produits
-      const { data: productsData } = await supabase
+  // Products Query
+  const { data: products = [], isLoading: productsLoading } = useQuery<Product[]>({
+    queryKey: ['partner-products', user?.id],
+    queryFn: async () => {
+      if (!user) return [];
+      const { data, error } = await supabase
         .from('products')
         .select('*')
         .eq('partner_id', user.id)
         .order('created_at', { ascending: false });
-      
-      // Charger les réservations (commenté car non utilisé pour le moment)
-      // const { data: bookingsData } = await supabase
-      //   .from('bookings')
-      //   .select('*')
-      //   .eq('partner_id', user.id)
-      //   .order('created_at', { ascending: false });
-      
-      setStats(statsData as PartnerStats);
-      setProducts(productsData || []);
-      // setBookings(bookingsData || []);
-    } catch (error) {
-      console.error('Erreur lors du chargement des données:', error);
-      toast.error('Erreur lors du chargement des données');
-    } finally {
-      setLoading(false);
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: !!user,
+  });
+
+  // REAL-TIME SYNC
+  useRealtimeSubscription({
+    table: 'products',
+    callback: () => {
+      queryClient.invalidateQueries({ queryKey: ['partner-products', user?.id] });
+      queryClient.invalidateQueries({ queryKey: ['partner-stats', user?.id] });
     }
-  };
+  });
+
+  useRealtimeSubscription({
+    table: 'bookings',
+    callback: () => {
+      queryClient.invalidateQueries({ queryKey: ['partner-stats', user?.id] });
+    }
+  });
 
   const getProductTypeIcon = (type: string) => {
     const icons: Record<string, any> = {
@@ -120,8 +93,6 @@ const PartnerDashboard: React.FC = () => {
     return <Icon className="w-5 h-5" />;
   };
 
-  // Note: getStatusBadge function removed as it's not currently used
-
   const handleDeleteProduct = async (productId: string) => {
     if (!confirm('Êtes-vous sûr de vouloir supprimer ce produit ?')) return;
     
@@ -134,14 +105,14 @@ const PartnerDashboard: React.FC = () => {
       if (error) throw error;
       
       toast.success('Produit supprimé avec succès');
-      loadDashboardData();
+      queryClient.invalidateQueries({ queryKey: ['partner-products', user?.id] });
     } catch (error) {
       console.error('Erreur lors de la suppression du produit:', error);
       toast.error('Erreur lors de la suppression du produit');
     }
   };
 
-  // Note: handleToggleAvailability function removed as it's not currently used
+  const loading = statsLoading || productsLoading;
 
   if (loading) {
     return (
@@ -180,7 +151,6 @@ const PartnerDashboard: React.FC = () => {
         {/* Statistiques */}
         {stats && (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {/* Cartes de statistiques ici */}
             <div className="bg-white/80 backdrop-blur-sm rounded-lg shadow-md p-6">
               <div className="flex items-center justify-between">
                 <div>
@@ -192,7 +162,42 @@ const PartnerDashboard: React.FC = () => {
                 </div>
               </div>
             </div>
-            {/* Ajoutez d'autres cartes de statistiques ici */}
+            
+            <div className="bg-white/80 backdrop-blur-sm rounded-lg shadow-md p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-500">Réservations</p>
+                  <p className="text-2xl font-bold">{stats.total_bookings}</p>
+                </div>
+                <div className="p-3 rounded-full bg-blue-100 text-blue-600">
+                  <Plus className="w-6 h-6" />
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-white/80 backdrop-blur-sm rounded-lg shadow-md p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-500">Revenus ce mois</p>
+                  <p className="text-2xl font-bold">{stats.this_month_earnings} DH</p>
+                </div>
+                <div className="p-3 rounded-full bg-green-100 text-green-600">
+                  <Plus className="w-6 h-6" />
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-white/80 backdrop-blur-sm rounded-lg shadow-md p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-500">Note moyenne</p>
+                  <p className="text-2xl font-bold">{stats.average_rating.toFixed(1)}/5</p>
+                </div>
+                <div className="p-3 rounded-full bg-yellow-100 text-yellow-600">
+                  <Plus className="w-6 h-6" />
+                </div>
+              </div>
+            </div>
           </div>
         )}
 
@@ -217,7 +222,6 @@ const PartnerDashboard: React.FC = () => {
               >
                 Voitures
               </button>
-              {/* Ajoutez d'autres filtres si nécessaire */}
             </div>
           </div>
 
@@ -226,10 +230,9 @@ const PartnerDashboard: React.FC = () => {
               .filter(product => 
                 productFilter === 'all' || 
                 (productFilter === 'voiture' && product.product_type === 'voiture')
-                // Ajoutez d'autres conditions de filtrage ici
               )
               .map(product => (
-                <div key={product.id} className="flex items-center justify-between p-4 border rounded-lg">
+                <div key={product.id} className="flex items-center justify-between p-4 border rounded-lg hover:shadow-sm transition-shadow">
                   <div className="flex items-center space-x-4">
                     {getProductTypeIcon(product.product_type)}
                     <div>
@@ -245,13 +248,13 @@ const PartnerDashboard: React.FC = () => {
                           setEditingProduct(product);
                           setShowProductForm(true);
                         }}
-                        className="p-2 text-gray-500 hover:text-emerald-600"
+                        className="p-2 text-gray-500 hover:text-emerald-600 transition-colors"
                       >
                         Modifier
                       </button>
                       <button
                         onClick={() => handleDeleteProduct(product.id)}
-                        className="p-2 text-gray-500 hover:text-red-600"
+                        className="p-2 text-gray-500 hover:text-red-600 transition-colors"
                       >
                         Supprimer
                       </button>
@@ -273,7 +276,8 @@ const PartnerDashboard: React.FC = () => {
           }}
           onSuccess={() => {
             setShowProductForm(false);
-            loadDashboardData();
+            queryClient.invalidateQueries({ queryKey: ['partner-products', user?.id] });
+            queryClient.invalidateQueries({ queryKey: ['partner-stats', user?.id] });
           }}
         />
       )}

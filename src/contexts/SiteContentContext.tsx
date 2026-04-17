@@ -30,7 +30,11 @@ const SiteContentContext = createContext<SiteContentContextType | undefined>(und
 // PROVIDER
 // ================================================
 export const SiteContentProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [content, setContent] = useState<Record<string, string>>(getDefaultContent());
+  const [content, setContent] = useState<Record<string, string>>(() => {
+    // Tenter de charger depuis le cache local au démarrage
+    const cached = typeof window !== 'undefined' ? localStorage.getItem('site_content_cache') : null;
+    return cached ? JSON.parse(cached) : getDefaultContent();
+  });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -60,10 +64,16 @@ export const SiteContentProvider: React.FC<{ children: ReactNode }> = ({ childre
         contentMap[fullKey] = item.value;
       });
       
-      setContent(() => ({
+      const finalContent = {
         ...getDefaultContent(),
         ...contentMap
-      }));
+      };
+      setContent(finalContent);
+      
+      // Sauvegarder dans le cache local
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('site_content_cache', JSON.stringify(finalContent));
+      }
     } catch (err) {
       console.error('Error loading site content:', err);
       const errorMessage = err instanceof Error ? err.message : 'Erreur lors du chargement du contenu';
@@ -78,8 +88,8 @@ export const SiteContentProvider: React.FC<{ children: ReactNode }> = ({ childre
   useEffect(() => {
     fetchContent();
 
-    // Rafraîchir toutes les 10 minutes
-    const interval = setInterval(fetchContent, 10 * 60 * 1000);
+    // Rafraîchir toutes les 60 minutes
+    const interval = setInterval(fetchContent, 60 * 60 * 1000);
     return () => clearInterval(interval);
   }, [fetchContent]);
 

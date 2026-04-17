@@ -1,27 +1,9 @@
 import { useState, useEffect } from 'react';
-import { supabase } from '../lib/supabase';
 import { Search, MapPin, DollarSign, Calendar, Phone, Mail, Tag, ChevronLeft, ChevronRight } from 'lucide-react';
-
-interface Annonce {
-  id: string;
-  title: string;
-  description: string;
-  category: string;
-  price: number;
-  images: string[];
-  contact_phone: string;
-  contact_email: string;
-  city: string;
-  available: boolean;
-  created_at: string;
-  partner?: {
-    company_name: string;
-  };
-}
+import { useAnnonces } from '../hooks/useAnnonces';
 
 const Annonces = () => {
-  const [annonces, setAnnonces] = useState<Annonce[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { annonces, loading } = useAnnonces();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [currentSlide, setCurrentSlide] = useState(0);
@@ -44,10 +26,6 @@ const Annonces = () => {
     { value: 'autres', label: 'Autres' }
   ];
 
-  useEffect(() => {
-    loadAnnonces();
-  }, []);
-
   // Carrousel automatique
   useEffect(() => {
     const interval = setInterval(() => {
@@ -65,72 +43,6 @@ const Annonces = () => {
     setCurrentSlide((prev) => (prev - 1 + heroImages.length) % heroImages.length);
   };
 
-  const loadAnnonces = async () => {
-    try {
-      setLoading(true);
-      
-      // 1. Charger les annonces principales
-      const { data: mainAnnonces = [], error: mainError } = await supabase
-        .from('annonces')
-        .select('*')
-        .eq('available', true)
-        .order('created_at', { ascending: false });
-
-      if (mainError) {
-        console.error('Erreur annonces principales:', mainError);
-        // Afficher un message à l'utilisateur
-        // Vous pouvez utiliser un état pour afficher ce message dans l'UI
-        return;
-      }
-
-      // 2. Charger les annonces des partenaires (sans la jointure qui cause des problèmes)
-      let partnerAnnonces = [];
-      try {
-        const { data, error } = await supabase
-          .from('partner_products')
-          .select('*')
-          .eq('available', true)
-          .eq('product_type', 'annonce')
-          .order('created_at', { ascending: false });
-
-        if (!error && data) {
-          partnerAnnonces = data;
-        } else if (error) {
-          console.warn('Erreur lors du chargement des annonces partenaires:', error);
-          // Continuer avec une liste vide pour les annonces partenaires
-        }
-      } catch (err) {
-        console.error('Erreur inattendue lors du chargement des annonces partenaires:', err);
-      }
-
-      // 3. Formater les annonces partenaires
-      const formattedPartnerAnnonces: Annonce[] = (partnerAnnonces || []).map((product: any) => ({
-        id: product.id,
-        title: product.title || product.name || 'Annonce partenaire',
-        description: product.description || '',
-        category: product.category || 'autres',
-        price: product.price || 0,
-        images: Array.isArray(product.images) ? product.images : (product.main_image ? [product.main_image] : []),
-        contact_phone: product.contact_phone || '',
-        contact_email: product.contact_email || '',
-        city: product.city || '',
-        available: Boolean(product.available),
-        created_at: product.created_at,
-        partner: product.partner ? { company_name: product.partner.company_name || 'Partenaire' } : undefined
-      }));
-
-      // 4. Combiner toutes les annonces
-      const allAnnonces = [...(mainAnnonces || []), ...formattedPartnerAnnonces]
-        .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
-
-      setAnnonces(allAnnonces);
-    } catch (error: any) {
-      console.error('Erreur:', error);
-      setAnnonces([]);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const filteredAnnonces = annonces.filter(annonce => {
     const matchesSearch = annonce.title.toLowerCase().includes(searchTerm.toLowerCase()) ||

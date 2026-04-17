@@ -50,13 +50,16 @@ if (missingVars.length > 0) {
   }
 }
 
-// Création d'un client React Query avec des options par défaut
+// Création d'un client React Query avec des options optimisées pour la scalabilité
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      refetchOnWindowFocus: false,
-      retry: 1,
-      staleTime: 5 * 60 * 1000, // 5 minutes
+      staleTime: 5 * 60 * 1000,   // Les données sont fraîches pendant 5 minutes
+      gcTime: 30 * 60 * 1000,      // Garder en mémoire pendant 30 minutes
+      retry: 2,                    // Retenter 2 fois
+      retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000), // Backoff exponentiel
+      refetchOnWindowFocus: false, // Évite les requêtes inutiles au focus
+      refetchOnReconnect: 'always',
     },
   },
 });

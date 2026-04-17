@@ -29,7 +29,6 @@ interface AuthContextType {
   isAdmin: boolean;
 }
 
-const SIGNUP_DELAY_MS = 5000;
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const useAuth = () => {
@@ -101,7 +100,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const signUp = async (email: string, password: string, userData: Omit<Profile, 'id' | 'email' | 'created_at' | 'updated_at'>) => {
     try {
       setLoading(true);
-      await new Promise(resolve => setTimeout(resolve, SIGNUP_DELAY_MS));
       
       if (!email || !password || !userData.first_name || !userData.last_name) {
         throw new Error('Tous les champs obligatoires doivent être remplis');
@@ -400,7 +398,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   return (
     <AuthContext.Provider value={value}>
-      {!loading && children}
+      {loading ? (
+        <div className="flex items-center justify-center min-h-screen bg-white">
+          <div className="animate-spin rounded-full h-10 w-10 border-4 border-emerald-500 border-t-transparent" aria-hidden="true"></div>
+        </div>
+      ) : (
+        children
+      )}
     </AuthContext.Provider>
   );
 };
