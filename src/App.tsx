@@ -1,7 +1,6 @@
 import { Suspense, lazy, useState } from "react";
 import { Routes, Route, Outlet, Navigate } from "react-router-dom";
 import { Toaster } from "react-hot-toast";
-import { HelmetProvider } from 'react-helmet-async';
 import { AuthProvider } from "./contexts/AuthContext";
 import { SiteSettingsProvider } from "./contexts/SiteSettingsContext";
 import { SiteContentProvider } from "./contexts/SiteContentContext";
@@ -226,13 +225,11 @@ function App() {
     // Si on est déjà sur la page de maintenance, on l'affiche
     if (typeof window !== 'undefined' && window.location.pathname === '/maintenance') {
       return (
-        <HelmetProvider>
-          <ErrorBoundary>
-            <div className="min-h-screen flex items-center justify-center bg-gray-50">
-              <Maintenance />
-            </div>
-          </ErrorBoundary>
-        </HelmetProvider>
+        <ErrorBoundary>
+          <div className="min-h-screen flex items-center justify-center bg-gray-50">
+            <Maintenance />
+          </div>
+        </ErrorBoundary>
       );
     }
     
@@ -256,18 +253,16 @@ function App() {
     
     // Fallback pour le rendu côté serveur
     return (
-      <HelmetProvider>
         <ErrorBoundary>
           <div className="min-h-screen flex items-center justify-center bg-gray-50">
             <Maintenance />
           </div>
         </ErrorBoundary>
-      </HelmetProvider>
     );
   }
 
   return (
-    <HelmetProvider>
+    <>
       <SEO />
       <AuthProvider>
         <SiteSettingsProvider>
@@ -507,7 +502,7 @@ function App() {
         </SiteContentProvider>
       </SiteSettingsProvider>
     </AuthProvider>
-    </HelmetProvider>
+    </>
   );
 }
 
