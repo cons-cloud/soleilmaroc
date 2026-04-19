@@ -1,4 +1,4 @@
-import { Helmet } from 'react-helmet-async';
+import { useEffect } from 'react';
 
 interface SEOProps {
   title?: string;
@@ -11,30 +11,47 @@ export const SEO = ({
   title = 'Maroc Soleil - Découvrez le Maroc',
   description = 'Voyagez à travers le Maroc et découvrez des expériences uniques',
   keywords = ['Maroc', 'tourisme', 'voyage', 'hôtels', 'activités'],
-  image = '/logo.png'
+  image = '/about/1.jpeg'
 }: SEOProps) => {
-  const siteUrl = typeof window !== 'undefined' ? window.location.href : '';
-  
-  return (
-    <Helmet>
-      <title>{title}</title>
-      <meta name="description" content={description} />
-      <meta name="keywords" content={keywords.join(', ')} />
-      <meta name="robots" content="index, follow" />
-      <link rel="canonical" href={siteUrl} />
-      
-      {/* Open Graph / Facebook */}
-      <meta property="og:type" content="website" />
-      <meta property="og:url" content={siteUrl} />
-      <meta property="og:title" content={title} />
-      <meta property="og:description" content={description} />
-      <meta property="og:image" content={image} />
-      
-      {/* Twitter */}
-      <meta name="twitter:card" content="summary_large_image" />
-      <meta name="twitter:title" content={title} />
-      <meta name="twitter:description" content={description} />
-      <meta name="twitter:image" content={image} />
-    </Helmet>
-  );
+  useEffect(() => {
+    // Update title
+    document.title = title;
+
+    // Update meta description
+    let metaDescription = document.querySelector('meta[name="description"]');
+    if (!metaDescription) {
+      metaDescription = document.createElement('meta');
+      metaDescription.setAttribute('name', 'description');
+      document.head.appendChild(metaDescription);
+    }
+    metaDescription.setAttribute('content', description);
+
+    // Update meta keywords
+    let metaKeywords = document.querySelector('meta[name="keywords"]');
+    if (!metaKeywords) {
+      metaKeywords = document.createElement('meta');
+      metaKeywords.setAttribute('name', 'keywords');
+      document.head.appendChild(metaKeywords);
+    }
+    metaKeywords.setAttribute('content', keywords.join(', '));
+
+    // Update Open Graph tags
+    const updateOGTag = (property: string, content: string) => {
+      let tag = document.querySelector(`meta[property="${property}"]`);
+      if (!tag) {
+        tag = document.createElement('meta');
+        tag.setAttribute('property', property);
+        document.head.appendChild(tag);
+      }
+      tag.setAttribute('content', content);
+    };
+
+    updateOGTag('og:title', title);
+    updateOGTag('og:description', description);
+    updateOGTag('og:image', image);
+    updateOGTag('og:url', window.location.href);
+
+  }, [title, description, keywords, image]);
+
+  return null;
 };
