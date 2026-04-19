@@ -12,6 +12,7 @@ export default defineConfig({
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url)),
     },
+    dedupe: ['react', 'react-dom'],
   },
   base: '/',
   server: {
@@ -35,7 +36,7 @@ export default defineConfig({
   },
   // Configuration pour le chargement des modules
   optimizeDeps: {
-    include: ['react', 'react-dom', 'react-router-dom'],
+    include: ['react', 'react-dom', 'react-router-dom', 'react-helmet-async'],
   },
   // Configuration pour le chargement des fichiers de traduction
   define: {

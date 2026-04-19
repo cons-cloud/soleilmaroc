@@ -1,4 +1,4 @@
-import { Suspense, lazy, useState } from "react";
+import React, { Suspense, lazy, useState } from "react";
 import { Routes, Route, Outlet, Navigate } from "react-router-dom";
 import { Toaster } from "react-hot-toast";
 import { AuthProvider } from "./contexts/AuthContext";

@@ -85,14 +85,16 @@ if ('serviceWorker' in navigator) {
 const root = createRoot(container);
 
 root.render(
-  <HelmetProvider>
-    <QueryClientProvider client={queryClient}>
-      <BrowserRouter>
-        <App />
-      </BrowserRouter>
-      {import.meta.env.DEV && (
-        <ReactQueryDevtools initialIsOpen={false} position="bottom" />
-      )}
-    </QueryClientProvider>
-  </HelmetProvider>
+  <React.StrictMode>
+    <HelmetProvider>
+      <QueryClientProvider client={queryClient}>
+        <BrowserRouter>
+          <App />
+        </BrowserRouter>
+        {import.meta.env.DEV && (
+          <ReactQueryDevtools initialIsOpen={false} position="bottom" />
+        )}
+      </QueryClientProvider>
+    </HelmetProvider>
+  </React.StrictMode>
 );
