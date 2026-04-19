@@ -7,16 +7,15 @@ self.addEventListener('activate', (e) => {
     caches.keys().then((cacheNames) => {
       return Promise.all(
         cacheNames.map((cacheName) => {
-          console.log('[SW] Deleting cache:', cacheName);
           return caches.delete(cacheName);
         })
       );
     })
   );
   self.clients.claim();
+  
+  // Unregister completely to remove the service worker
+  self.registration.unregister();
 });
 
-self.addEventListener('fetch', (e) => {
-  // Toujours network first, aucun cache pour éviter les conflits en développement
-  e.respondWith(fetch(e.request));
-});
+// We completely bypass the 'fetch' event listener, allowing the browser to handle it.
