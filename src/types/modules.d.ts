@@ -7,7 +7,7 @@ declare module 'react-datepicker';
 declare module 'react-phone-number-input';
 declare module 'react-phone-input-2';
 declare module 'react-currency-input-field';
-declare module 'react-helmet-async';
+
 declare module 'react-google-maps';
 declare module 'react-google-recaptcha';
 declare module 'react-google-autocomplete';

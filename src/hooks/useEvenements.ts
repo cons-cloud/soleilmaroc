@@ -21,14 +21,27 @@ export interface Event {
 }
 
 async function fetchEvents(): Promise<Event[]> {
-  // 1. Charger les événements principaux
-  const { data: mainEvents = [], error: mainError } = await supabase
-    .from('evenements')
-    .select('*')
-    .eq('available', true)
-    .order('event_date', { ascending: true });
-
-  if (mainError) throw mainError;
+  let mainEvents: any[] = [];
+  try {
+    const { data, error } = await supabase
+      .from('evenements')
+      .select('*');
+    
+    if (!error) {
+      // Filtrer et trier en mémoire pour éviter les erreurs SQL 400 si les colonnes manquent
+      mainEvents = (data || [])
+        .filter(e => e.available !== false) // Par défaut true si manquant
+        .sort((a, b) => {
+          const dateA = a.event_date || a.date || '';
+          const dateB = b.event_date || b.date || '';
+          return dateA.localeCompare(dateB);
+        });
+    } else {
+      console.warn("Supabase evenements query error:", error);
+    }
+  } catch (err) {
+    console.warn("Could not fetch main evenements", err);
+  }
 
   // 2. Charger les événements des partenaires
   const { data: partnerEvents = [] } = await supabase
