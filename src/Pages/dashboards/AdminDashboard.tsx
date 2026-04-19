@@ -118,6 +118,33 @@ const AdminDashboard: React.FC = () => {
     }
   });
 
+  useRealtimeSubscription({
+    table: 'profiles',
+    callback: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-stats'] });
+    }
+  });
+
+  useRealtimeSubscription({
+    table: 'services',
+    callback: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-stats'] });
+    }
+  });
+
+  useRealtimeSubscription({
+    table: 'evenements',
+    callback: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-stats'] });
+    }
+  });
+
+  useRealtimeSubscription({
+    table: 'annonces',
+    callback: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-stats'] });
+    }
+  });
   // Fonction pour vérifier si un onglet est actif
   const isActive = (path: string) => {
     if (path === '/admin' || path === '') {

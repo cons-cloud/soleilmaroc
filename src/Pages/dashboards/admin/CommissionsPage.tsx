@@ -29,6 +29,26 @@ export const CommissionsPage: React.FC = () => {
 
   useEffect(() => {
     loadCommissions();
+
+    // S'abonner aux changements en temps réel
+    const channel = supabase
+      .channel('admin_commissions_changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'payments'
+        },
+        () => {
+          loadCommissions();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   const loadCommissions = async () => {

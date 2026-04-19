@@ -16,6 +16,26 @@ const VillasManagement: React.FC = () => {
 
   useEffect(() => {
     loadVillas();
+    
+    // S'abonner aux changements en temps réel
+    const channel = supabase
+      .channel('admin_villas_changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'villas'
+        },
+        () => {
+          loadVillas();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   const loadVillas = async () => {

@@ -17,6 +17,26 @@ const ActivitesTouristiquesManagement: React.FC = () => {
 
   useEffect(() => {
     loadItems();
+
+    // S'abonner aux changements en temps réel
+    const channel = supabase
+      .channel('admin_activites_changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'activites_touristiques'
+        },
+        () => {
+          loadItems();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   const loadItems = async () => {

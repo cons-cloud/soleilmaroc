@@ -42,7 +42,6 @@ const checkMaintenanceBypass = () => {
 
 // Composants de pages
 const Maintenance = lazy(() => import("./Pages/Maintenance"));
-const DevenirHote = lazy(() => import("./Pages/DevenirHote"));
 
 // Composants de mise en page (imports statiques pour éviter les problèmes Suspense)
 import DashboardLayout from './components/DashboardLayout';
@@ -289,7 +288,7 @@ function App() {
                   <Route element={<AuthLayout />}>
                     <Route path={ROUTES.LOGIN} element={<Login />} />
                     <Route path={ROUTES.SIGNUP} element={<Inscription />} />
-                    <Route path={ROUTES.BECOME_HOST} element={<DevenirHote />} />
+                    <Route path={ROUTES.BECOME_HOST} element={<Navigate to={`${ROUTES.SIGNUP}?role=partner`} replace />} />
                   </Route>
 
                   {/* Routes publiques avec navbar et footer */}

@@ -1,185 +1,18 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { FiMapPin, FiClock } from 'react-icons/fi';
 import { supabase } from '../lib/supabase';
 import toast from 'react-hot-toast';
 import LoadingSpinner from '../components/LoadingSpinner';
 
-interface Event {
-  id: string;
-  title: string;
-  event_date?: string;  // Nom de colonne Supabase
-  date?: string;        // Alias pour compatibilité
-  location: string;
-  event_time?: string;  // Nom de colonne Supabase
-  time?: string;        // Alias pour compatibilité
-  description: string;
-  image: string;
-  category: string;
-  price: number;
-  available_seats?: number;
-}
 
-// Données statiques en attendant la création de la table Supabase
-const staticEvents: Event[] = [
-  {
-    id: '1',
-    title: "Festival des Roses à Kelaa M'Gouna",
-    date: "15-17 Mai 2026",
-    location: "Vallée des Roses, Maroc",
-    time: "Toute la journée",
-    description: "Célébrez la récolte des roses dans la magnifique vallée du Dadès avec des défilés, des danses traditionnelles et des expositions d'artisanat local.",
-    image: "./assets/events/T0.jpeg",
-    category: "Festival",
-    price: 250,
-    available_seats: 200
-  },
-  {
-    id: '2',
-    title: "Marathon des Sables",
-    date: "12-22 Avril 2026",
-    location: "Désert du Sahara, Maroc",
-    time: "06:00 - 18:00",
-    description: "Participez à l'une des courses à pied les plus difficiles au monde à travers les paysages époustouflants du désert marocain.",
-    image: "./assets/events/1.jpg",
-    category: "Sport",
-    price: 3500,
-    available_seats: 500
-  },
-  {
-    id: '3',
-    title: "Festival des Arts Populaires de Marrakech",
-    date: "22-30 Juin 2026",
-    location: "Marrakech, Maroc",
-    time: "18:00 - Minuit",
-    description: "Découvrez la richesse du patrimoine culturel marocain à travers des spectacles de musique, de danse et d'art traditionnels.",
-    image: "./assets/events/2.jpg",
-    category: "Culture",
-    price: 150,
-    available_seats: 300
-  },
-  {
-    id: '4',
-    title: "Festival Gnaoua et Musiques du Monde",
-    date: "20-23 Juin 2026",
-    location: "Essaouira, Maroc",
-    time: "20:00 - 02:00",
-    description: "Le plus grand festival de musique Gnaoua au monde, avec des artistes internationaux et locaux.",
-    image: "./assets/events/mrkc.jpg",
-    category: "Musique",
-    price: 200,
-    available_seats: 1000
-  },
-  {
-    id: '5',
-    title: "Festival International du Film de Marrakech",
-    date: "1-9 Décembre 2026",
-    location: "Marrakech, Maroc",
-    time: "18:00 - 23:00",
-    description: "Découvrez les meilleurs films du monde entier dans la ville rouge.",
-    image: "./assets/events/2.jpg",
-    category: "Cinéma",
-    price: 300,
-    available_seats: 500
-  },
-  {
-    id: '6',
-    title: "Moussem de Tan-Tan",
-    date: "15-20 Mai 2026",
-    location: "Tan-Tan, Maroc",
-    time: "Toute la journée",
-    description: "Patrimoine culturel immatériel de l'UNESCO, célébrant les traditions nomades.",
-    image: "./assets/events/T0.jpeg",
-    category: "Culture",
-    price: 180,
-    available_seats: 250
-  }
-];
+
+import { useEvenements } from '../hooks/useEvenements';
 
 const Evenements = () => {
-  const [events, setEvents] = useState<Event[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const { events, loading: isLoading } = useEvenements();
   const [email, setEmail] = useState('');
   const [isSubscribing, setIsSubscribing] = useState(false);
-
-  useEffect(() => {
-    loadEvents();
-  }, []);
-
-  const loadEvents = async () => {
-    try {
-      setIsLoading(true);
-      
-      // 1. Charger les événements principaux
-      const { data: mainEvents = [], error: mainError } = await supabase
-        .from('evenements')
-        .select('*')
-        .eq('available', true)
-        .order('end_date', { ascending: true });
-
-      console.log('Événements chargés depuis Supabase:', mainEvents);
-
-      if (mainError) {
-        console.warn('Erreur événements principaux:', mainError);
-      }
-
-      // 2. Charger les événements des partenaires
-      const { data: partnerEvents, error: partnerError } = await supabase
-        .from('partner_products')
-        .select('*, partner:profiles(company_name)')
-        .eq('available', true)
-        .eq('product_type', 'evenement')
-        .order('created_at', { ascending: false });
-
-      if (partnerError) {
-        console.warn('Erreur événements partenaires (non bloquant):', partnerError);
-      }
-
-      // 3. Formater les événements partenaires
-      const formattedPartnerEvents: Event[] = (partnerEvents || []).map((product: any) => ({
-        id: product.id,
-        title: product.title || product.name || 'Événement partenaire',
-        event_date: product.event_date || product.date || '',
-        date: product.event_date || product.date || '',
-        location: product.location || product.city || '',
-        event_time: product.event_time || product.time || '',
-        time: product.event_time || product.time || '',
-        description: product.description || '',
-        image: Array.isArray(product.images) && product.images.length > 0 
-          ? product.images[0] 
-          : (product.main_image || './assets/events/T0.jpeg'),
-        category: product.category || 'Culture',
-        price: product.price || 0,
-        available_seats: product.available_seats || 0
-      }));
-
-      // 4. Combiner tous les événements
-      const allEvents = [...(mainEvents || []), ...formattedPartnerEvents];
-      
-      // Trier uniquement si on a des dates à comparer
-      const sortedEvents = allEvents.sort((a, b) => {
-        const dateA = a.end_date || a.event_date || a.date || '';
-        const dateB = b.end_date || b.event_date || b.date || '';
-        return dateA.localeCompare(dateB);
-      });
-
-      console.log('Tous les événements combinés:', sortedEvents);
-
-      if (sortedEvents.length > 0) {
-        setEvents(sortedEvents);
-      } else {
-        // Si aucun événement n'est trouvé, utiliser les données statiques
-        console.warn('Aucun événement trouvé, utilisation des données statiques');
-        setEvents(staticEvents);
-      }
-    } catch (error: any) {
-      console.error('Erreur lors du chargement des événements:', error);
-      // Utiliser des données statiques en cas d'erreur
-      setEvents(staticEvents);
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   const handleNewsletterSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

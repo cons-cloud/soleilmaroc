@@ -16,6 +16,26 @@ const AppartementsManagement: React.FC = () => {
 
   useEffect(() => {
     loadAppartements();
+    
+    // S'abonner aux changements en temps réel
+    const channel = supabase
+      .channel('admin_appartements_changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'appartements'
+        },
+        () => {
+          loadAppartements();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   const loadAppartements = async () => {

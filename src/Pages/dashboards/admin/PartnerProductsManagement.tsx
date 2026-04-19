@@ -40,6 +40,26 @@ const PartnerProductsManagement: React.FC = () => {
 
   useEffect(() => {
     loadProducts();
+
+    // S'abonner aux changements en temps réel
+    const channel = supabase
+      .channel('admin_partner_products_changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'partner_products'
+        },
+        () => {
+          loadProducts();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   const loadProducts = async () => {

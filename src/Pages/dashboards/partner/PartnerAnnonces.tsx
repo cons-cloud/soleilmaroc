@@ -60,6 +60,27 @@ const PartnerAnnonces = () => {
   useEffect(() => {
     if (user) {
       loadAnnonces();
+
+      // S'abonner aux changements en temps réel
+      const channel = supabase
+        .channel(`partner_annonces_${user.id}`)
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'annonces',
+            filter: `partner_id=eq.${user.id}`
+          },
+          () => {
+            loadAnnonces();
+          }
+        )
+        .subscribe();
+
+      return () => {
+        supabase.removeChannel(channel);
+      };
     }
   }, [user]);
 

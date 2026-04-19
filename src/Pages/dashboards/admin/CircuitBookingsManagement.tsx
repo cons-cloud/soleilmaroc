@@ -40,6 +40,26 @@ const CircuitBookingsManagement = () => {
 
   useEffect(() => {
     loadBookings();
+
+    // S'abonner aux changements en temps réel
+    const channel = supabase
+      .channel('admin_circuit_bookings_changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'bookings'
+        },
+        () => {
+          loadBookings();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   const loadBookings = async () => {

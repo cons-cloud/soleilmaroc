@@ -47,6 +47,26 @@ export const SiteSettings: React.FC = () => {
 
   useEffect(() => {
     loadSettings();
+
+    // S'abonner aux changements en temps réel
+    const channel = supabase
+      .channel('admin_site_settings_changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'site_settings'
+        },
+        () => {
+          loadSettings();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   const loadSettings = async () => {

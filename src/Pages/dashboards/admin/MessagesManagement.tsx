@@ -14,6 +14,26 @@ const MessagesManagement: React.FC = () => {
 
   useEffect(() => {
     loadMessages();
+
+    // S'abonner aux changements en temps réel
+    const channel = supabase
+      .channel('admin_messages_changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'contact_messages'
+        },
+        () => {
+          loadMessages();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   const loadMessages = async () => {

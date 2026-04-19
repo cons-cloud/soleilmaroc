@@ -11,6 +11,26 @@ const PaymentsManagement: React.FC = () => {
 
   useEffect(() => {
     loadPayments();
+
+    // S'abonner aux changements en temps réel
+    const channel = supabase
+      .channel('admin_payments_changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'payments'
+        },
+        () => {
+          loadPayments();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   const loadPayments = async () => {

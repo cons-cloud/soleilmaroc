@@ -17,6 +17,26 @@ const EvenementsManagement: React.FC = () => {
 
   useEffect(() => {
     loadItems();
+    
+    // S'abonner aux changements en temps réel
+    const channel = supabase
+      .channel('admin_evenements_changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'evenements'
+        },
+        () => {
+          loadItems();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   const loadItems = async () => {

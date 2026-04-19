@@ -4,6 +4,7 @@ import { supabase } from '../../../lib/supabase';
 import { Loader2, AlertCircle, Calendar } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { Link } from 'react-router-dom';
+import { ROUTES } from '../../../config/routes';
 
 // Interface pour les réservations
 interface Booking {
@@ -253,7 +254,7 @@ const ClientBookings = () => {
         event: '*',
         schema: 'public',
         table: 'bookings',
-        filter: `user_id=eq.${user.id}`
+        filter: `client_id=eq.${user.id}`
       }, () => {
         loadBookings();
       })
@@ -533,6 +534,21 @@ const ClientBookings = () => {
                           >
                             Voir les détails
                           </Link>
+                          
+                          {booking.status === 'pending' && (
+                            <Link
+                              to={ROUTES.PAYMENT}
+                              state={{ 
+                                bookingId: booking.id,
+                                totalPrice: booking.total_price,
+                                serviceTitle: booking.service_title,
+                                serviceType: booking.service_type
+                              }}
+                              className="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-md text-white bg-emerald-600 hover:bg-emerald-700 ml-2"
+                            >
+                              Finaliser le paiement
+                            </Link>
+                          )}
                           
                           {!['cancelled', 'completed', 'refunded'].includes(booking.status) && (
                             <button

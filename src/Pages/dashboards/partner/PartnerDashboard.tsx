@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from '../../../lib/supabase';
 import { useAuth } from '../../../contexts/AuthContext';
 import { DollarSign, TrendingUp, Clock, CreditCard, CheckCircle, XCircle, AlertCircle, Plus, Package, ArrowRight } from 'lucide-react';
+import { useRealtimeSubscription } from '../../../hooks/useRealtimeSubscription';
 import { Line, Doughnut } from 'react-chartjs-2';
 import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, ArcElement, Title, Tooltip, Legend } from 'chart.js';
 
@@ -93,6 +94,9 @@ const PartnerDashboard: React.FC = () => {
     ],
   };
   const [recentBookings, setRecentBookings] = useState<Array<RecentBooking & { product_title: string }>>([]);
+
+  // Utiliser un état pour déclencher le rafraîchissement
+  const [refreshKey, setRefreshKey] = useState(0);
 
   // Charger les données du tableau de bord
   useEffect(() => {
@@ -252,7 +256,18 @@ const PartnerDashboard: React.FC = () => {
     } else {
       setLoading(false);
     }
-  }, [user?.id]);
+  }, [user?.id, refreshKey]); // Ajout de refreshKey ici
+
+  // S'abonner aux changements en temps réel
+  useRealtimeSubscription({
+    table: 'bookings',
+    filter: user?.id ? `partner_id=eq.${user.id}` : undefined,
+    enabled: !!user?.id,
+    callback: () => {
+      // Déclencher un rafraîchissement des données
+      setRefreshKey(prev => prev + 1);
+    }
+  });
 
   // Options pour les graphiques
   const lineChartOptions = {

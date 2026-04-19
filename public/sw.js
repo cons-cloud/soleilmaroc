@@ -4,6 +4,9 @@ const ASSETS_TO_CACHE = [
   '/index.html',
   '/manifest.json',
   '/vite.svg',
+  '/src/main.tsx',
+  '/src/App.tsx',
+  '/src/index.css',
 ];
 
 // Installation

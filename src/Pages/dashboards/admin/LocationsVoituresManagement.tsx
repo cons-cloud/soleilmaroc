@@ -69,7 +69,7 @@ const LocationsVoituresManagement: FC = () => {
     }
   }, []);
 
-  // Effet pour charger les données
+  // Effet pour charger les données et s'abonner au temps réel
   useEffect(() => {
     if (isEdit && id) {
       const loadVoiture = async () => {
@@ -97,6 +97,26 @@ const LocationsVoituresManagement: FC = () => {
     } else {
       loadVoitures();
     }
+
+    // S'abonner aux changements en temps réel
+    const channel = supabase
+      .channel('admin_voitures_changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'locations_voitures'
+        },
+        () => {
+          loadVoitures();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [isEdit, isNew, id, loadVoitures]);
 
   // Gérer la suppression d'une voiture

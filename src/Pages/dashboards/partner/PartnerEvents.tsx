@@ -61,6 +61,45 @@ const PartnerEvents = () => {
     if (user) {
       loadEvents();
       loadRegistrations();
+
+      // S'abonner aux changements en temps réel
+      const channel = supabase
+        .channel(`partner_evenements_${user.id}`)
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'evenements',
+            filter: `partner_id=eq.${user.id}`
+          },
+          () => {
+            loadEvents();
+          }
+        )
+        .subscribe();
+
+      // S'abonner aux inscriptions en temps réel
+      const registrationsChannel = supabase
+        .channel(`partner_registrations_${user.id}`)
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'event_registrations',
+            filter: `partner_id=eq.${user.id}`
+          },
+          () => {
+            loadRegistrations();
+          }
+        )
+        .subscribe();
+
+      return () => {
+        supabase.removeChannel(channel);
+        supabase.removeChannel(registrationsChannel);
+      };
     }
   }, [user]);
 

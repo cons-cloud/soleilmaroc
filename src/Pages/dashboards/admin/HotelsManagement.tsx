@@ -35,6 +35,26 @@ const HotelsManagement: React.FC = () => {
 
   useEffect(() => {
     loadHotels();
+    
+    // S'abonner aux changements en temps réel
+    const channel = supabase
+      .channel('admin_hotels_changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'hotels'
+        },
+        () => {
+          loadHotels();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   const loadHotels = async () => {

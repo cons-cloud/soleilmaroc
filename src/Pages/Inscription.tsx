@@ -3,7 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
 import { useAuth } from '../contexts/AuthContext';
 import { validateEmail, validatePhoneMaroc as validatePhone } from '../utils/validation';
-import { Loader2, Eye, EyeOff, Check } from 'lucide-react';
+import { Loader2, Eye, EyeOff, Check, User, Users } from 'lucide-react';
 import LegalModal from '../components/LegalModal';
 import { ROUTES } from '../config/routes';
 
@@ -15,6 +15,7 @@ interface FormData {
   password: string;
   confirmPassword: string;
   terms: boolean;
+  role: 'client' | 'partner';
 }
 
 interface FormErrors {
@@ -30,6 +31,11 @@ interface FormErrors {
 const Inscription = () => {
   const navigate = useNavigate();
   const { signUp } = useAuth();
+  
+  // Récupérer le rôle depuis l'URL si présent
+  const queryParams = new URLSearchParams(window.location.search);
+  const initialRole = queryParams.get('role') === 'partner' ? 'partner' : 'client';
+
   const [formData, setFormData] = useState<FormData>({
     nom: '',
     prenom: '',
@@ -37,7 +43,8 @@ const Inscription = () => {
     telephone: '',
     password: '',
     confirmPassword: '',
-    terms: false
+    terms: false,
+    role: initialRole
   });
   const [errors, setErrors] = useState<FormErrors>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -117,7 +124,7 @@ const Inscription = () => {
         first_name: formData.prenom.trim(),
         last_name: formData.nom.trim(),
         phone: formData.telephone.trim() || undefined,
-        role: 'client' as const,
+        role: formData.role,
         is_verified: false,
         country: 'Maroc'
       };
@@ -193,7 +200,12 @@ const Inscription = () => {
         duration: 6000,
       });
       
-      navigate(ROUTES.CLIENT.DASHBOARD);
+      // Rediriger vers le tableau de bord approprié
+      if (formData.role === 'partner') {
+        navigate(ROUTES.PARTNER.DASHBOARD);
+      } else {
+        navigate(ROUTES.CLIENT.DASHBOARD);
+      }
     } catch (error: any) {
       console.error('Registration error:', error);
       const errorMessage = error?.message?.includes('email') 
@@ -242,6 +254,34 @@ const Inscription = () => {
               Connectez-vous ici
             </Link>
           </p>
+        </div>
+
+        {/* Sélection du rôle */}
+        <div className="mt-8 flex justify-center space-x-4">
+          <button
+            type="button"
+            onClick={() => setFormData(prev => ({ ...prev, role: 'client' }))}
+            className={`flex-1 flex items-center justify-center p-3 rounded-lg border-2 transition-all ${
+              formData.role === 'client' 
+                ? 'border-emerald-500 bg-emerald-50 text-emerald-700' 
+                : 'border-gray-200 bg-white text-gray-500 hover:border-emerald-200'
+            }`}
+          >
+            <User className={`w-5 h-5 mr-2 ${formData.role === 'client' ? 'text-emerald-500' : ''}`} />
+            <span className="font-medium text-sm">Je suis un client</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setFormData(prev => ({ ...prev, role: 'partner' }))}
+            className={`flex-1 flex items-center justify-center p-3 rounded-lg border-2 transition-all ${
+              formData.role === 'partner' 
+                ? 'border-emerald-500 bg-emerald-50 text-emerald-700' 
+                : 'border-gray-200 bg-white text-gray-500 hover:border-emerald-200'
+            }`}
+          >
+            <Users className={`w-5 h-5 mr-2 ${formData.role === 'partner' ? 'text-emerald-500' : ''}`} />
+            <span className="font-medium text-sm">Je suis un partenaire</span>
+          </button>
         </div>
 
         <div className="mt-8 bg-white py-8 px-6 shadow-lg sm:rounded-xl">

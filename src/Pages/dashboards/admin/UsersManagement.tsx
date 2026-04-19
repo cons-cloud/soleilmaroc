@@ -59,23 +59,6 @@ const UsersManagement: React.FC = () => {
     totalItems: 0,
   });
 
-  useEffect(() => {
-    loadUsers();
-    
-    // Recharger les données quand la page devient visible
-    const handleVisibilityChange = () => {
-      if (!document.hidden) {
-        loadUsers();
-      }
-    };
-    
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-    
-    return () => {
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
-    };
-  }, []);
-
   // Charger les utilisateurs avec les filtres actuels
   const loadUsers = useCallback(async () => {
     try {
@@ -137,6 +120,41 @@ const UsersManagement: React.FC = () => {
       setLoading(false);
     }
   }, [searchTerm, currentPage, itemsPerPage, updateTotalItems]);
+
+  useEffect(() => {
+    loadUsers();
+    
+    // S'abonner aux changements en temps réel
+    const channel = supabase
+      .channel('admin_users_changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'profiles'
+        },
+        () => {
+          loadUsers();
+        }
+      )
+      .subscribe();
+
+    // Recharger les données quand la page devient visible
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        loadUsers();
+      }
+    };
+    
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      supabase.removeChannel(channel);
+    };
+  }, [loadUsers]);
+
 
   // Note: updateUserRole function removed as it's not currently used
 

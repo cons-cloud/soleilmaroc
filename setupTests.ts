@@ -1,31 +1,23 @@
-// Configuration de base pour les tests
+// Configuration de base pour les tests Vitest
 import '@testing-library/jest-dom';
-import { server } from './src/mocks/server';
+import { vi } from 'vitest';
 
-// Mock pour Supabase
-jest.mock('./src/lib/supabase', () => ({
+// Mock global pour Supabase – évite les appels réseau en test
+vi.mock('./src/lib/supabase', () => ({
   supabase: {
     auth: {
-      getUser: jest.fn().mockResolvedValue({
+      getUser: vi.fn().mockResolvedValue({
         data: { user: { id: 'test-user-id' } },
         error: null,
       }),
     },
-    from: jest.fn(() => ({
-      select: jest.fn().mockReturnThis(),
-      insert: jest.fn().mockResolvedValue({ data: null, error: null }),
-      update: jest.fn().mockReturnThis(),
-      delete: jest.fn().mockReturnThis(),
-      eq: jest.fn().mockReturnThis(),
-      order: jest.fn().mockReturnThis(),
+    from: vi.fn(() => ({
+      select: vi.fn().mockReturnThis(),
+      insert: vi.fn().mockResolvedValue({ data: null, error: null }),
+      update: vi.fn().mockReturnThis(),
+      delete: vi.fn().mockReturnThis(),
+      eq: vi.fn().mockReturnThis(),
+      order: vi.fn().mockReturnThis(),
     })),
   },
 }));
-
-// Configuration du serveur de test
-beforeAll(() => server.listen());
-afterEach(() => {
-  server.resetHandlers();
-  jest.clearAllMocks();
-});
-afterAll(() => server.close());

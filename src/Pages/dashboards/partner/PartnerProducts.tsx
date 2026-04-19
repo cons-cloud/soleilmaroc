@@ -34,32 +34,57 @@ const PartnerProducts: React.FC = () => {
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
   // Charger les produits du partenaire
-  useEffect(() => {
-    const loadProducts = async () => {
-      if (!user?.id) return;
-      
-      try {
-        setLoading(true);
-        
-        let query = supabase
-          .from('partner_products')
-          .select('*')
-          .eq('partner_id', user.id);
-          
-        const { data, error } = await query;
-        
-        if (error) throw error;
-        
-        setProducts(data || []);
-      } catch (error) {
-        console.error('Erreur lors du chargement des produits:', error);
-        toast.error('Erreur lors du chargement des produits');
-      } finally {
-        setLoading(false);
-      }
-    };
+  const loadProducts = async () => {
+    if (!user?.id) return;
     
+    try {
+      setLoading(true);
+      
+      let query = supabase
+        .from('partner_products')
+        .select('*')
+        .eq('partner_id', user.id);
+        
+      const { data, error } = await query;
+      
+      if (error) throw error;
+      
+      setProducts(data || []);
+    } catch (error) {
+      console.error('Erreur lors du chargement des produits:', error);
+      toast.error('Erreur lors du chargement des produits');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
     loadProducts();
+  }, [user?.id]);
+
+  // S'abonner aux changements en temps réel
+  useEffect(() => {
+    if (!user?.id) return;
+
+    const channel = supabase
+      .channel('partner_products_changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'partner_products',
+          filter: `partner_id=eq.${user.id}`
+        },
+        () => {
+          loadProducts();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [user?.id]);
 
   // Supprimer un produit

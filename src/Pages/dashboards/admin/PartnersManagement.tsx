@@ -26,6 +26,23 @@ const PartnersManagement: React.FC = () => {
   useEffect(() => {
     loadPartners();
     
+    // S'abonner aux changements en temps réel
+    const channel = supabase
+      .channel('admin_partners_changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'profiles',
+          filter: 'role=like.partner%'
+        },
+        () => {
+          loadPartners();
+        }
+      )
+      .subscribe();
+
     // Recharger les données quand la page devient visible
     const handleVisibilityChange = () => {
       if (!document.hidden) {
@@ -37,6 +54,7 @@ const PartnersManagement: React.FC = () => {
     
     return () => {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
+      supabase.removeChannel(channel);
     };
   }, []);
 
