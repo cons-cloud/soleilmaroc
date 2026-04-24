@@ -77,7 +77,7 @@ const UsersManagement: React.FC = () => {
       
       updateTotalItems(count || 0);
       
-      // Récupérer les utilisateurs avec pagination
+      // Récupérer les utilisateurs avec pagination (email inclus directement depuis profiles)
       const { data: profiles, error: profilesError } = await supabase
         .from('profiles')
         .select('*')
@@ -94,24 +94,11 @@ const UsersManagement: React.FC = () => {
         return;
       }
 
-      // Utiliser la vue auth.users qui est accessible via la fonction RPC
-      const { data: userData, error: userError } = await supabase.rpc('get_user_emails');
-      
-      if (userError) {
-        console.warn('Could not fetch user emails:', userError);
-        // Si on ne peut pas récupérer les emails, on utilise les profils sans les emails
-        setUsers(profiles.map((profile: any) => ({
-          ...profile,
-          email: 'Email non disponible'
-        })));
-      } else {
-        // Fusionner les données des profils avec les emails
-        const usersWithEmails = profiles.map((profile: any) => ({
-          ...profile,
-          email: userData?.find((u: any) => u.id === profile.id)?.email || 'Email non disponible'
-        }));
-        setUsers(usersWithEmails);
-      }
+      // Email est déjà dans la table profiles — pas besoin de RPC externe
+      setUsers(profiles.map((profile: any) => ({
+        ...profile,
+        email: profile.email || 'Email non disponible'
+      })));
     } catch (error: any) {
       console.error('Error loading users:', error);
       setError(error.message || 'Erreur lors du chargement des utilisateurs');
