@@ -33,22 +33,14 @@ const PageNotFound = () => {
             Il semble que vous vous soyez aventuré un peu trop loin dans les dunes. Cette page n'existe pas ou s'est perdue dans le désert.
           </p>
 
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+          <div className="flex justify-center">
             <Link
               to="/"
-              className="group flex items-center justify-center gap-2 px-8 py-4 bg-emerald-500 text-white font-bold rounded-2xl hover:bg-emerald-400 transition-all shadow-xl shadow-emerald-900/40 active:scale-95 w-full sm:w-auto"
+              className="group flex items-center justify-center gap-2 px-6 py-3 bg-emerald-500 text-white font-bold rounded-xl hover:bg-emerald-400 transition-all shadow-lg shadow-emerald-900/40 active:scale-95"
             >
-              <Home className="w-5 h-5" />
+              <Home className="w-4 h-4" />
               Retour à l'accueil
-              <ChevronRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-            </Link>
-            
-            <Link
-              to="/recherche"
-              className="flex items-center justify-center gap-2 px-8 py-4 bg-white/10 text-white font-bold rounded-2xl border border-white/20 hover:bg-white/20 transition-all backdrop-blur-md active:scale-95 w-full sm:w-auto"
-            >
-              <Search className="w-5 h-5" />
-              Lancer une recherche
+              <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
             </Link>
           </div>
         </div>
