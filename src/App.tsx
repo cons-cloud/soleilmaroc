@@ -205,15 +205,30 @@ const Dashboard404 = ({ role = 'admin' }: { role?: 'admin' | 'partner' | 'client
   const basePath = `/dashboard/${role}`;
   
   return (
-    <div className="flex flex-col items-center justify-center h-64 p-4 text-center">
-      <h2 className="text-2xl font-bold text-gray-900">404 - Page non trouvée</h2>
-      <p className="mt-2 text-gray-600">La page que vous recherchez n'existe pas ou a été déplacée.</p>
-      <button 
-        onClick={() => window.location.href = basePath}
-        className="mt-4 px-4 py-2 bg-emerald-600 text-white rounded-md hover:bg-emerald-700 transition-colors"
-      >
-        Retour au tableau de bord
-      </button>
+    <div className="flex flex-col items-center justify-center p-8 text-center bg-gray-50/50 rounded-2xl border border-gray-200 backdrop-blur-sm m-4 lg:m-8 min-h-[400px]">
+      <div className="w-20 h-20 bg-emerald-100 rounded-full flex items-center justify-center mb-6 text-emerald-600">
+        <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+        </svg>
+      </div>
+      <h2 className="text-3xl font-bold text-gray-900 mb-2">Oups ! Page introuvable</h2>
+      <p className="text-gray-600 max-w-md mx-auto mb-8">
+        La fonctionnalité ou la page que vous recherchez au sein du tableau de bord semble avoir pris des vacances sans nous prévenir.
+      </p>
+      <div className="flex flex-col sm:flex-row gap-4 justify-center">
+        <button 
+          onClick={() => window.location.href = basePath}
+          className="px-6 py-3 bg-emerald-600 text-white font-medium rounded-xl hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-200 active:scale-95"
+        >
+          Retour au tableau de bord
+        </button>
+        <button 
+          onClick={() => window.location.href = '/'}
+          className="px-6 py-3 bg-white text-gray-700 font-medium rounded-xl border border-gray-200 hover:bg-gray-50 transition-all active:scale-95"
+        >
+          Page d'accueil
+        </button>
+      </div>
     </div>
   );
 };
@@ -488,13 +503,7 @@ function App() {
                 <Route path="/client" element={<Navigate to={ROUTES.CLIENT.DASHBOARD} replace />} />
 
                 {/* Page 404 globale */}
-                <Route path="*" element={
-                  <div className="flex flex-col min-h-screen">
-                    <Navbar />
-                    <PageNotFound />
-                    <Footer />
-                  </div>
-                } />
+                <Route path="*" element={<PageNotFound />} />
                 </Routes>
               </ErrorBoundary>
             </Suspense>
