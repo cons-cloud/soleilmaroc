@@ -27,7 +27,7 @@ export const useCreateProperty = () => {
       setError(null);
 
       const { data, error: supabaseError } = await supabase
-        .from('properties')
+        .from('properties_marocsoleil')
         .insert([{
           ...propertyData,
           created_at: new Date().toISOString(),

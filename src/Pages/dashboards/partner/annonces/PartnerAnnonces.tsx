@@ -20,7 +20,7 @@ const PartnerAnnonces: React.FC = () => {
       if (!user) throw new Error('Non authentifié');
 
       const { data, error } = await supabase
-        .from('annonces')
+        .from('annonces_marocsoleil')
         .select('*')
         .eq('user_id', user.id)
         .order('created_at', { ascending: false });

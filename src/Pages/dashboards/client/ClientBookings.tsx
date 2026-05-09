@@ -49,7 +49,7 @@ const ClientBookings = () => {
       
       // 1. Récupérer d'abord les réservations avec une meilleure gestion des erreurs
       const { data: bookingsData, error: bookingsError } = await supabase
-        .from('bookings')
+        .from('bookings_marocsoleil')
         .select('*')
         .eq('client_id', user.id)
         .order('created_at', { ascending: false });
@@ -185,7 +185,7 @@ const ClientBookings = () => {
           const partnerProductType = mapToPartnerProductType(serviceType);
           if (missingIds.length > 0 && partnerProductType) {
             const { data: partnerProducts, error: partnerError } = await supabase
-              .from('partner_products')
+              .from('partner_products_marocsoleil')
               .select('*')
               .in('id', missingIds)
               .eq('product_type', partnerProductType);
@@ -253,7 +253,7 @@ const ClientBookings = () => {
       .on('postgres_changes', {
         event: '*',
         schema: 'public',
-        table: 'bookings',
+        table: 'bookings_marocsoleil',
         filter: `client_id=eq.${user.id}`
       }, () => {
         loadBookings();
@@ -279,7 +279,7 @@ const ClientBookings = () => {
     try {
       setLoading(true);
       const { error } = await supabase
-        .from('bookings')
+        .from('bookings_marocsoleil')
         .update({ 
           status: 'cancelled',
           updated_at: new Date().toISOString()

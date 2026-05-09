@@ -67,7 +67,7 @@ const UsersManagement: React.FC = () => {
       
       // Compter le nombre total d'utilisateurs qui correspondent aux filtres
       const { count, error: countError } = await supabase
-        .from('profiles')
+        .from('profiles_marocsoleil')
         .select('*', { count: 'exact', head: true })
         .ilike('email', `%${searchTerm}%`)
         .or(`company_name.ilike.%${searchTerm}%,phone.ilike.%${searchTerm}%`)
@@ -79,7 +79,7 @@ const UsersManagement: React.FC = () => {
       
       // Récupérer les utilisateurs avec pagination (email inclus directement depuis profiles)
       const { data: profiles, error: profilesError } = await supabase
-        .from('profiles')
+        .from('profiles_marocsoleil')
         .select('*')
         .ilike('email', `%${searchTerm}%`)
         .or(`company_name.ilike.%${searchTerm}%,phone.ilike.%${searchTerm}%`)
@@ -119,7 +119,7 @@ const UsersManagement: React.FC = () => {
         {
           event: '*',
           schema: 'public',
-          table: 'profiles'
+          table: 'profiles_marocsoleil'
         },
         () => {
           loadUsers();
@@ -148,7 +148,7 @@ const UsersManagement: React.FC = () => {
   const toggleVerification = async (userId: string, currentStatus: boolean) => {
     try {
       const { error } = await supabase
-        .from('profiles')
+        .from('profiles_marocsoleil')
         .update({ is_verified: !currentStatus })
         .eq('id', userId);
 
@@ -166,7 +166,7 @@ const UsersManagement: React.FC = () => {
 
     try {
       const { error } = await supabase
-        .from('profiles')
+        .from('profiles_marocsoleil')
         .delete()
         .eq('id', userId);
 

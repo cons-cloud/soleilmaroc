@@ -48,7 +48,7 @@ export const usePropertyDetails = (type: string, id?: string) => {
       // 2. Try partner_products fallback
       if (!data && partnerProductType) {
         const { data: partnerData, error: partnerError } = await supabase
-          .from('partner_products')
+          .from('partner_products_marocsoleil')
           .select('*')
           .eq('id', id)
           .eq('product_type', partnerProductType)

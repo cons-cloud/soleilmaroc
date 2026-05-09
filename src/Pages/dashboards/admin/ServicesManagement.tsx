@@ -38,7 +38,7 @@ const ServicesManagement: React.FC = () => {
   const loadServices = async () => {
     try {
       const { data, error } = await supabase
-        .from('services')
+        .from('services_marocsoleil')
         .select(`
           *,
           category:category_id (name, type)
@@ -78,7 +78,7 @@ const ServicesManagement: React.FC = () => {
 
     try {
       const { error } = await supabase
-        .from('services')
+        .from('services_marocsoleil')
         .delete()
         .eq('id', id);
 
@@ -95,7 +95,7 @@ const ServicesManagement: React.FC = () => {
   const toggleAvailability = async (id: string, currentStatus: boolean) => {
     try {
       const { error } = await supabase
-        .from('services')
+        .from('services_marocsoleil')
         .update({ available: !currentStatus })
         .eq('id', id);
 
@@ -112,7 +112,7 @@ const ServicesManagement: React.FC = () => {
   const toggleFeatured = async (id: string, currentStatus: boolean) => {
     try {
       const { error } = await supabase
-        .from('services')
+        .from('services_marocsoleil')
         .update({ featured: !currentStatus })
         .eq('id', id);
 

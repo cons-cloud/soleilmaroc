@@ -103,7 +103,7 @@ const PartnerSettings = () => {
     try {
       // Supprimer le profil (cascade supprimera les données liées)
       const { error } = await supabase
-        .from('profiles')
+        .from('profiles_marocsoleil')
         .delete()
         .eq('id', profile?.id);
 

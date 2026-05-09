@@ -34,7 +34,7 @@ const PartnersManagement: React.FC = () => {
         {
           event: '*',
           schema: 'public',
-          table: 'profiles',
+          table: 'profiles_marocsoleil',
           filter: 'role=like.partner%'
         },
         () => {
@@ -61,7 +61,7 @@ const PartnersManagement: React.FC = () => {
   const loadPartners = async () => {
     try {
       const { data, error } = await supabase
-        .from('profiles')
+        .from('profiles_marocsoleil')
         .select('*')
         .like('role', 'partner%')
         .order('created_at', { ascending: false });
@@ -82,7 +82,7 @@ const PartnersManagement: React.FC = () => {
     setIsDeleting(true);
     try {
       const { error } = await supabase
-        .from('profiles')
+        .from('profiles_marocsoleil')
         .delete()
         .eq('id', deletingPartner.id);
 
@@ -142,7 +142,7 @@ const PartnersManagement: React.FC = () => {
   const saveBankDetails = async (partnerId: string) => {
     try {
       const { error } = await supabase
-        .from('profiles')
+        .from('profiles_marocsoleil')
         .update({
           bank_account: bankDetails[partnerId]?.bank_account || null,
           iban: bankDetails[partnerId]?.iban || null
@@ -167,7 +167,7 @@ const PartnersManagement: React.FC = () => {
   const handleToggleVerification = async (partner: any) => {
     try {
       const { error } = await supabase
-        .from('profiles')
+        .from('profiles_marocsoleil')
         .update({ is_verified: !partner.is_verified })
         .eq('id', partner.id);
 

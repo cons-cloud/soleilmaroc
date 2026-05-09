@@ -29,7 +29,7 @@ interface PartnerProduct {
 
 async function fetchMainHotels(): Promise<Hotel[]> {
   const { data, error } = await supabase
-    .from('hotels')
+    .from('hotels_marocsoleil')
     .select('id, name, description, price_per_night, city, region, address, stars, amenities, contact_phone, available, featured, images, created_at, updated_at, user_id, partner_id, rooms_count')
     .eq('available', true)
     .order('featured', { ascending: false })
@@ -44,7 +44,7 @@ async function fetchMainHotels(): Promise<Hotel[]> {
 
 async function fetchPartnerHotels(): Promise<Hotel[]> {
   const { data, error } = await supabase
-    .from('partner_products')
+    .from('partner_products_marocsoleil')
     .select('id, title, name, description, price, price_per_night, city, region, address, stars, amenities, contact_phone, available, featured, images, main_image, created_at, updated_at, partner_id, rooms_count')
     .eq('available', true)
     .eq('product_type', 'hotel')
@@ -101,14 +101,14 @@ export const useHotels = () => {
 
   // REAL-TIME SYNC
   useRealtimeSubscription({
-    table: 'hotels',
+    table: 'hotels_marocsoleil',
     callback: () => {
       queryClient.invalidateQueries({ queryKey: ['hotels', 'main'] });
     }
   });
 
   useRealtimeSubscription({
-    table: 'partner_products',
+    table: 'partner_products_marocsoleil',
     callback: () => {
       queryClient.invalidateQueries({ queryKey: ['hotels', 'partner'] });
     }

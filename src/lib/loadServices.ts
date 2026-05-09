@@ -28,22 +28,22 @@ export async function loadServices(type: string, onlyAvailable = true) {
   try {
     // Mappage des types vers les noms de table et champs
     const typeConfig: Record<string, { table: string; field: string | null }> = {
-      'apartment': { table: 'appartements', field: null },
-      'appartement': { table: 'appartements', field: null },
-      'appartements': { table: 'appartements', field: null },
-      'villa': { table: 'villas', field: null },
-      'villas': { table: 'villas', field: null },
-      'car': { table: 'locations_voitures', field: null },
-      'voiture': { table: 'locations_voitures', field: null },
-      'voitures': { table: 'locations_voitures', field: null },
-      'circuit': { table: 'circuits_touristiques', field: null },
-      'tourism': { table: 'circuits_touristiques', field: null },
-      'tour': { table: 'circuits_touristiques', field: null },
-      'hotel': { table: 'hotels', field: null },
-      'hotels': { table: 'hotels', field: null }
+      'apartment': { table: 'appartements_marocsoleil', field: null },
+      'appartement': { table: 'appartements_marocsoleil', field: null },
+      'appartements': { table: 'appartements_marocsoleil', field: null },
+      'villa': { table: 'villas_marocsoleil', field: null },
+      'villas': { table: 'villas_marocsoleil', field: null },
+      'car': { table: 'locations_voitures_marocsoleil', field: null },
+      'voiture': { table: 'locations_voitures_marocsoleil', field: null },
+      'voitures': { table: 'locations_voitures_marocsoleil', field: null },
+      'circuit': { table: 'circuits_touristiques_marocsoleil', field: null },
+      'tourism': { table: 'circuits_touristiques_marocsoleil', field: null },
+      'tour': { table: 'circuits_touristiques_marocsoleil', field: null },
+      'hotel': { table: 'hotels_marocsoleil', field: null },
+      'hotels': { table: 'hotels_marocsoleil', field: null }
     };
 
-    const config = typeConfig[type] || { table: 'services', field: 'type' };
+    const config = typeConfig[type] || { table: 'services_marocsoleil', field: 'type' };
     const tableName = config.table;
     const typeField = config.field;
 
@@ -93,7 +93,7 @@ export async function loadServices(type: string, onlyAvailable = true) {
     if (partnerType) {
       // Utilisation de "as any" pour éviter les problèmes de typage avec Supabase
       const { data: partnerProducts, error: partnerError } = await supabase
-        .from('partner_products')
+        .from('partner_products_marocsoleil')
         .select('*, partner:profiles(company_name)')
         .eq('product_type', partnerType)
         .eq('available', onlyAvailable)

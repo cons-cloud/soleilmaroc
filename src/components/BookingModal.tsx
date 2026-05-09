@@ -108,7 +108,7 @@ export const BookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose, ser
       };
 
       const { data, error } = await supabase
-        .from('reservations')
+        .from('reservations_marocsoleil')
         .insert([reservationData])
         .select();
 

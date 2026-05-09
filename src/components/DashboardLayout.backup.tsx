@@ -65,7 +65,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, role }) => 
       if (role === 'admin') {
         // Messages non lus pour admin
         const { data: messages, error: msgError } = await supabase
-          .from('contact_messages')
+          .from('contact_messages_marocsoleil')
           .select('*')
           .eq('is_read', false)
           .order('created_at', { ascending: false })
@@ -84,7 +84,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, role }) => 
       } else if (role === 'partner') {
         // Réservations en attente pour partenaire
         const { data: bookings, error: bookError } = await supabase
-          .from('bookings')
+          .from('bookings_marocsoleil')
           .select('*')
           .eq('partner_id', profile?.id)
           .eq('status', 'pending')
@@ -133,7 +133,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, role }) => 
       if (role === 'admin') {
         // Rechercher dans les utilisateurs
         const { data: users } = await supabase
-          .from('profiles')
+          .from('profiles_marocsoleil')
           .select('id, email, company_name, role')
           .or(`email.ilike.%${searchTerm}%,company_name.ilike.%${searchTerm}%`)
           .limit(5);
@@ -152,7 +152,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, role }) => 
 
         // Rechercher dans les messages
         const { data: messages } = await supabase
-          .from('contact_messages')
+          .from('contact_messages_marocsoleil')
           .select('id, name, email, subject')
           .or(`name.ilike.%${searchTerm}%,email.ilike.%${searchTerm}%,subject.ilike.%${searchTerm}%`)
           .limit(5);
@@ -171,7 +171,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, role }) => 
       } else if (role === 'partner') {
         // Rechercher dans les réservations du partenaire
         const { data: bookings } = await supabase
-          .from('bookings')
+          .from('bookings_marocsoleil')
           .select('id, service_name, client_name, status')
           .eq('partner_id', profile?.id)
           .or(`service_name.ilike.%${searchTerm}%,client_name.ilike.%${searchTerm}%`)
@@ -191,7 +191,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, role }) => 
 
         // Rechercher dans les événements du partenaire
         const { data: events } = await supabase
-          .from('events')
+          .from('events_marocsoleil')
           .select('id, title, location')
           .eq('partner_id', profile?.id)
           .ilike('title', `%${searchTerm}%`)

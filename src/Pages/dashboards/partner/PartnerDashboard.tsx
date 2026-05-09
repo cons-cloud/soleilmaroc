@@ -114,11 +114,11 @@ const PartnerDashboard: React.FC = () => {
             console.warn('Fonction RPC non disponible, calcul manuel des stats:', statsError);
             // Calculer manuellement les statistiques
             // Charger d'abord les produits pour obtenir les IDs
-            const productsRes = await supabase.from('partner_products').select('id, available').eq('partner_id', user?.id);
+            const productsRes = await supabase.from('partner_products_marocsoleil').select('id, available').eq('partner_id', user?.id);
             const productIds = (productsRes.data || []).map((p: any) => p.id);
             
             // Charger les réservations (via partner_id ou service_id)
-            let bookingsQuery = supabase.from('bookings').select('id, total_amount, status');
+            let bookingsQuery = supabase.from('bookings_marocsoleil').select('id, total_amount, status');
             if (productIds.length > 0) {
               bookingsQuery = bookingsQuery.or(`partner_id.eq.${user?.id},service_id.in.(${productIds.join(',')})`);
             } else {
@@ -130,7 +130,7 @@ const PartnerDashboard: React.FC = () => {
             const bookingIds = (bookingsRes.data || []).map((b: any) => b.id);
             let paymentsRes: any = { data: [], error: null };
             if (bookingIds.length > 0) {
-              paymentsRes = await supabase.from('payments').select('amount, status').in('booking_id', bookingIds);
+              paymentsRes = await supabase.from('payments_marocsoleil').select('amount, status').in('booking_id', bookingIds);
             }
             
             const totalProducts = (productsRes.data || []).length;
@@ -183,7 +183,7 @@ const PartnerDashboard: React.FC = () => {
         
         // Charger les réservations récentes
         const { data: bookingsData, error: bookingsError } = await supabase
-          .from('bookings')
+          .from('bookings_marocsoleil')
           .select('*')
           .eq('partner_id', user?.id)
           .order('created_at', { ascending: false })
@@ -260,7 +260,7 @@ const PartnerDashboard: React.FC = () => {
 
   // S'abonner aux changements en temps réel
   useRealtimeSubscription({
-    table: 'bookings',
+    table: 'bookings_marocsoleil',
     filter: user?.id ? `partner_id=eq.${user.id}` : undefined,
     enabled: !!user?.id,
     callback: () => {

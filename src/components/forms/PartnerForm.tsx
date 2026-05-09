@@ -57,7 +57,7 @@ const PartnerForm: React.FC<PartnerFormProps> = ({ onClose, onSuccess }) => {
         console.log('Création du profil...');
         
         const { error: insertError } = await supabaseAdmin
-          .from('profiles')
+          .from('profiles_marocsoleil')
           .insert([{
             id: authData.user.id,
             role: `partner_${formData.service_type}`,
@@ -74,7 +74,7 @@ const PartnerForm: React.FC<PartnerFormProps> = ({ onClose, onSuccess }) => {
           if (insertError.code === '23505') {
             console.log('Profil existe, mise à jour...');
             const { error: updateError } = await supabaseAdmin
-              .from('profiles')
+              .from('profiles_marocsoleil')
               .update({
                 role: `partner_${formData.service_type}`,
                 company_name: formData.company_name,

@@ -44,7 +44,7 @@ const HotelsManagement: React.FC = () => {
         {
           event: '*',
           schema: 'public',
-          table: 'hotels'
+          table: 'hotels_marocsoleil'
         },
         () => {
           loadHotels();
@@ -60,7 +60,7 @@ const HotelsManagement: React.FC = () => {
   const loadHotels = async () => {
   try {
     const { data, error } = await supabase
-      .from('hotels')
+      .from('hotels_marocsoleil')
       .select(`
         id,
         name,
@@ -102,7 +102,7 @@ const HotelsManagement: React.FC = () => {
     if (!hotelToDelete) return;
 
     try {
-      const { error } = await supabase.from('hotels').delete().eq('id', hotelToDelete.id);
+      const { error } = await supabase.from('hotels_marocsoleil').delete().eq('id', hotelToDelete.id);
       if (error) throw error;
       toast.success('Hôtel supprimé');
       setShowConfirm(false);

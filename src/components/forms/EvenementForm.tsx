@@ -69,11 +69,11 @@ const EvenementForm: React.FC<EvenementFormProps> = ({ evenement, onClose, onSuc
       };
 
       if (evenement?.id) {
-        const { error } = await supabase.from('evenements').update(dataToSave).eq('id', evenement.id);
+        const { error } = await supabase.from('evenements_marocsoleil').update(dataToSave).eq('id', evenement.id);
         if (error) throw error;
         toast.success('Événement modifié');
       } else {
-        const { error } = await supabase.from('evenements').insert([dataToSave]);
+        const { error } = await supabase.from('evenements_marocsoleil').insert([dataToSave]);
         if (error) throw error;
         toast.success('Événement créé');
       }

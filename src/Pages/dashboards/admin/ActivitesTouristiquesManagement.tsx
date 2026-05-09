@@ -26,7 +26,7 @@ const ActivitesTouristiquesManagement: React.FC = () => {
         {
           event: '*',
           schema: 'public',
-          table: 'activites_touristiques'
+          table: 'activites_touristiques_marocsoleil'
         },
         () => {
           loadItems();
@@ -49,7 +49,7 @@ const ActivitesTouristiquesManagement: React.FC = () => {
       // Charger TOUTES les activités du site (pas de filtre par partner_id)
       // Essayer d'abord avec RPC ou avec service_role si disponible
       let { data, error } = await supabase
-        .from('activites_touristiques')
+        .from('activites_touristiques_marocsoleil')
         .select('*')
         .order('created_at', { ascending: false });
         
@@ -60,7 +60,7 @@ const ActivitesTouristiquesManagement: React.FC = () => {
         
         // Essayer de charger seulement les champs de base
         const retry = await supabase
-          .from('activites_touristiques')
+          .from('activites_touristiques_marocsoleil')
           .select('id, title, city, activity_type, price_per_person, available, created_at')
           .order('created_at', { ascending: false })
           .limit(100);
@@ -134,7 +134,7 @@ const ActivitesTouristiquesManagement: React.FC = () => {
   const handleDeleteConfirm = async () => {
     if (!activiteToDelete) return;
     try {
-      const { error } = await supabase.from('activites_touristiques').delete().eq('id', activiteToDelete.id);
+      const { error } = await supabase.from('activites_touristiques_marocsoleil').delete().eq('id', activiteToDelete.id);
       if (error) throw error;
       toast.success('Activité supprimée');
       setShowConfirm(false);

@@ -25,7 +25,7 @@ const AppartementsManagement: React.FC = () => {
         {
           event: '*',
           schema: 'public',
-          table: 'appartements'
+          table: 'appartements_marocsoleil'
         },
         () => {
           loadAppartements();
@@ -41,7 +41,7 @@ const AppartementsManagement: React.FC = () => {
   const loadAppartements = async () => {
     try {
       const { data, error } = await supabase
-        .from('appartements')
+        .from('appartements_marocsoleil')
         .select('*')
         .order('created_at', { ascending: false });
       if (error) throw error;
@@ -72,7 +72,7 @@ const AppartementsManagement: React.FC = () => {
   const handleDeleteConfirm = async () => {
     if (!appartementToDelete) return;
     try {
-      const { error } = await supabase.from('appartements').delete().eq('id', appartementToDelete.id);
+      const { error } = await supabase.from('appartements_marocsoleil').delete().eq('id', appartementToDelete.id);
       if (error) throw error;
       toast.success('Appartement supprimé');
       setShowConfirm(false);

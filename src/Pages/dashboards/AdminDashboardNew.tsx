@@ -89,23 +89,23 @@ const AdminDashboard = () => {
       
       // Récupérer le nombre d'utilisateurs
       const { count: usersCount } = await supabase
-        .from('profiles')
+        .from('profiles_marocsoleil')
         .select('*', { count: 'exact', head: true });
       
       // Récupérer les statistiques des réservations
       const { count: bookingsCount } = await supabase
-        .from('bookings')
+        .from('bookings_marocsoleil')
         .select('*', { count: 'exact', head: true });
       
       // Récupérer le nombre de réservations en attente
       const { count: pendingBookingsCount } = await supabase
-        .from('bookings')
+        .from('bookings_marocsoleil')
         .select('*', { count: 'exact', head: true })
         .eq('status', 'pending');
       
       // Récupérer le chiffre d'affaires total
       const { data: paymentsData } = await supabase
-        .from('payments')
+        .from('payments_marocsoleil')
         .select('amount')
         .eq('status', 'paid');
       
@@ -113,17 +113,17 @@ const AdminDashboard = () => {
       
       // Récupérer le nombre d'événements
       const { count: eventsCount } = await supabase
-        .from('evenements')
+        .from('evenements_marocsoleil')
         .select('*', { count: 'exact', head: true });
       
       // Récupérer le nombre d'annonces
       const { count: announcementsCount } = await supabase
-        .from('annonces')
+        .from('annonces_marocsoleil')
         .select('*', { count: 'exact', head: true });
       
       // Récupérer le nombre de services actifs
       const { count: activeServicesCount } = await supabase
-        .from('services')
+        .from('services_marocsoleil')
         .select('*', { count: 'exact', head: true })
         .eq('is_active', true);
       
@@ -149,7 +149,7 @@ const AdminDashboard = () => {
   const fetchRecentBookings = async () => {
     try {
       const { data, error } = await supabase
-        .from('bookings')
+        .from('bookings_marocsoleil')
         .select(`
           *,
           user:profiles(*),

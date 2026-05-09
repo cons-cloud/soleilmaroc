@@ -40,7 +40,7 @@ const SettingsManagement: React.FC = () => {
     try {
       setLoading(true);
       const { data, error } = await supabase
-        .from('site_content')
+        .from('site_content_marocsoleil')
         .select('*')
         .eq('section', 'contact');
 
@@ -79,7 +79,7 @@ const SettingsManagement: React.FC = () => {
 
       for (const update of updates) {
         await supabase
-          .from('site_content')
+          .from('site_content_marocsoleil')
           .update({ value: update.value, value_ar: update.value })
           .eq('section', 'contact')
           .eq('key', update.key);

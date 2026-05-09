@@ -256,7 +256,7 @@ const UniversalBookingForm: React.FC<UniversalBookingFormProps> = ({ serviceType
       }
 
       const { data: booking, error: bookingError } = await supabase
-        .from('bookings')
+        .from('bookings_marocsoleil')
         .insert(bookingData)
         .select()
         .single();
@@ -298,13 +298,13 @@ const UniversalBookingForm: React.FC<UniversalBookingFormProps> = ({ serviceType
       // 4. Mettre à jour le statut
       if (paymentIntent.status === 'succeeded') {
         await supabase
-          .from('bookings')
+          .from('bookings_marocsoleil')
           .update({ payment_status: 'confirmed' })
           .eq('id', booking.id);
 
         // 5. Créer l'enregistrement de paiement
         const { data: paymentData } = await supabase
-          .from('payments')
+          .from('payments_marocsoleil')
           .insert({
             booking_id: booking.id,
             amount: totalPrice,

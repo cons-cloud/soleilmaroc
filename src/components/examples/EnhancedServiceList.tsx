@@ -100,7 +100,7 @@ const EnhancedServiceList: React.FC = () => {
       try {
         setIsLoading(true);
         const { data, error } = await supabase
-          .from('services')
+          .from('services_marocsoleil')
           .select('*')
           .order('created_at', { ascending: false });
 

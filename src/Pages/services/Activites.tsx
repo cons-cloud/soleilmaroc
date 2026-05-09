@@ -56,7 +56,7 @@ const Activites = () => {
     try {
       setIsLoading(true);
       const { data, error } = await supabase
-        .from('activites_touristiques')
+        .from('activites_touristiques_marocsoleil')
         .select('*')
         .eq('available', true)
         .order('created_at', { ascending: false });

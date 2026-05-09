@@ -75,7 +75,7 @@ const PartnerDashboard: React.FC = () => {
   });
 
   useRealtimeSubscription({
-    table: 'bookings',
+    table: 'bookings_marocsoleil',
     callback: () => {
       queryClient.invalidateQueries({ queryKey: ['partner-stats', user?.id] });
     }

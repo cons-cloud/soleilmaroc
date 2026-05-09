@@ -59,7 +59,7 @@ const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
       console.log('Tentative de téléchargement vers:', filePath);
       
       const { data, error: uploadError } = await supabase.storage
-        .from('product-images')
+        .from('product-images_marocsoleil')
         .upload(filePath, file, {
           cacheControl: '3600',
           upsert: false,
@@ -78,7 +78,7 @@ const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
       }
 
       const { data: { publicUrl } } = supabase.storage
-        .from('product-images')
+        .from('product-images_marocsoleil')
         .getPublicUrl(filePath);
 
       console.log('URL publique:', publicUrl);
@@ -149,7 +149,7 @@ const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
 
     if (immobilier?.id) {
       const { error } = await supabase
-        .from('appartements')
+        .from('appartements_marocsoleil')
         .update(dataToSave)
         .eq('id', immobilier.id);
       
@@ -157,7 +157,7 @@ const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
       toast.success('Appartement mis à jour avec succès');
     } else {
       const { error } = await supabase
-        .from('appartements')
+        .from('appartements_marocsoleil')
         .insert([dataToSave]);
       
       if (error) throw error;

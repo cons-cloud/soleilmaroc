@@ -27,7 +27,7 @@ export const useCircuitDetails = (id: string | undefined) => {
     queryFn: async () => {
       if (!id) return null;
       const { data, error } = await supabase
-        .from('circuits_touristiques')
+        .from('circuits_touristiques_marocsoleil')
         .select('*')
         .eq('id', id)
         .single();
@@ -41,7 +41,7 @@ export const useCircuitDetails = (id: string | undefined) => {
 
   // REAL-TIME SYNC
   useRealtimeSubscription({
-    table: 'circuits_touristiques',
+    table: 'circuits_touristiques_marocsoleil',
     callback: (payload) => {
       if (payload.new && (payload.new as any).id === id) {
         queryClient.invalidateQueries({ queryKey });

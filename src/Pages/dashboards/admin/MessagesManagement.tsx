@@ -23,7 +23,7 @@ const MessagesManagement: React.FC = () => {
         {
           event: '*',
           schema: 'public',
-          table: 'contact_messages'
+          table: 'contact_messages_marocsoleil'
         },
         () => {
           loadMessages();
@@ -39,7 +39,7 @@ const MessagesManagement: React.FC = () => {
   const loadMessages = async () => {
     try {
       const { data, error } = await supabase
-        .from('contact_messages')
+        .from('contact_messages_marocsoleil')
         .select('*')
         .order('created_at', { ascending: false });
 
@@ -63,7 +63,7 @@ const MessagesManagement: React.FC = () => {
 
     try {
       const { error } = await supabase
-        .from('contact_messages')
+        .from('contact_messages_marocsoleil')
         .delete()
         .eq('id', messageToDelete.id);
 
@@ -81,7 +81,7 @@ const MessagesManagement: React.FC = () => {
   const toggleReadStatus = async (message: any) => {
     try {
       const { error } = await supabase
-        .from('contact_messages')
+        .from('contact_messages_marocsoleil')
         .update({ is_read: !message.is_read })
         .eq('id', message.id);
 

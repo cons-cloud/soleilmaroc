@@ -22,7 +22,7 @@ export interface Annonce {
 async function fetchAnnonces(): Promise<Annonce[]> {
   // 1. Charger les annonces principales
   const { data: mainAnnonces = [], error: mainError } = await supabase
-    .from('annonces')
+    .from('annonces_marocsoleil')
     .select('*')
     .eq('available', true)
     .order('created_at', { ascending: false });
@@ -31,7 +31,7 @@ async function fetchAnnonces(): Promise<Annonce[]> {
 
   // 2. Charger les annonces des partenaires
   const { data: partnerProducts = [] } = await supabase
-    .from('partner_products')
+    .from('partner_products_marocsoleil')
     .select('*')
     .eq('available', true)
     .eq('product_type', 'annonce')
@@ -71,14 +71,14 @@ export const useAnnonces = () => {
 
   // REAL-TIME SYNC
   useRealtimeSubscription({
-    table: 'annonces',
+    table: 'annonces_marocsoleil',
     callback: () => {
       queryClient.invalidateQueries({ queryKey });
     }
   });
 
   useRealtimeSubscription({
-    table: 'partner_products',
+    table: 'partner_products_marocsoleil',
     callback: () => {
       queryClient.invalidateQueries({ queryKey });
     }

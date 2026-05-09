@@ -141,13 +141,13 @@ const CircuitForm: React.FC<CircuitFormProps> = ({ circuit, onClose, onSuccess }
     let error;
     if (circuit?.id) {
       ({ error } = await supabase
-        .from('circuits_touristiques')
+        .from('circuits_touristiques_marocsoleil')
         .update(dataToSave)
         .eq('id', circuit.id)
         .select());
     } else {
       ({ error } = await supabase
-        .from('circuits_touristiques')
+        .from('circuits_touristiques_marocsoleil')
         .insert([dataToSave])
         .select());
     }

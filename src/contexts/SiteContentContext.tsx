@@ -44,7 +44,7 @@ export const SiteContentProvider: React.FC<{ children: ReactNode }> = ({ childre
       setError(null);
       
       const { data, error: fetchError } = await supabase
-        .from('site_content')
+        .from('site_content_marocsoleil')
         .select('*');
 
       if (fetchError) {

@@ -86,7 +86,7 @@ export const SiteSettingsProvider: React.FC<{ children: ReactNode }> = ({ childr
       setError(null);
 
       const { data, error: fetchError } = await supabase
-        .from('site_settings')
+        .from('site_settings_marocsoleil')
         .select('*')
         .single();
 

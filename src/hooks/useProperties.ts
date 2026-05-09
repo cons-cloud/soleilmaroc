@@ -22,7 +22,7 @@ export const useProperties = (propertyType: string) => {
     queryKey: ['properties', propertyType],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('properties')
+        .from('properties_marocsoleil')
         .select('id, property_type, title, description, price, location, bedrooms, bathrooms, area, created_at')
         .eq('property_type', propertyType)
         .order('created_at', { ascending: false });
@@ -36,7 +36,7 @@ export const useProperties = (propertyType: string) => {
 
   // REAL-TIME SYNC
   useRealtimeSubscription({
-    table: 'properties',
+    table: 'properties_marocsoleil',
     callback: () => {
       queryClient.invalidateQueries({ queryKey: ['properties', propertyType] });
     }

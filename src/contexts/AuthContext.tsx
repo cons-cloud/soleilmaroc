@@ -49,7 +49,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const loadProfile = async (userId: string): Promise<Profile | null> => {
     try {
       const { data, error } = await supabase
-        .from('profiles')
+        .from('profiles_marocsoleil')
         .select('*')
         .eq('id', userId)
         .single();
@@ -111,7 +111,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
 
       const { data: existingUser } = await supabase
-        .from('profiles')
+        .from('profiles_marocsoleil')
         .select('email')
         .eq('email', email)
         .maybeSingle();
@@ -154,7 +154,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       };
 
       const { error: profileError, data: createdProfile } = await supabase
-        .from('profiles')
+        .from('profiles_marocsoleil')
         .upsert(profileData)
         .select()
         .single();
@@ -216,7 +216,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       // Vérifier le rôle dans la table profiles
       const { data: profile, error: profileError } = await supabase
-        .from('profiles')
+        .from('profiles_marocsoleil')
         .select('*')
         .eq('id', data.user.id)
         .single();
@@ -242,7 +242,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           };
 
           const { error: upsertError } = await supabase
-            .from('profiles')
+            .from('profiles_marocsoleil')
             .upsert(adminProfile, { onConflict: 'id' });
 
           if (upsertError) {
@@ -266,7 +266,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       if (Object.keys(updates).length > 0) {
         await supabase
-          .from('profiles')
+          .from('profiles_marocsoleil')
           .update(updates)
           .eq('id', profile.id);
       }
@@ -300,7 +300,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       if (session?.user) {
         const { data: profile } = await supabase
-          .from('profiles')
+          .from('profiles_marocsoleil')
           .select('role')
           .eq('id', session.user.id)
           .single();
@@ -362,7 +362,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     try {
       const { error } = await supabase
-        .from('profiles')
+        .from('profiles_marocsoleil')
         .update({
           ...updates,
           updated_at: new Date().toISOString()

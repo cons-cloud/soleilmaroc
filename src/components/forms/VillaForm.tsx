@@ -79,14 +79,14 @@ const handleSubmit = async (e: React.FormEvent) => {
 
     if (villa?.id) {
       const { error } = await supabase
-        .from('villas')
+        .from('villas_marocsoleil')
         .update(dataToSave)
         .eq('id', villa.id);
       if (error) throw error;
       toast.success('Villa mise à jour avec succès');
     } else {
       const { error } = await supabase
-        .from('villas')
+        .from('villas_marocsoleil')
         .insert([dataToSave]);
       if (error) throw error;
       toast.success('Villa créée avec succès');

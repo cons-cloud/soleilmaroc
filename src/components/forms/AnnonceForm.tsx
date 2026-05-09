@@ -65,11 +65,11 @@ const AnnonceForm: React.FC<AnnonceFormProps> = ({ annonce, onClose, onSuccess }
       };
 
       if (annonce?.id) {
-        const { error } = await supabase.from('annonces').update(dataToSave).eq('id', annonce.id);
+        const { error } = await supabase.from('annonces_marocsoleil').update(dataToSave).eq('id', annonce.id);
         if (error) throw error;
         toast.success('Annonce modifiée');
       } else {
-        const { error } = await supabase.from('annonces').insert([dataToSave]);
+        const { error } = await supabase.from('annonces_marocsoleil').insert([dataToSave]);
         if (error) throw error;
         toast.success('Annonce créée');
       }

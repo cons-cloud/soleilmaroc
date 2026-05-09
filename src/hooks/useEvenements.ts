@@ -24,7 +24,7 @@ async function fetchEvents(): Promise<Event[]> {
   let mainEvents: any[] = [];
   try {
     const { data, error } = await supabase
-      .from('evenements')
+      .from('evenements_marocsoleil')
       .select('*');
     
     if (!error) {
@@ -45,7 +45,7 @@ async function fetchEvents(): Promise<Event[]> {
 
   // 2. Charger les événements des partenaires
   const { data: partnerEvents = [] } = await supabase
-    .from('partner_products')
+    .from('partner_products_marocsoleil')
     .select('*')
     .eq('available', true)
     .eq('product_type', 'evenement')
@@ -92,14 +92,14 @@ export const useEvenements = () => {
 
   // REAL-TIME SYNC
   useRealtimeSubscription({
-    table: 'evenements',
+    table: 'evenements_marocsoleil',
     callback: () => {
       queryClient.invalidateQueries({ queryKey });
     }
   });
 
   useRealtimeSubscription({
-    table: 'partner_products',
+    table: 'partner_products_marocsoleil',
     callback: () => {
       queryClient.invalidateQueries({ queryKey });
     }

@@ -102,7 +102,7 @@ function collectImages(dir) {
 
           // check exists by title+city+type
           const { data: exists } = await supabase
-            .from('services')
+            .from('services_marocsoleil')
             .select('id')
             .eq('title', title)
             .eq('city', city)
@@ -126,7 +126,7 @@ function collectImages(dir) {
           };
 
           const { data, error } = await supabase
-            .from('services')
+            .from('services_marocsoleil')
             .insert([payload]);
 
           if (error) {

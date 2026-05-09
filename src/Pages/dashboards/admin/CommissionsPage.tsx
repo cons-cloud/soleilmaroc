@@ -38,7 +38,7 @@ export const CommissionsPage: React.FC = () => {
         {
           event: '*',
           schema: 'public',
-          table: 'payments'
+          table: 'payments_marocsoleil'
         },
         () => {
           loadCommissions();
@@ -83,7 +83,7 @@ export const CommissionsPage: React.FC = () => {
   const markAsPaid = async (paymentId: string) => {
     try {
       const { error } = await supabase
-        .from('payments')
+        .from('payments_marocsoleil')
         .update({ is_commission_paid: true })
         .eq('id', paymentId);
 

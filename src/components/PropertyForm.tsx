@@ -200,7 +200,7 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ property, type, onClose, on
 
       if (property?.id) {
         const { error } = await supabase
-          .from('properties')
+          .from('properties_marocsoleil')
           .update(dataToSave)
           .eq('id', property.id);
 
@@ -208,7 +208,7 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ property, type, onClose, on
         toast.success('Propriété mise à jour avec succès');
       } else {
         const { error } = await supabase
-          .from('properties')
+          .from('properties_marocsoleil')
           .insert([{ 
             ...dataToSave, 
             created_at: new Date().toISOString() 

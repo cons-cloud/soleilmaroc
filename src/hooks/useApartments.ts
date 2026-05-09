@@ -38,7 +38,7 @@ const formatImages = (images: any, mainImage?: string): string[] => {
 
 async function fetchMainApartments(): Promise<Apartment[]> {
   const { data, error } = await supabase
-    .from('appartements')
+    .from('appartements_marocsoleil')
     .select('id, title, description, price_per_night, city, region, address, bedrooms, bathrooms, amenities, contact_phone, available, featured, images, created_at, updated_at')
     .eq('available', true)
     .order('featured', { ascending: false })
@@ -68,7 +68,7 @@ async function fetchMainApartments(): Promise<Apartment[]> {
 
 async function fetchPartnerApartments(): Promise<Apartment[]> {
   const { data, error } = await supabase
-    .from('partner_products')
+    .from('partner_products_marocsoleil')
     .select('id, title, name, description, price, price_per_night, city, region, address, bedrooms, bathrooms, amenities, contact_phone, available, featured, images, main_image, created_at, updated_at, partner_id')
     .eq('available', true)
     .eq('product_type', 'appartement')
@@ -124,14 +124,14 @@ export const useApartments = () => {
 
   // REAL-TIME SYNC
   useRealtimeSubscription({
-    table: 'appartements',
+    table: 'appartements_marocsoleil',
     callback: () => {
       queryClient.invalidateQueries({ queryKey: ['apartments', 'main'] });
     }
   });
 
   useRealtimeSubscription({
-    table: 'partner_products',
+    table: 'partner_products_marocsoleil',
     callback: () => {
       queryClient.invalidateQueries({ queryKey: ['apartments', 'partner'] });
     }

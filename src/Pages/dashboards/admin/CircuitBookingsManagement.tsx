@@ -49,7 +49,7 @@ const CircuitBookingsManagement = () => {
         {
           event: '*',
           schema: 'public',
-          table: 'bookings'
+          table: 'bookings_marocsoleil'
         },
         () => {
           loadBookings();
@@ -66,7 +66,7 @@ const CircuitBookingsManagement = () => {
     try {
       setLoading(true);
       const { data, error } = await supabase
-        .from('bookings')
+        .from('bookings_marocsoleil')
         .select(`
           *,
           circuits_touristiques (
@@ -95,7 +95,7 @@ const CircuitBookingsManagement = () => {
   const updatePaymentStatus = async (bookingId: string, status: string) => {
     try {
       const { error } = await supabase
-        .from('bookings')
+        .from('bookings_marocsoleil')
         .update({ payment_status: status })
         .eq('id', bookingId);
 

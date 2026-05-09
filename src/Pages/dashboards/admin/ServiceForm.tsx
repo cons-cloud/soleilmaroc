@@ -80,7 +80,7 @@ const ServiceForm: React.FC = () => {
     try {
       setLoading(true);
       const { data, error } = await supabase
-        .from('services')
+        .from('services_marocsoleil')
         .select('*')
         .eq('id', id)
         .single();
@@ -161,7 +161,7 @@ const ServiceForm: React.FC = () => {
 
       if (isEditMode) {
         const { error } = await supabase
-          .from('services')
+          .from('services_marocsoleil')
           .update(serviceData)
           .eq('id', id);
 
@@ -169,7 +169,7 @@ const ServiceForm: React.FC = () => {
         toast.success('Service modifié avec succès');
       } else {
         const { error } = await supabase
-          .from('services')
+          .from('services_marocsoleil')
           .insert([serviceData]);
 
         if (error) throw error;

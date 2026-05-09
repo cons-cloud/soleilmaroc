@@ -25,7 +25,7 @@ const ClientAnnonces: React.FC = () => {
       setLoading(true);
       
       let query = supabase
-        .from('annonces')
+        .from('annonces_marocsoleil')
         .select('*')
         .eq('available', true)
         .order('created_at', { ascending: false });
@@ -62,7 +62,7 @@ const ClientAnnonces: React.FC = () => {
       if (!user) return;
 
       const { data, error } = await supabase
-        .from('favorites')
+        .from('favorites_marocsoleil')
         .select('annonce_id')
         .eq('user_id', user.id);
 
@@ -87,7 +87,7 @@ const ClientAnnonces: React.FC = () => {
       
       if (isFavorite) {
         await supabase
-          .from('favorites')
+          .from('favorites_marocsoleil')
           .delete()
           .eq('user_id', user.id)
           .eq('annonce_id', annonceId);
@@ -101,7 +101,7 @@ const ClientAnnonces: React.FC = () => {
         toast.success('Annonce retirée des favoris');
       } else {
         await supabase
-          .from('favorites')
+          .from('favorites_marocsoleil')
           .insert([{ user_id: user.id, annonce_id: annonceId }]);
         
         setFavorites(prev => new Set(prev).add(annonceId));

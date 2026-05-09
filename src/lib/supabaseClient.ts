@@ -79,7 +79,7 @@ export const isUserAdmin = async (): Promise<boolean> => {
     }
     
     const { data: userData, error } = await supabase
-      .from('profiles')
+      .from('profiles_marocsoleil')
       .select('role')
       .eq('id', user.id)
       .single();

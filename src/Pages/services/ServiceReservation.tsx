@@ -200,7 +200,7 @@ const ServiceReservation: React.FC = () => {
 
         if (partnerProductType) {
           const partnerRes = await supabase
-            .from('partner_products')
+            .from('partner_products_marocsoleil')
             .select('*')
             .eq('id', id)
             .eq('product_type', partnerProductType)
@@ -384,7 +384,7 @@ const ServiceReservation: React.FC = () => {
 
       // Créer la réservation dans la table bookings
       const { data: reservation, error } = await supabase
-        .from('bookings')
+        .from('bookings_marocsoleil')
         .insert([{
           client_id: user.id,
           service_type: normalizedType,

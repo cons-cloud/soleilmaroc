@@ -25,7 +25,7 @@ const AnnoncesManagement: React.FC = () => {
         {
           event: '*',
           schema: 'public',
-          table: 'annonces'
+          table: 'annonces_marocsoleil'
         },
         () => {
           loadItems();
@@ -49,7 +49,7 @@ const AnnoncesManagement: React.FC = () => {
       // Vérifier le profil utilisateur
       if (session?.user) {
         const { data: profile } = await supabase
-          .from('profiles')
+          .from('profiles_marocsoleil')
           .select('role')
           .eq('id', session.user.id)
           .single();
@@ -58,7 +58,7 @@ const AnnoncesManagement: React.FC = () => {
       
       // Récupérer les annonces
       const { data, error, status } = await supabase
-        .from('annonces')
+        .from('annonces_marocsoleil')
         .select('*')
         .order('created_at', { ascending: false });
       
@@ -111,7 +111,7 @@ const AnnoncesManagement: React.FC = () => {
       
       // Vérifier si l'utilisateur est admin
       const { data: profile, error: profileError } = await supabase
-        .from('profiles')
+        .from('profiles_marocsoleil')
         .select('role')
         .eq('id', session.user.id)
         .single();
@@ -130,7 +130,7 @@ const AnnoncesManagement: React.FC = () => {
       
       // Supprimer l'annonce avec les en-têtes d'authentification
       const { error: deleteError } = await supabase
-        .from('annonces')
+        .from('annonces_marocsoleil')
         .delete()
         .eq('id', annonceToDelete.id);
         

@@ -73,10 +73,10 @@ const StatsManagement: React.FC = () => {
         { data: paymentsData },
         { count: propertyCount }
       ] = await Promise.all([
-        supabase.from('profiles').select('*', { count: 'exact' }),
-        supabase.from('bookings').select('*', { count: 'exact' }),
-        supabase.from('payments').select('amount').eq('status', 'paid'),
-        supabase.from('properties').select('*', { count: 'exact' })
+        supabase.from('profiles_marocsoleil').select('*', { count: 'exact' }),
+        supabase.from('bookings_marocsoleil').select('*', { count: 'exact' }),
+        supabase.from('payments_marocsoleil').select('amount').eq('status', 'paid'),
+        supabase.from('properties_marocsoleil').select('*', { count: 'exact' })
       ]);
 
       const totalRevenue = paymentsData?.reduce((sum, { amount }: any) => sum + (amount || 0), 0) || 0;
@@ -156,12 +156,12 @@ const StatsManagement: React.FC = () => {
 
   // REAL-TIME SYNC
   useRealtimeSubscription({
-    table: 'bookings',
+    table: 'bookings_marocsoleil',
     callback: () => queryClient.invalidateQueries({ queryKey: ['stats-management'] })
   });
 
   useRealtimeSubscription({
-    table: 'profiles',
+    table: 'profiles_marocsoleil',
     callback: () => queryClient.invalidateQueries({ queryKey: ['stats-management'] })
   });
 

@@ -52,7 +52,7 @@ const LocationsVoituresManagement: FC = () => {
     try {
       setLoading(true);
       const { data, error } = await supabase
-        .from('locations_voitures')
+        .from('locations_voitures_marocsoleil')
         .select('*')
         .order('created_at', { ascending: false });
         
@@ -75,7 +75,7 @@ const LocationsVoituresManagement: FC = () => {
       const loadVoiture = async () => {
         try {
           const { data, error } = await supabase
-            .from('locations_voitures')
+            .from('locations_voitures_marocsoleil')
             .select('*')
             .eq('id', id)
             .single();
@@ -106,7 +106,7 @@ const LocationsVoituresManagement: FC = () => {
         {
           event: '*',
           schema: 'public',
-          table: 'locations_voitures'
+          table: 'locations_voitures_marocsoleil'
         },
         () => {
           loadVoitures();
@@ -126,7 +126,7 @@ const LocationsVoituresManagement: FC = () => {
     try {
       setLoading(true);
       const { error } = await supabase
-        .from('locations_voitures')
+        .from('locations_voitures_marocsoleil')
         .delete()
         .eq('id', id);
 

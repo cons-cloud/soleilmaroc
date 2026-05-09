@@ -21,7 +21,7 @@ export const useAuth = () => {
   const checkAdminStatus = async (userId: string): Promise<boolean> => {
     try {
       const { data, error } = await supabase
-        .from('profiles')
+        .from('profiles_marocsoleil')
         .select('*')
         .eq('id', userId)
         .single();

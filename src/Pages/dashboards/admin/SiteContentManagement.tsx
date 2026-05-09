@@ -28,7 +28,7 @@ const SiteContentManagement: React.FC = () => {
   const loadContent = async () => {
     try {
       const { data, error } = await supabase
-        .from('site_content')
+        .from('site_content_marocsoleil')
         .select('*')
         .order('section', { ascending: true })
         .order('order_index', { ascending: true });
@@ -79,7 +79,7 @@ const SiteContentManagement: React.FC = () => {
         updateData[update.field] = update.value;
         
         const { error } = await supabase
-          .from('site_content')
+          .from('site_content_marocsoleil')
           .update(updateData)
           .eq('id', update.id);
 

@@ -100,14 +100,14 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onClose, onSuccess }
 
       // Upload vers Supabase Storage (bucket services)
       const { error } = await supabase.storage
-        .from('services')
+        .from('services_marocsoleil')
         .upload(fileName, file);
 
       if (error) throw error;
 
       // Obtenir l'URL publique
       const { data: { publicUrl } } = supabase.storage
-        .from('services')
+        .from('services_marocsoleil')
         .getPublicUrl(fileName);
 
       if (isMain) {
@@ -172,7 +172,7 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onClose, onSuccess }
       if (product?.id) {
         // Mise à jour
         const { error } = await supabase
-          .from('partner_products')
+          .from('partner_products_marocsoleil')
           .update(productData)
           .eq('id', product.id);
 
@@ -181,7 +181,7 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onClose, onSuccess }
       } else {
         // Création
         const { error } = await supabase
-          .from('partner_products')
+          .from('partner_products_marocsoleil')
           .insert([productData]);
 
         if (error) throw error;

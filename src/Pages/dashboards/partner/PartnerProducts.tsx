@@ -41,7 +41,7 @@ const PartnerProducts: React.FC = () => {
       setLoading(true);
       
       let query = supabase
-        .from('partner_products')
+        .from('partner_products_marocsoleil')
         .select('*')
         .eq('partner_id', user.id);
         
@@ -73,7 +73,7 @@ const PartnerProducts: React.FC = () => {
         {
           event: '*',
           schema: 'public',
-          table: 'partner_products',
+          table: 'partner_products_marocsoleil',
           filter: `partner_id=eq.${user.id}`
         },
         () => {
@@ -98,7 +98,7 @@ const PartnerProducts: React.FC = () => {
       
       // Supprimer les images du stockage
       const { data: productData } = await supabase
-        .from('partner_products')
+        .from('partner_products_marocsoleil')
         .select('images')
         .eq('id', id)
         .single();
@@ -110,7 +110,7 @@ const PartnerProducts: React.FC = () => {
         });
         
         const { error: deleteError } = await supabase.storage
-          .from('maroc2030')
+          .from('maroc2030_marocsoleil')
           .remove(filesToDelete);
           
         if (deleteError) throw deleteError;
@@ -118,7 +118,7 @@ const PartnerProducts: React.FC = () => {
       
       // Supprimer le produit de la base de données
       const { error } = await supabase
-        .from('partner_products')
+        .from('partner_products_marocsoleil')
         .delete()
         .eq('id', id);
         

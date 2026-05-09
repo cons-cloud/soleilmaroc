@@ -56,7 +56,7 @@ export const SiteSettings: React.FC = () => {
         {
           event: '*',
           schema: 'public',
-          table: 'site_settings'
+          table: 'site_settings_marocsoleil'
         },
         () => {
           loadSettings();
@@ -72,7 +72,7 @@ export const SiteSettings: React.FC = () => {
   const loadSettings = async () => {
     try {
       const { data, error } = await supabase
-        .from('site_settings')
+        .from('site_settings_marocsoleil')
         .select('*')
         .single();
 
@@ -137,7 +137,7 @@ export const SiteSettings: React.FC = () => {
 
       // Update settings in database
       const { error } = await supabase
-        .from('site_settings')
+        .from('site_settings_marocsoleil')
         .upsert({
           ...data,
           id: data.id || '00000000-0000-0000-0000-000000000000',

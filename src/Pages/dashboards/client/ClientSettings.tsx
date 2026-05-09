@@ -87,7 +87,7 @@ const ClientSettings = () => {
     try {
       // Supprimer le profil
       const { error: profileError } = await supabase
-        .from('profiles')
+        .from('profiles_marocsoleil')
         .delete()
         .eq('id', profile?.id);
 

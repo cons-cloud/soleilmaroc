@@ -77,14 +77,14 @@ const VoitureForm: React.FC<VoitureFormProps> = ({ voiture, onClose, onSuccess }
 
       if (voiture?.id) {
         const { error } = await supabase
-          .from('locations_voitures')
+          .from('locations_voitures_marocsoleil')
           .update(dataToSave)
           .eq('id', voiture.id);
         if (error) throw error;
         toast.success('Voiture modifiée avec succès');
       } else {
         const { error } = await supabase
-          .from('locations_voitures')
+          .from('locations_voitures_marocsoleil')
           .insert([dataToSave]);
         if (error) throw error;
         toast.success('Voiture créée avec succès');

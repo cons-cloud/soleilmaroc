@@ -20,7 +20,7 @@ const PaymentsManagement: React.FC = () => {
         {
           event: '*',
           schema: 'public',
-          table: 'payments'
+          table: 'payments_marocsoleil'
         },
         () => {
           loadPayments();
@@ -39,7 +39,7 @@ const PaymentsManagement: React.FC = () => {
       
       // D'abord, récupérer les paiements avec les informations de base
       const { data: paymentsData, error: paymentsError } = await supabase
-        .from('payments')
+        .from('payments_marocsoleil')
         .select('*')
         .order('created_at', { ascending: false });
 
@@ -56,7 +56,7 @@ const PaymentsManagement: React.FC = () => {
             // Récupérer les détails de la réservation
             if (payment.booking_id) {
               const { data: bookingData, error: bookingError } = await supabase
-                .from('bookings')
+                .from('bookings_marocsoleil')
                 .select('*, client:client_id(*), service:service_id(*)')
                 .eq('id', payment.booking_id)
                 .single();

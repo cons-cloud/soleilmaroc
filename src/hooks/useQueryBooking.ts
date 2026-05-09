@@ -23,7 +23,7 @@ export const useQueryBooking = () => {
   return useMutation<any, Error, BookingData, MutationContext>({
     mutationFn: async (bookingData: BookingData) => {
       const { data, error } = await supabase
-        .from('bookings')
+        .from('bookings_marocsoleil')
         .insert([bookingData])
         .select()
         .single();

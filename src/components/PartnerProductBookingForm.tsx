@@ -195,7 +195,7 @@ const PartnerProductBookingForm: React.FC<PartnerProductBookingFormProps> = ({
       bookingData.payment_method_id = paymentMethod?.id;
 
       const { data: booking, error: bookingError } = await supabase
-        .from('bookings')
+        .from('bookings_marocsoleil')
         .insert([bookingData])
         .select()
         .single();

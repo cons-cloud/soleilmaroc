@@ -26,7 +26,7 @@ const Contact = () => {
 
     try {
       const { error } = await supabase
-        .from('contact_messages')
+        .from('contact_messages_marocsoleil')
         .insert([{
           first_name: formData.first_name,
           last_name: formData.last_name,

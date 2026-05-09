@@ -83,7 +83,7 @@ const Payment: React.FC = () => {
 
       // Créer la réservation dans la table bookings (table unifiée)
       const { data: reservation, error } = await supabase
-        .from('bookings')
+        .from('bookings_marocsoleil')
         .insert([{
           client_id: user.id,
           service_type: normalizedType,
@@ -132,7 +132,7 @@ const Payment: React.FC = () => {
     try {
       // 1. Créer le paiement dans la table payments
       const { data: payment, error: paymentError } = await supabase
-        .from('payments')
+        .from('payments_marocsoleil')
         .insert([{
           booking_id: bookingId,
           client_id: profile?.id || user?.id,
@@ -153,7 +153,7 @@ const Payment: React.FC = () => {
 
       // 2. Mettre à jour le statut de la réservation dans la table bookings
       const { error: bookingError } = await supabase
-        .from('bookings')
+        .from('bookings_marocsoleil')
         .update({
           status: 'confirmed',
           payment_status: 'paid',
@@ -167,7 +167,7 @@ const Payment: React.FC = () => {
       try {
         // Récupérer les détails de la réservation pour l'email
         const { data: bookingData } = await supabase
-          .from('bookings')
+          .from('bookings_marocsoleil')
           .select('customer_email, customer_name, service_type, start_date, end_date')
           .eq('id', bookingId)
           .single();

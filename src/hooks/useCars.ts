@@ -34,7 +34,7 @@ const formatImages = (images: any, mainImage?: string): string[] => {
 
 async function fetchMainCars(): Promise<Car[]> {
   const { data, error } = await supabase
-    .from('locations_voitures')
+    .from('locations_voitures_marocsoleil')
     .select('id, marque, modele, annee, prix, prix_jour, ville, disponible, en_vedette, images, type_carburant, boite_vitesse, nb_places, nb_portes, climatisation, description, created_at, updated_at')
     .eq('disponible', true)
     .order('en_vedette', { ascending: false })
@@ -65,7 +65,7 @@ async function fetchMainCars(): Promise<Car[]> {
 
 async function fetchPartnerCars(): Promise<Car[]> {
   const { data, error } = await supabase
-    .from('partner_products')
+    .from('partner_products_marocsoleil')
     .select('id, title, name, description, price, price_per_night, city, available, featured, images, main_image, created_at, updated_at, partner_id, marque, modele, annee, type_carburant, boite_vitesse, nb_places, nb_portes, climatisation')
     .eq('available', true)
     .eq('product_type', 'voiture')
@@ -122,14 +122,14 @@ export const useCars = () => {
 
   // REAL-TIME SYNC
   useRealtimeSubscription({
-    table: 'locations_voitures',
+    table: 'locations_voitures_marocsoleil',
     callback: () => {
       queryClient.invalidateQueries({ queryKey: ['cars', 'main'] });
     }
   });
 
   useRealtimeSubscription({
-    table: 'partner_products',
+    table: 'partner_products_marocsoleil',
     callback: () => {
       queryClient.invalidateQueries({ queryKey: ['cars', 'partner'] });
     }

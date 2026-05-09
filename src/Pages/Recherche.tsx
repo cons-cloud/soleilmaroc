@@ -47,7 +47,7 @@ const Recherche = () => {
       // Recherche dans les circuits touristiques
       if (selectedFilters.includes('all') || selectedFilters.includes('tourism')) {
         const { data: circuits, error: circuitsError } = await supabase
-          .from('circuits_touristiques')
+          .from('circuits_touristiques_marocsoleil')
           .select('*')
           .or(`title.ilike.${searchTerm},city.ilike.${searchTerm},description.ilike.${searchTerm}`)
           .eq('available', true)
@@ -72,7 +72,7 @@ const Recherche = () => {
 
         // Recherche dans les activités touristiques
         const { data: activities, error: activitiesError } = await supabase
-          .from('activites_touristiques')
+          .from('activites_touristiques_marocsoleil')
           .select('*')
           .or(`title.ilike.${searchTerm},city.ilike.${searchTerm},description.ilike.${searchTerm}`)
           .eq('available', true)
@@ -97,7 +97,7 @@ const Recherche = () => {
 
         // Recherche dans les circuits partenaires
         const { data: partnerCircuits, error: partnerCircuitsError } = await supabase
-          .from('partner_products')
+          .from('partner_products_marocsoleil')
           .select('*')
           .eq('available', true)
           .eq('product_type', 'circuit')
@@ -127,7 +127,7 @@ const Recherche = () => {
       // Recherche dans les voitures
       if (selectedFilters.includes('all') || selectedFilters.includes('car')) {
         const { data: cars, error: carsError } = await supabase
-          .from('locations_voitures')
+          .from('locations_voitures_marocsoleil')
           .select('*')
           .or(`marque.ilike.${searchTerm},modele.ilike.${searchTerm},ville.ilike.${searchTerm}`)
           .eq('disponible', true)
@@ -151,7 +151,7 @@ const Recherche = () => {
         }
 
         const { data: partnerCars, error: partnerCarsError } = await supabase
-          .from('partner_products')
+          .from('partner_products_marocsoleil')
           .select('*')
           .eq('available', true)
           .eq('product_type', 'voiture')
@@ -182,7 +182,7 @@ const Recherche = () => {
       if (selectedFilters.includes('all') || selectedFilters.includes('property')) {
         // Appartements
         const { data: apartments, error: apartmentsError } = await supabase
-          .from('appartements')
+          .from('appartements_marocsoleil')
           .select('*')
           .or(`title.ilike.${searchTerm},city.ilike.${searchTerm},description.ilike.${searchTerm}`)
           .eq('available', true)
@@ -207,7 +207,7 @@ const Recherche = () => {
 
         // Villas
         const { data: villas, error: villasError } = await supabase
-          .from('villas')
+          .from('villas_marocsoleil')
           .select('*')
           .or(`title.ilike.${searchTerm},city.ilike.${searchTerm},description.ilike.${searchTerm}`)
           .eq('available', true)
@@ -232,7 +232,7 @@ const Recherche = () => {
 
         // Hôtels
         const { data: hotels, error: hotelsError } = await supabase
-          .from('hotels')
+          .from('hotels_marocsoleil')
           .select('*')
           .or(`name.ilike.${searchTerm},city.ilike.${searchTerm},description.ilike.${searchTerm}`)
           .eq('available', true)
@@ -257,7 +257,7 @@ const Recherche = () => {
 
         // Produits partenaires (appartement / villa / hotel)
         const { data: partnerProps, error: partnerPropsError } = await supabase
-          .from('partner_products')
+          .from('partner_products_marocsoleil')
           .select('*')
           .eq('available', true)
           .in('product_type', ['appartement', 'villa', 'hotel'])

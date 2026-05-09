@@ -65,16 +65,16 @@ const StatsOverview: React.FC = () => {
         { count: totalAnnouncements },
         { data: monthlyPayments }
       ] = await Promise.all([
-        supabase.from('profiles').select('*', { count: 'exact', head: true }),
-        supabase.from('bookings').select('*', { count: 'exact', head: true }),
-        supabase.from('payments').select('amount, payment_status').eq('payment_status', 'paid'),
-        supabase.from('services').select('*', { count: 'exact', head: true }).eq('is_active', true),
-        supabase.from('bookings').select('*', { count: 'exact', head: true }).eq('status', 'pending'),
-        supabase.from('evenements').select('*', { count: 'exact', head: true }),
-        supabase.from('annonces').select('*', { count: 'exact', head: true }),
+        supabase.from('profiles_marocsoleil').select('*', { count: 'exact', head: true }),
+        supabase.from('bookings_marocsoleil').select('*', { count: 'exact', head: true }),
+        supabase.from('payments_marocsoleil').select('amount, payment_status').eq('payment_status', 'paid'),
+        supabase.from('services_marocsoleil').select('*', { count: 'exact', head: true }).eq('is_active', true),
+        supabase.from('bookings_marocsoleil').select('*', { count: 'exact', head: true }).eq('status', 'pending'),
+        supabase.from('evenements_marocsoleil').select('*', { count: 'exact', head: true }),
+        supabase.from('annonces_marocsoleil').select('*', { count: 'exact', head: true }),
         // Revenu mensuel
         supabase
-          .from('payments')
+          .from('payments_marocsoleil')
           .select('amount')
           .eq('payment_status', 'paid')
           .gte('created_at', new Date(new Date().setDate(1)).toISOString())

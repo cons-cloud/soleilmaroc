@@ -145,13 +145,13 @@ const ProductForm: React.FC<ProductFormProps> = ({ onClose = () => {}, onCreate,
       const performUpsert = async (p: any) => {
         if (editingProduct && editingProduct.id) {
           return supabase
-            .from('partner_products')
+            .from('partner_products_marocsoleil')
             .update(p)
             .eq('id', editingProduct.id)
             .eq('partner_id', user.id);
         }
         return supabase
-          .from('partner_products')
+          .from('partner_products_marocsoleil')
           .insert([{ ...p, created_at: new Date().toISOString() }])
           .select()
           .single();

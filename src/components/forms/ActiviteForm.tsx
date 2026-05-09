@@ -68,11 +68,11 @@ const ActiviteForm: React.FC<ActiviteFormProps> = ({ activite, onClose, onSucces
       };
 
       if (activite?.id) {
-        const { error } = await supabase.from('activites_touristiques').update(dataToSave).eq('id', activite.id);
+        const { error } = await supabase.from('activites_touristiques_marocsoleil').update(dataToSave).eq('id', activite.id);
         if (error) throw error;
         toast.success('Activité modifiée');
       } else {
-        const { error } = await supabase.from('activites_touristiques').insert([dataToSave]);
+        const { error } = await supabase.from('activites_touristiques_marocsoleil').insert([dataToSave]);
         if (error) throw error;
         toast.success('Activité créée');
       }

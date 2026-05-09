@@ -159,7 +159,7 @@ const BookingsManagement: React.FC = () => {
       console.log('[BookingsManagement] Exécution de la requête Supabase...');
       // Essayer d'abord avec la relation, puis sans si ça échoue
       let { data, error } = await supabase
-        .from('bookings')
+        .from('bookings_marocsoleil')
         .select('*')
         .order('created_at', { ascending: false });
       
@@ -167,7 +167,7 @@ const BookingsManagement: React.FC = () => {
       if (error && error.code === 'PGRST116') {
         console.warn('[BookingsManagement] Relation non disponible, réessai sans relation...');
         const retry = await supabase
-          .from('bookings')
+          .from('bookings_marocsoleil')
           .select('*')
           .order('created_at', { ascending: false });
         data = retry.data;
@@ -181,7 +181,7 @@ const BookingsManagement: React.FC = () => {
         
         // Essayer de charger seulement les champs de base
         const retry = await supabase
-          .from('bookings')
+          .from('bookings_marocsoleil')
           .select('id, created_at, start_date, end_date, total_amount, status, client_id, service_id, service_type')
           .order('created_at', { ascending: false })
           .limit(100);
@@ -222,7 +222,7 @@ const BookingsManagement: React.FC = () => {
           const clientIds = [...new Set(data.map((b: any) => b.client_id).filter(Boolean))];
           if (clientIds.length > 0) {
             const { data: clientsData } = await supabase
-              .from('profiles')
+              .from('profiles_marocsoleil')
               .select('id, first_name, last_name, email, phone, company_name')
               .in('id', clientIds);
             
@@ -343,7 +343,7 @@ const BookingsManagement: React.FC = () => {
         {
           event: '*',
           schema: 'public',
-          table: 'bookings'
+          table: 'bookings_marocsoleil'
         },
         (payload: any) => {
           console.log('[BookingsManagement] Événement en temps réel reçu:', payload.eventType);
@@ -390,7 +390,7 @@ const BookingsManagement: React.FC = () => {
       setIsDeleting(true);
       
       const { error } = await supabase
-        .from('bookings')
+        .from('bookings_marocsoleil')
         .delete()
         .eq('id', deletingBooking.id);
 
@@ -411,7 +411,7 @@ const BookingsManagement: React.FC = () => {
   const updateStatus = useCallback(async (bookingId: string, newStatus: string) => {
     try {
       const { error } = await supabase
-        .from('bookings')
+        .from('bookings_marocsoleil')
         .update({ status: newStatus })
         .eq('id', bookingId);
 

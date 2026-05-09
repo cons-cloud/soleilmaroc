@@ -25,7 +25,7 @@ const VillasManagement: React.FC = () => {
         {
           event: '*',
           schema: 'public',
-          table: 'villas'
+          table: 'villas_marocsoleil'
         },
         () => {
           loadVillas();
@@ -41,7 +41,7 @@ const VillasManagement: React.FC = () => {
   const loadVillas = async () => {
     try {
       const { data, error } = await supabase
-        .from('villas')
+        .from('villas_marocsoleil')
         .select('*')
         .order('created_at', { ascending: false });
       if (error) throw error;
@@ -72,7 +72,7 @@ const VillasManagement: React.FC = () => {
   const handleDeleteConfirm = async () => {
     if (!villaToDelete) return;
     try {
-      const { error } = await supabase.from('villas').delete().eq('id', villaToDelete.id);
+      const { error } = await supabase.from('villas_marocsoleil').delete().eq('id', villaToDelete.id);
       if (error) throw error;
       toast.success('Villa supprimée');
       setShowConfirm(false);

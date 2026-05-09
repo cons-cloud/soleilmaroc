@@ -33,7 +33,7 @@ const Evenements = () => {
     try {
       setIsLoading(true);
       const { data, error } = await supabase
-        .from('evenements')
+        .from('evenements_marocsoleil')
         .select('*')
         .eq('available', true)
         .order('date_debut', { ascending: true });

@@ -86,14 +86,14 @@ const HotelForm: React.FC<HotelFormProps> = ({ hotel, onClose, onSuccess }) => {
 
       if (hotel?.id) {
         const { error } = await supabase
-          .from('hotels')
+          .from('hotels_marocsoleil')
           .update(dataToSave)
           .eq('id', hotel.id);
         if (error) throw error;
         toast.success('Hôtel modifié avec succès');
       } else {
         const { error } = await supabase
-          .from('hotels')
+          .from('hotels_marocsoleil')
           .insert([dataToSave]);
         if (error) throw error;
         toast.success('Hôtel créé avec succès');

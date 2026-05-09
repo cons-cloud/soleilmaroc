@@ -124,7 +124,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, role }) => 
       if (role === 'admin') {
         // Recherche des utilisateurs
         const { data: users, error } = await supabase
-          .from('profiles')
+          .from('profiles_marocsoleil')
           .select('id, email, company_name, role')
           .or(`email.ilike.%${searchTerm}%,company_name.ilike.%${searchTerm}%`)
           .limit(5);

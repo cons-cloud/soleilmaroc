@@ -53,13 +53,13 @@ const AdminDashboard: React.FC = () => {
         { count: eventsCount },
         { count: announcementsCount }
       ] = await Promise.all([
-        supabase.from('profiles').select('*', { count: 'exact', head: true }),
-        supabase.from('bookings').select('*', { count: 'exact', head: true }),
-        supabase.from('bookings').select('*', { count: 'exact', head: true }).eq('status', 'pending'),
-        supabase.from('payments').select('amount').eq('status', 'paid'),
-        supabase.from('services').select('*', { count: 'exact', head: true }).eq('available', true),
-        supabase.from('evenements').select('*', { count: 'exact', head: true }),
-        supabase.from('annonces').select('*', { count: 'exact', head: true })
+        supabase.from('profiles_marocsoleil').select('*', { count: 'exact', head: true }),
+        supabase.from('bookings_marocsoleil').select('*', { count: 'exact', head: true }),
+        supabase.from('bookings_marocsoleil').select('*', { count: 'exact', head: true }).eq('status', 'pending'),
+        supabase.from('payments_marocsoleil').select('amount').eq('status', 'paid'),
+        supabase.from('services_marocsoleil').select('*', { count: 'exact', head: true }).eq('available', true),
+        supabase.from('evenements_marocsoleil').select('*', { count: 'exact', head: true }),
+        supabase.from('annonces_marocsoleil').select('*', { count: 'exact', head: true })
       ]);
 
       const totalRevenue = paymentsData?.reduce((sum, payment: any) => sum + (payment.amount || 0), 0) || 0;
@@ -82,7 +82,7 @@ const AdminDashboard: React.FC = () => {
     queryKey: ['admin-recent-bookings'],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('bookings')
+        .from('bookings_marocsoleil')
         .select('*')
         .order('created_at', { ascending: false })
         .limit(5);
@@ -104,7 +104,7 @@ const AdminDashboard: React.FC = () => {
   // REAL-TIME SYNCRONIZATION
   // Écouter les changements sur les tables clés et rafraîchir les queries
   useRealtimeSubscription({
-    table: 'bookings',
+    table: 'bookings_marocsoleil',
     callback: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-stats'] });
       queryClient.invalidateQueries({ queryKey: ['admin-recent-bookings'] });
@@ -112,35 +112,35 @@ const AdminDashboard: React.FC = () => {
   });
 
   useRealtimeSubscription({
-    table: 'payments',
+    table: 'payments_marocsoleil',
     callback: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-stats'] });
     }
   });
 
   useRealtimeSubscription({
-    table: 'profiles',
+    table: 'profiles_marocsoleil',
     callback: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-stats'] });
     }
   });
 
   useRealtimeSubscription({
-    table: 'services',
+    table: 'services_marocsoleil',
     callback: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-stats'] });
     }
   });
 
   useRealtimeSubscription({
-    table: 'evenements',
+    table: 'evenements_marocsoleil',
     callback: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-stats'] });
     }
   });
 
   useRealtimeSubscription({
-    table: 'annonces',
+    table: 'annonces_marocsoleil',
     callback: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-stats'] });
     }
@@ -572,7 +572,7 @@ const EvenementsList: React.FC = () => {
       try {
         setLoading(true);
         const { data, error } = await supabase
-          .from('evenements')
+          .from('evenements_marocsoleil')
           .select('*')
           .order('start_date', { ascending: false });
           
@@ -600,7 +600,7 @@ const EvenementsList: React.FC = () => {
     if (window.confirm('Êtes-vous sûr de vouloir supprimer cet événement ?')) {
       try {
         const { error } = await supabase
-          .from('evenements')
+          .from('evenements_marocsoleil')
           .delete()
           .eq('id', id);
           
@@ -749,7 +749,7 @@ const AnnoncesList: React.FC = () => {
       try {
         setLoading(true);
         const { data, error } = await supabase
-          .from('annonces')
+          .from('annonces_marocsoleil')
           .select('*')
           .order('created_at', { ascending: false });
           
@@ -778,7 +778,7 @@ const AnnoncesList: React.FC = () => {
     if (window.confirm('Êtes-vous sûr de vouloir supprimer cette annonce ?')) {
       try {
         const { error } = await supabase
-          .from('annonces')
+          .from('annonces_marocsoleil')
           .delete()
           .eq('id', id);
           
@@ -949,7 +949,7 @@ const SiteSettingsForm: React.FC = () => {
       try {
         setLoading(true);
         const { data, error } = await supabase
-          .from('site_settings')
+          .from('site_settings_marocsoleil')
           .select('*')
           .single();
           
@@ -986,7 +986,7 @@ const SiteSettingsForm: React.FC = () => {
       setSaving(true);
       
       const { error } = await supabase
-        .from('site_settings')
+        .from('site_settings_marocsoleil')
         .upsert({
           id: 1, // ID fixe car on n'a qu'une seule ligne de paramètres
           ...settings,

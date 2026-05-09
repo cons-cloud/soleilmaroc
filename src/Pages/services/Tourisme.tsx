@@ -104,7 +104,7 @@ const Tourisme = () => {
       
       // 1. Charger les circuits touristiques
       const { data: circuitsData = [], error: circuitsError } = await supabase
-        .from('circuits_touristiques')
+        .from('circuits_touristiques_marocsoleil')
         .select('*')
         .eq('available', true)
         .order('created_at', { ascending: false });
@@ -118,7 +118,7 @@ const Tourisme = () => {
       let partnerCircuits: any[] = [];
       try {
         const { data, error: partnerError } = await supabase
-          .from('partner_products')
+          .from('partner_products_marocsoleil')
           .select('*')
           .eq('available', true)
           .eq('product_type', 'circuit')

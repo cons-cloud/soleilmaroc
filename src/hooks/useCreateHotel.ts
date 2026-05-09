@@ -36,7 +36,7 @@ export const useCreateHotel = () => {
       };
 
       const { data, error: insertError } = await supabase
-        .from('hotels')
+        .from('hotels_marocsoleil')
         .insert(hotelToInsert)
         .select()
         .single();

@@ -2,7 +2,7 @@ import { supabase } from './supabase';
 
 export const uploadImage = async (
   file: File,
-  bucket: string = 'services',
+  bucket: string = 'services_marocsoleil',
   folder?: string
 ): Promise<string> => {
   try {
@@ -32,7 +32,7 @@ export const uploadImage = async (
 
 export const uploadMultipleImages = async (
   files: File[],
-  bucket: string = 'services',
+  bucket: string = 'services_marocsoleil',
   folder?: string
 ): Promise<string[]> => {
   try {
@@ -44,7 +44,7 @@ export const uploadMultipleImages = async (
   }
 };
 
-export const deleteImage = async (url: string, bucket: string = 'services'): Promise<void> => {
+export const deleteImage = async (url: string, bucket: string = 'services_marocsoleil'): Promise<void> => {
   try {
     const urlParts = url.split('/');
     const filePath = urlParts.slice(urlParts.indexOf(bucket) + 1).join('/');

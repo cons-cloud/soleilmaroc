@@ -123,7 +123,7 @@ const CircuitBookingForm: React.FC<CircuitBookingFormProps> = ({ circuit, onClos
 
       // 1. Créer la réservation dans Supabase
       const { data: booking, error: bookingError } = await supabase
-        .from('bookings')
+        .from('bookings_marocsoleil')
         .insert({
           client_id: user.id, // 🔑 IMPORTANT : Lier la réservation au client (cohérent avec ServiceReservation/Payment)
           circuit_id: circuit.id,
@@ -179,13 +179,13 @@ const CircuitBookingForm: React.FC<CircuitBookingFormProps> = ({ circuit, onClos
       // 4. Mettre à jour le statut de la réservation
       if (paymentIntent.status === 'succeeded') {
         await supabase
-          .from('bookings')
+          .from('bookings_marocsoleil')
           .update({ payment_status: 'confirmed' })
           .eq('id', booking.id);
 
         // 5. Créer l'enregistrement de paiement
         const { data: paymentData } = await supabase
-          .from('payments')
+          .from('payments_marocsoleil')
           .insert({
             booking_id: booking.id,
             amount: totalPrice,

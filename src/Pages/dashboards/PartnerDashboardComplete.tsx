@@ -20,7 +20,7 @@ const PartnerDashboardComplete: React.FC = () => {
     setLoading(true);
     try {
       const { data, error } = await supabase
-        .from('partner_products')
+        .from('partner_products_marocsoleil')
         .select('*')
         .eq('partner_id', user.id)
         .order('created_at', { ascending: false });
@@ -64,7 +64,7 @@ const PartnerDashboardComplete: React.FC = () => {
     if (!user) return;
     if (!confirm('Supprimer ce produit ?')) return;
     try {
-      const { error } = await supabase.from('partner_products').delete().eq('id', productId).eq('partner_id', user.id);
+      const { error } = await supabase.from('partner_products_marocsoleil').delete().eq('id', productId).eq('partner_id', user.id);
       if (error) throw error;
       toast.success('Produit supprimé');
       loadDashboardData();

@@ -77,14 +77,14 @@ const AppartementForm: React.FC<AppartementFormProps> = ({ appartement, onClose,
 
       if (appartement?.id) {
         const { error } = await supabase
-          .from('appartements')
+          .from('appartements_marocsoleil')
           .update(dataToSave)
           .eq('id', appartement.id);
         if (error) throw error;
         toast.success('Appartement modifié avec succès');
       } else {
         const { error } = await supabase
-          .from('appartements')
+          .from('appartements_marocsoleil')
           .insert([dataToSave]);
         if (error) throw error;
         toast.success('Appartement créé avec succès');

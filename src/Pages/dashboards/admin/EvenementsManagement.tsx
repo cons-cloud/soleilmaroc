@@ -26,7 +26,7 @@ const EvenementsManagement: React.FC = () => {
         {
           event: '*',
           schema: 'public',
-          table: 'evenements'
+          table: 'evenements_marocsoleil'
         },
         () => {
           loadItems();
@@ -43,7 +43,7 @@ const EvenementsManagement: React.FC = () => {
     try {
       console.log('Chargement des événements...');
       const { data, error, status, statusText } = await supabase
-        .from('evenements')
+        .from('evenements_marocsoleil')
         .select('*')
         .order('created_at', { ascending: false });
       
@@ -86,7 +86,7 @@ const EvenementsManagement: React.FC = () => {
   const handleDeleteConfirm = async () => {
     if (!evenementToDelete) return;
     try {
-      const { error } = await supabase.from('evenements').delete().eq('id', evenementToDelete.id);
+      const { error } = await supabase.from('evenements_marocsoleil').delete().eq('id', evenementToDelete.id);
       if (error) throw error;
       toast.success('Événement supprimé');
       setShowConfirm(false);

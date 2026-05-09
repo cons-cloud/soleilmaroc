@@ -49,7 +49,7 @@ const PartnerProductsManagement: React.FC = () => {
         {
           event: '*',
           schema: 'public',
-          table: 'partner_products'
+          table: 'partner_products_marocsoleil'
         },
         () => {
           loadProducts();
@@ -66,7 +66,7 @@ const PartnerProductsManagement: React.FC = () => {
     try {
       setLoading(true);
       const { data, error } = await supabase
-        .from('partner_products')
+        .from('partner_products_marocsoleil')
         .select(`
           *,
           partner:profiles!partner_id(company_name, email, phone)
@@ -86,7 +86,7 @@ const PartnerProductsManagement: React.FC = () => {
   const toggleAvailability = async (productId: string, currentStatus: boolean) => {
     try {
       const { error } = await supabase
-        .from('partner_products')
+        .from('partner_products_marocsoleil')
         .update({ available: !currentStatus })
         .eq('id', productId);
 
@@ -105,7 +105,7 @@ const PartnerProductsManagement: React.FC = () => {
 
     try {
       const { error } = await supabase
-        .from('partner_products')
+        .from('partner_products_marocsoleil')
         .delete()
         .eq('id', productId);
 

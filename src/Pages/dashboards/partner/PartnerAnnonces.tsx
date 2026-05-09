@@ -69,7 +69,7 @@ const PartnerAnnonces = () => {
           {
             event: '*',
             schema: 'public',
-            table: 'annonces',
+            table: 'annonces_marocsoleil',
             filter: `partner_id=eq.${user.id}`
           },
           () => {
@@ -88,7 +88,7 @@ const PartnerAnnonces = () => {
     try {
       setLoading(true);
       const { data, error } = await supabase
-        .from('annonces')
+        .from('annonces_marocsoleil')
         .select('*')
         .eq('partner_id', user?.id)
         .order('created_at', { ascending: false });
@@ -97,7 +97,7 @@ const PartnerAnnonces = () => {
         console.error('Erreur annonces:', error);
         // Essayer sans le filtre is_partner_annonce si la colonne n'existe pas
         const { data: fallbackData, error: fallbackError } = await supabase
-          .from('annonces')
+          .from('annonces_marocsoleil')
           .select('*')
           .eq('partner_id', user?.id)
           .order('created_at', { ascending: false });
@@ -131,7 +131,7 @@ const PartnerAnnonces = () => {
 
       if (selectedAnnonce) {
         const { error } = await supabase
-          .from('annonces')
+          .from('annonces_marocsoleil')
           .update(annonceData)
           .eq('id', selectedAnnonce.id);
 
@@ -139,7 +139,7 @@ const PartnerAnnonces = () => {
         toast.success('Annonce modifiée avec succès');
       } else {
         const { error } = await supabase
-          .from('annonces')
+          .from('annonces_marocsoleil')
           .insert([annonceData]);
 
         if (error) throw error;
@@ -177,7 +177,7 @@ const PartnerAnnonces = () => {
 
     try {
       const { error } = await supabase
-        .from('annonces')
+        .from('annonces_marocsoleil')
         .delete()
         .eq('id', id);
 
@@ -193,7 +193,7 @@ const PartnerAnnonces = () => {
   const toggleAvailability = async (annonce: Annonce) => {
     try {
       const { error } = await supabase
-        .from('annonces')
+        .from('annonces_marocsoleil')
         .update({ available: !annonce.available })
         .eq('id', annonce.id);
 

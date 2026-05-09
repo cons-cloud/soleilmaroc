@@ -27,7 +27,7 @@ const BookingsList: React.FC = () => {
           {
             event: '*',
             schema: 'public',
-            table: 'bookings',
+            table: 'bookings_marocsoleil',
             filter: `partner_id=eq.${user.id}`
           },
           () => {

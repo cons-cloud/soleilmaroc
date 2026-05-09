@@ -25,7 +25,7 @@ const ProductDetail: React.FC = () => {
         // Cette page sert de "pont" : si un jour on route vers /product/:id,
         // on redirige vers la page détail existante (hotels/villas/...).
         const { data, error } = await supabase
-          .from('partner_products')
+          .from('partner_products_marocsoleil')
           .select('id, product_type, title, name, description, city')
           .eq('id', id)
           .maybeSingle();

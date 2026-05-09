@@ -77,7 +77,7 @@ const ClientProfileComponent = () => {
     
     try {
       const { error } = await supabase
-        .from('profiles')
+        .from('profiles_marocsoleil')
         .update({
           first_name: formData.first_name,
           last_name: formData.last_name,

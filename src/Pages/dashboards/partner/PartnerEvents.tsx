@@ -70,7 +70,7 @@ const PartnerEvents = () => {
           {
             event: '*',
             schema: 'public',
-            table: 'evenements',
+            table: 'evenements_marocsoleil',
             filter: `partner_id=eq.${user.id}`
           },
           () => {
@@ -107,7 +107,7 @@ const PartnerEvents = () => {
     try {
       setLoading(true);
       const { data, error } = await supabase
-        .from('evenements')
+        .from('evenements_marocsoleil')
         .select('*')
         .eq('partner_id', user?.id)
         .order('event_date', { ascending: false });
@@ -116,7 +116,7 @@ const PartnerEvents = () => {
         console.error('Erreur événements:', error);
         // Essayer sans le filtre is_partner_event si la colonne n'existe pas
         const { data: fallbackData, error: fallbackError } = await supabase
-          .from('evenements')
+          .from('evenements_marocsoleil')
           .select('*')
           .eq('partner_id', user?.id)
           .order('event_date', { ascending: false });
@@ -165,7 +165,7 @@ const PartnerEvents = () => {
 
       if (selectedEvent) {
         const { error } = await supabase
-          .from('evenements')
+          .from('evenements_marocsoleil')
           .update(eventData)
           .eq('id', selectedEvent.id);
 
@@ -173,7 +173,7 @@ const PartnerEvents = () => {
         toast.success('Événement modifié avec succès');
       } else {
         const { error } = await supabase
-          .from('evenements')
+          .from('evenements_marocsoleil')
           .insert([eventData]);
 
         if (error) throw error;
@@ -210,7 +210,7 @@ const PartnerEvents = () => {
 
     try {
       const { error } = await supabase
-        .from('evenements')
+        .from('evenements_marocsoleil')
         .delete()
         .eq('id', id);
 
@@ -226,7 +226,7 @@ const PartnerEvents = () => {
   const toggleAvailability = async (event: Event) => {
     try {
       const { error } = await supabase
-        .from('evenements')
+        .from('evenements_marocsoleil')
         .update({ available: !event.available })
         .eq('id', event.id);
 

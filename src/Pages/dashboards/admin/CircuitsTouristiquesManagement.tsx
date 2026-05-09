@@ -25,7 +25,7 @@ const CircuitsTouristiquesManagement: React.FC = () => {
         {
           event: '*',
           schema: 'public',
-          table: 'circuits_touristiques'
+          table: 'circuits_touristiques_marocsoleil'
         },
         () => {
           loadItems();
@@ -41,7 +41,7 @@ const CircuitsTouristiquesManagement: React.FC = () => {
   const loadItems = async () => {
     try {
       const { data, error } = await supabase
-        .from('circuits_touristiques')
+        .from('circuits_touristiques_marocsoleil')
         .select('*')
         .order('created_at', { ascending: false });
       if (error) throw error;
@@ -72,7 +72,7 @@ const CircuitsTouristiquesManagement: React.FC = () => {
   const handleDeleteConfirm = async () => {
     if (!circuitToDelete) return;
     try {
-      const { error } = await supabase.from('circuits_touristiques').delete().eq('id', circuitToDelete.id);
+      const { error } = await supabase.from('circuits_touristiques_marocsoleil').delete().eq('id', circuitToDelete.id);
       if (error) throw error;
       toast.success('Circuit supprimé');
       setShowConfirm(false);

@@ -39,7 +39,7 @@ const PartnerProfile = () => {
 
     try {
       const { error } = await supabase
-        .from('profiles')
+        .from('profiles_marocsoleil')
         .update({
           company_name: formData.company_name,
           phone: formData.phone,
