@@ -3,7 +3,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { FiArrowRight, FiChevronLeft, FiChevronRight } from 'react-icons/fi';
 import Hero from "../components/Hero";
 import CallModal from "../components/CallModal";
-import { Outlet } from 'react-router-dom';
+import { Link, Outlet } from 'react-router-dom';
+import { ROUTES } from '../config/routes';
 
 interface Service {
   title: string;
@@ -32,31 +33,31 @@ const Home: React.FC<HomeProps> = ({ onOpenBooking }) => {
       title: "Tourisme & Excursions",
       description: "Découvrez le Maroc avec nos visites guidées et activités touristiques.",
       image: "https://images.unsplash.com/photo-1501785888041-af3ef285b470?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1470&q=80",
-      link: "/services/tourisme"
+      link: ROUTES.TOURISM
     },
     {
       title: "Location de voitures",
       description: "Trouvez la voiture idéale pour vos déplacements à travers le Maroc.",
       image: "https://images.unsplash.com/photo-1489824904134-891ab64532f1?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1631&q=80",
-      link: "/services/voitures"
+      link: ROUTES.CARS
     },
     {
       title: "Appartements",
       description: "Découvrez nos appartements et locations de vacances sélectionnés avec soin.",
       image: "https://images.unsplash.com/photo-1566073771259-6a8506099945?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1470&q=80",
-      link: "/services/appartements"
+      link: ROUTES.APARTMENTS
     },
     {
       title: "Villas",
       description: "Profitez de nos villas de luxe pour des vacances inoubliables au Maroc.",
       image: "https://images.unsplash.com/photo-1518780664697-55e3ad937233?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1465&q=80",
-      link: "/services/villas"
+      link: ROUTES.VILLAS
     },
     {
       title: "Hôtels",
       description: "Découvrez nos hôtels sélectionnés pour votre confort et votre détente.",
       image: "https://images.unsplash.com/photo-1520250497591-112f2f40a3f4?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1470&q=80",
-      link: "/services/hotels"
+      link: ROUTES.HOTELS
     }
   ];
 
@@ -223,12 +224,12 @@ const Home: React.FC<HomeProps> = ({ onOpenBooking }) => {
                 <div className="p-6">
                   <h3 className="text-xl font-bold mb-2">{service.title}</h3>
                   <p className="text-gray-600 mb-4">{service.description}</p>
-                  <a 
-                    href={service.link}
+                  <Link 
+                    to={service.link}
                     className="text-primary font-medium hover:underline inline-flex items-center"
                   >
                     En savoir plus <FiArrowRight className="ml-1" />
-                  </a>
+                  </Link>
                 </div>
               </motion.div>
             ))}
@@ -268,12 +269,12 @@ const Home: React.FC<HomeProps> = ({ onOpenBooking }) => {
                       <span className="text-sm font-medium text-primary">{event.location}</span>
                     </div>
                     <h3 className="text-xl font-bold text-gray-900 mb-4">{event.title}</h3>
-                    <a 
-                      href="/evenements"
+                    <Link 
+                      to={ROUTES.EVENTS}
                       className="inline-flex items-center text-primary font-medium hover:underline"
                     >
                       Voir tous les événements <FiArrowRight className="ml-2" />
-                    </a>
+                    </Link>
                   </div>
                 </motion.div>
               ))
@@ -329,12 +330,12 @@ const Home: React.FC<HomeProps> = ({ onOpenBooking }) => {
           </div>
 
           <div className="text-center mt-12">
-            <a 
-              href="/apropos"
+            <Link 
+              to={ROUTES.ABOUT}
               className="inline-flex items-center px-8 py-3 bg-primary text-black font-medium rounded-lg hover:bg-primary/90 transition-colors"
             >
               En savoir plus sur nous <FiArrowRight className="ml-2" />
-            </a>
+            </Link>
           </div>
         </div>
       </section>
@@ -347,12 +348,12 @@ const Home: React.FC<HomeProps> = ({ onOpenBooking }) => {
             Notre équipe est à votre disposition pour créer le voyage de vos rêves au Maroc
           </p>
           <div className="flex flex-col sm:flex-row justify-center gap-4">
-            <a 
-              href="/contact"
+            <Link 
+              to={ROUTES.CONTACT}
               className="px-8 py-3 bg-black/30 text-primary font-medium rounded-lg hover:bg-gray-100 transition-colors"
             >
               Contactez-nous
-            </a>
+            </Link>
             <button 
               onClick={() => setShowCallModal(true)}
               className="px-8 py-3 border-2 border-white text-white font-medium rounded-lg hover:bg-white/10 transition-colors"

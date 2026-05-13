@@ -50,7 +50,7 @@ const CircuitForm: React.FC<CircuitFormProps> = ({ circuit, onClose, onSuccess }
 
     setUploadingImages(true);
     try {
-      const uploadedUrls = await uploadMultipleImages(Array.from(files), 'circuits');
+      const uploadedUrls = await uploadMultipleImages(Array.from(files), 'circuits_marocsoleil');
       setImages(prev => [...prev, ...uploadedUrls]);
       toast.success(`${uploadedUrls.length} photo(s) ajoutée(s)`);
     } catch (error) {

@@ -25,7 +25,7 @@ const ImmobilierManagement: React.FC = () => {
         {
           event: '*',
           schema: 'public',
-          table: 'immobilier'
+          table: 'immobilier_marocsoleil'
         },
         () => {
           loadItems();
@@ -41,7 +41,7 @@ const ImmobilierManagement: React.FC = () => {
   const loadItems = async () => {
     try {
       const { data, error } = await supabase
-        .from('immobilier')
+        .from('immobilier_marocsoleil')
         .select('*')
         .order('created_at', { ascending: false });
       if (error) throw error;
@@ -72,7 +72,7 @@ const ImmobilierManagement: React.FC = () => {
   const handleDeleteConfirm = async () => {
     if (!itemToDelete) return;
     try {
-      const { error } = await supabase.from('immobilier').delete().eq('id', itemToDelete.id);
+      const { error } = await supabase.from('immobilier_marocsoleil').delete().eq('id', itemToDelete.id);
       if (error) throw error;
       toast.success('Bien immobilier supprimé');
       setShowConfirm(false);

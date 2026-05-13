@@ -56,7 +56,7 @@ const Guides = () => {
     try {
       setIsLoading(true);
       const { data, error } = await supabase
-        .from('guides_touristiques')
+        .from('guides_touristiques_marocsoleil')
         .select('*')
         .eq('available', true)
         .order('rating', { ascending: false })

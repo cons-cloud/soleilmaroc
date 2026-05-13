@@ -59,7 +59,7 @@ const ServicesManagement: React.FC = () => {
     try {
       setLoading(true);
       const { data, error } = await supabase
-        .from('service_categories')
+        .from('categories_marocsoleil')
         .select('*')
         .order('name');
 

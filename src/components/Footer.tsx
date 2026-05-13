@@ -122,8 +122,9 @@ const Footer = () => {
                 <li><Link to="/" onClick={handleLinkClick} className="text-gray-300 hover:text-primary transition-colors">Accueil</Link></li>
                 <li><Link to="/services" onClick={handleLinkClick} className="text-gray-300 hover:text-primary transition-colors">Nos Services</Link></li>
                 <li><Link to="/evenements" onClick={handleLinkClick} className="text-gray-300 hover:text-primary transition-colors">Événements</Link></li>
-                <li><Link to="/services/tourisme" onClick={handleLinkClick} className="text-gray-300 hover:text-primary transition-colors">Circuits Touristiques</Link></li>
-                <li><Link to="/services/appartements" onClick={handleLinkClick} className="text-gray-300 hover:text-primary transition-colors">Hébergements</Link></li>
+                <li><Link to="/tourisme" onClick={handleLinkClick} className="text-gray-300 hover:text-primary transition-colors">Circuits Touristiques</Link></li>
+                <li><Link to="/appartements" onClick={handleLinkClick} className="text-gray-300 hover:text-primary transition-colors">Hébergements</Link></li>
+                <li><Link to="/restaurants" onClick={handleLinkClick} className="text-gray-300 hover:text-primary transition-colors">Restaurants</Link></li>
                 <li><Link to="/annonces" onClick={handleLinkClick} className="text-gray-300 hover:text-primary transition-colors">Annonces</Link></li>
               </ul>
             </div>

@@ -65,7 +65,7 @@ const ServiceForm: React.FC = () => {
   const loadCategories = async () => {
     try {
       const { data, error } = await supabase
-        .from('service_categories')
+        .from('categories_marocsoleil')
         .select('*')
         .order('name');
 
@@ -107,7 +107,7 @@ const ServiceForm: React.FC = () => {
     try {
       setUploading(true);
       const filesArray = Array.from(files);
-      const urls = await uploadMultipleImages(filesArray, 'services');
+      const urls = await uploadMultipleImages(filesArray, 'services_marocsoleil');
       
       setFormData(prev => ({
         ...prev,
@@ -125,7 +125,7 @@ const ServiceForm: React.FC = () => {
 
   const removeImage = async (url: string) => {
     try {
-      await deleteImage(url, 'services');
+      await deleteImage(url, 'services_marocsoleil');
       setFormData(prev => ({
         ...prev,
         images: prev.images.filter(img => img !== url),

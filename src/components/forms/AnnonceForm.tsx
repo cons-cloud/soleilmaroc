@@ -33,7 +33,7 @@ const AnnonceForm: React.FC<AnnonceFormProps> = ({ annonce, onClose, onSuccess }
 
     setUploadingImages(true);
     try {
-      const uploadedUrls = await uploadMultipleImages(Array.from(files), 'annonces');
+      const uploadedUrls = await uploadMultipleImages(Array.from(files), 'annonces_marocsoleil');
       setImages([...images, ...uploadedUrls]);
       toast.success(`${uploadedUrls.length} photo(s) ajoutée(s)`);
     } catch (error) {

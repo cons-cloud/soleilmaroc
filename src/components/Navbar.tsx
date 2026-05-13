@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
-import { useNavigate, Link, useLocation } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { ROUTES } from '../config/routes';
-import { Menu, X, ChevronDown, Compass, Car, Building2, Home, Hotel, UserPlus } from 'lucide-react';
+import { Menu, X, ChevronDown, Compass, Car, Building2, Home, Hotel, UserPlus, Utensils } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import UserMenu from './UserMenu';
 
@@ -19,19 +19,11 @@ const Navbar: React.FC<NavbarProps> = () => {
   const [isOpen, setIsOpen] = useState<boolean>(false);
   const [servicesOpen, setServicesOpen] = useState<boolean>(false);
   const location = useLocation();
-  const navigate = useNavigate();
   const { profile } = useAuth();
   const servicesRef = useRef<HTMLDivElement>(null);
   const servicesButtonRef = useRef<HTMLButtonElement>(null);
 
   const toggleMenu = (): void => setIsOpen(!isOpen);
-  
-  // Handle navigation for programmatic navigation if needed
-  const handleNavigation = (path: string) => {
-    navigate(path);
-    setIsOpen(false);
-    setServicesOpen(false);
-  };
   
   const toggleServices = (e: React.MouseEvent): void => {
     e.stopPropagation();
@@ -65,6 +57,7 @@ const Navbar: React.FC<NavbarProps> = () => {
     'Appartements': Building2,
     'Villas': Home,
     'Hôtels': Hotel,
+    'Restaurants': Utensils,
   };
 
   const serviceColors: { [key: string]: string } = {
@@ -73,10 +66,11 @@ const Navbar: React.FC<NavbarProps> = () => {
     'Appartements': 'from-orange-500 to-red-500',
     'Villas': 'from-green-500 to-emerald-500',
     'Hôtels': 'from-indigo-500 to-green-500',
+    'Restaurants': 'from-red-500 to-orange-500',
   };
 
   // Ordre fixe des sous‑menus pour desktop / mobile / tablette
-  const servicesOrder = ['Tourisme', 'Location de voitures', 'Appartements', 'Villas', 'Hôtels'];
+  const servicesOrder = ['Tourisme', 'Location de voitures', 'Appartements', 'Villas', 'Hôtels', 'Restaurants'];
   const orderSubmenu = (submenu?: Array<{ name: string; path: string }>) => {
     if (!submenu) return [];
     return submenu.slice().sort((a, b) => {
@@ -87,21 +81,22 @@ const Navbar: React.FC<NavbarProps> = () => {
   };
 
   const navLinks: NavLink[] = [
-    { name: 'Accueil', path: '/' },
+    { name: 'Accueil', path: ROUTES.HOME },
     {
       name: 'Services',
       submenu: [
-        { name: 'Tourisme', path: '/services/tourisme' },
-        { name: 'Location de voitures', path: '/services/voitures' },
-        { name: 'Appartements', path: '/services/appartements' },
-        { name: 'Villas', path: '/services/villas' },
-        { name: 'Hôtels', path: '/services/hotels' },
+        { name: 'Tourisme', path: ROUTES.TOURISM },
+        { name: 'Location de voitures', path: ROUTES.CARS },
+        { name: 'Appartements', path: ROUTES.APARTMENTS },
+        { name: 'Villas', path: ROUTES.VILLAS },
+        { name: 'Hôtels', path: ROUTES.HOTELS },
+        { name: 'Restaurants', path: ROUTES.RESTAURANTS },
       ],
     },
-    { name: 'Événements', path: '/evenements' },
-    { name: 'Annonces', path: '/annonces' },
-    { name: 'À propos', path: '/apropos' },
-    { name: 'Contact', path: '/contact' },
+    { name: 'Événements', path: ROUTES.EVENTS },
+    { name: 'Annonces', path: ROUTES.ANNOUNCEMENTS },
+    { name: 'À propos', path: ROUTES.ABOUT },
+    { name: 'Contact', path: ROUTES.CONTACT },
   ];
 
   return (
@@ -147,8 +142,6 @@ const Navbar: React.FC<NavbarProps> = () => {
                               <Link
                                 key={subItem.path}
                                 to={subItem.path}
-                                onPointerDown={() => { setIsOpen(false); setServicesOpen(false); }}
-                                onClick={() => { setIsOpen(false); setServicesOpen(false); }}
                                 className="group flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-200 hover:bg-white/10 transition-all duration-200 hover:shadow-lg hover:shadow-yellow-200/20"
                               >
                                 <div className={`flex items-center justify-center w-10 h-10 rounded-lg bg-linear-to-br ${gradientColor} shadow-lg group-hover:scale-110 group-hover:shadow-xl transition-transform duration-200`}>
@@ -260,11 +253,9 @@ const Navbar: React.FC<NavbarProps> = () => {
                           const Icon = serviceIcons[subItem.name];
                           const gradientColor = serviceColors[subItem.name];
                           return (
-                            <button
+                            <Link
                               key={subItem.path}
-                              type="button"
-                              onPointerDown={() => handleNavigation(subItem.path)}
-                              onClick={() => handleNavigation(subItem.path)}
+                              to={subItem.path}
                               className="group flex items-center gap-3 w-full px-3 py-2 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-all duration-200 text-left"
                             >
                               <div className={`flex items-center justify-center w-8 h-8 rounded-lg bg-gradient-to-br ${gradientColor} shadow-sm`}>
@@ -273,15 +264,15 @@ const Navbar: React.FC<NavbarProps> = () => {
                               <span className="group-hover:text-gray-900">
                                 {subItem.name}
                               </span>
-                            </button>
+                            </Link>
                           );
                         })}
                       </div>
                     )}
                   </div>
                 ) : (
-                  <button
-                    onClick={() => item.path && handleNavigation(item.path)}
+                  <Link
+                    to={item.path || '#'}
                     className={`block w-full text-left px-3 py-2 rounded-md text-base font-medium ${
                       location.pathname === item.path
                         ? 'text-primary bg-gray-50'
@@ -289,7 +280,7 @@ const Navbar: React.FC<NavbarProps> = () => {
                     }`}
                   >
                     {item.name}
-                  </button>
+                  </Link>
                 )}
               </div>
             ))}

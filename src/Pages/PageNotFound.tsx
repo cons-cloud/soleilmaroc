@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { Home, Search, Compass, ChevronRight } from 'lucide-react';
+import { Home, Compass, ChevronRight } from 'lucide-react';
 
 const PageNotFound = () => {
   return (

@@ -35,7 +35,7 @@ const HotelForm: React.FC<HotelFormProps> = ({ hotel, onClose, onSuccess }) => {
 
     setUploadingImages(true);
     try {
-      const uploadedUrls = await uploadMultipleImages(Array.from(files), 'services', 'hotels');
+      const uploadedUrls = await uploadMultipleImages(Array.from(files), 'hotels_marocsoleil');
       setImages([...images, ...uploadedUrls]);
       toast.success(`${uploadedUrls.length} photo(s) ajoutée(s)`);
     } catch (error) {
@@ -47,7 +47,7 @@ const HotelForm: React.FC<HotelFormProps> = ({ hotel, onClose, onSuccess }) => {
 
   const handleDeleteImage = async (imageUrl: string, index: number) => {
     try {
-      await deleteImage(imageUrl, 'services');
+      await deleteImage(imageUrl, 'hotels_marocsoleil');
       setImages(images.filter((_: string, i: number) => i !== index));
       toast.success('Photo supprimée');
     } catch (error) {

@@ -34,7 +34,7 @@ const ActiviteForm: React.FC<ActiviteFormProps> = ({ activite, onClose, onSucces
 
     setUploadingImages(true);
     try {
-      const uploadedUrls = await uploadMultipleImages(Array.from(files), 'activites');
+      const uploadedUrls = await uploadMultipleImages(Array.from(files), 'activites_marocsoleil');
       setImages([...images, ...uploadedUrls]);
       toast.success(`${uploadedUrls.length} photo(s) ajoutée(s)`);
     } catch (error) {

@@ -36,7 +36,7 @@ const EvenementForm: React.FC<EvenementFormProps> = ({ evenement, onClose, onSuc
 
     setUploadingImages(true);
     try {
-      const uploadedUrls = await uploadMultipleImages(Array.from(files), 'evenements');
+      const uploadedUrls = await uploadMultipleImages(Array.from(files), 'evenements_marocsoleil');
       setImages([...images, ...uploadedUrls]);
       toast.success(`${uploadedUrls.length} photo(s) ajoutée(s)`);
     } catch (error) {

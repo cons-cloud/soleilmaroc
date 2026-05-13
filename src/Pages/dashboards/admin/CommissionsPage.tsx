@@ -55,7 +55,7 @@ export const CommissionsPage: React.FC = () => {
     try {
       setLoading(true);
       const { data, error } = await supabase
-        .from('commission_reports')
+        .from('payments_marocsoleil')
         .select('*')
         .order('paid_at', { ascending: false });
 

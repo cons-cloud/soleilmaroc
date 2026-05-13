@@ -94,32 +94,6 @@ const ClientBookings = () => {
       const servicesMap = new Map();
 
       // Helper: mapping service_type -> partner_products.product_type
-      const mapToPartnerProductType = (serviceType: string) => {
-        switch (serviceType) {
-          case 'hotels':
-          case 'hotel':
-            return 'hotel';
-          case 'appartement':
-          case 'apartment':
-          case 'appartements':
-            return 'appartement';
-          case 'villa':
-          case 'villas':
-            return 'villa';
-          case 'voiture':
-          case 'car':
-          case 'voitures':
-          case 'cars':
-            return 'voiture';
-          case 'circuit':
-          case 'tourism':
-          case 'tour':
-          case 'circuits':
-            return 'circuit';
-          default:
-            return null;
-        }
-      };
       
       for (const [serviceType, bookings] of Object.entries(bookingsByType)) {
         const serviceIds = bookings
@@ -128,32 +102,41 @@ const ClientBookings = () => {
         
         if (serviceIds.length === 0) continue;
 
-        let tableName = 'services';
+        let tableName = 'services_marocsoleil';
         switch (serviceType) {
           case 'hotel':
           case 'hotels':
-            tableName = 'hotels';
+            tableName = 'hotels_marocsoleil';
             break;
           case 'appartement':
           case 'apartment':
           case 'appartements':
-            tableName = 'appartements';
+            tableName = 'appartements_marocsoleil';
             break;
           case 'villa':
           case 'villas':
-            tableName = 'villas';
+            tableName = 'villas_marocsoleil';
             break;
           case 'voiture':
           case 'car':
           case 'voitures':
           case 'cars':
-            tableName = 'locations_voitures';
+            tableName = 'locations_voitures_marocsoleil';
             break;
           case 'circuit':
           case 'tourism':
           case 'tour':
           case 'circuits':
-            tableName = 'circuits_touristiques';
+            tableName = 'circuits_touristiques_marocsoleil';
+            break;
+          case 'evenement':
+          case 'event':
+          case 'evenements':
+            tableName = 'evenements_marocsoleil';
+            break;
+          case 'annonce':
+          case 'annonces':
+            tableName = 'annonces_marocsoleil';
             break;
         }
 
@@ -182,13 +165,11 @@ const ClientBookings = () => {
           // Fallback: si certains ids ne sont pas trouvés (produits partenaires),
           // tenter de charger depuis partner_products.
           const missingIds = serviceIds.filter((id) => !servicesMap.has(id));
-          const partnerProductType = mapToPartnerProductType(serviceType);
-          if (missingIds.length > 0 && partnerProductType) {
+          if (missingIds.length > 0) {
             const { data: partnerProducts, error: partnerError } = await supabase
               .from('partner_products_marocsoleil')
               .select('*')
-              .in('id', missingIds)
-              .eq('product_type', partnerProductType);
+              .in('id', missingIds);
 
             if (partnerError) {
               // Non bloquant

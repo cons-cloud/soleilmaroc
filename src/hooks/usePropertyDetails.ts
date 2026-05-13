@@ -3,13 +3,14 @@ import { supabase } from '../lib/supabase';
 
 const getTableName = (type: string) => {
   switch (type) {
-    case 'hotel': return 'hotels';
-    case 'apartment': return 'appartements';
-    case 'villa': return 'villas';
-    case 'car': return 'locations_voitures';
+    case 'hotel': return 'hotels_marocsoleil';
+    case 'apartment': return 'appartements_marocsoleil';
+    case 'villa': return 'villas_marocsoleil';
+    case 'car': return 'voitures_marocsoleil';
     case 'tourism':
     case 'circuit':
-    case 'tour': return 'circuits_touristiques';
+    case 'tour': return 'circuits_marocsoleil';
+    case 'restaurant': return 'restaurants_marocsoleil';
     default: return 'services';
   }
 };
@@ -23,6 +24,7 @@ const getPartnerProductType = (type: string) => {
     case 'tourism':
     case 'circuit':
     case 'tour': return 'circuit';
+    case 'restaurant': return 'restaurant';
     default: return null;
   }
 };

@@ -105,14 +105,14 @@ export const SiteSettings: React.FC = () => {
     const filePath = `${path}/${fileName}`;
 
     const { error: uploadError } = await supabase.storage
-      .from('site-assets')
+      .from('site_assets_marocsoleil')
       .upload(filePath, file);
 
     if (uploadError) throw uploadError;
 
     const { data: { publicUrl } } = supabase
       .storage
-      .from('site-assets')
+      .from('site_assets_marocsoleil')
       .getPublicUrl(filePath);
 
     return publicUrl;

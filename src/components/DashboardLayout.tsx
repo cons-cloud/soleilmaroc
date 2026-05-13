@@ -20,7 +20,8 @@ import {
   Bell,
   X,
   LogOut,
-  Megaphone
+  Megaphone,
+  Utensils
 } from 'lucide-react';
 
 interface DashboardLayoutProps {
@@ -61,12 +62,14 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, role }) => 
         { name: 'Voitures', path: '/dashboard/admin/voitures', icon: Car },
         { name: 'Circuits', path: '/dashboard/admin/circuits', icon: Map },
         { name: 'Activités', path: '/dashboard/admin/activites', icon: Activity },
+        { name: 'Restaurants', path: '/dashboard/admin/restaurants', icon: Utensils },
         { name: 'Réservations', path: '/dashboard/admin/bookings', icon: Calendar },
         { name: 'Messages', path: '/dashboard/admin/messages', icon: MessageSquare },
         { name: 'Annonces', path: '/dashboard/admin/annonces', icon: Megaphone },
         { name: 'Paramètres', path: '/dashboard/admin/parametres', icon: Settings },
       ],
       partner: [
+        { name: 'Mes Produits', path: '/dashboard/partner/products', icon: Building },
         { name: 'Événements', path: '/dashboard/partner/evenements', icon: Activity },
         { name: 'Annonces', path: '/dashboard/partner/annonces', icon: Bell },
         { name: 'Profil', path: '/dashboard/partner/profil', icon: UserCheck },

@@ -92,6 +92,8 @@ const Villas = lazy(() => import("./Pages/services/Villas"));
 const Hotels = lazy(() => import("./Pages/services/Hotels"));
 const Guides = lazy(() => import("./Pages/services/Guides"));
 const Activites = lazy(() => import("./Pages/services/Activites"));
+const Restaurants = lazy(() => import("./Pages/services/Restaurants"));
+const RestaurantDetails = lazy(() => import("./Pages/services/RestaurantDetails"));
 const ServiceReservation = lazy(() => import("./Pages/services/ServiceReservation"));
 const Immobilier = lazy(() => import("./Pages/Immobilier"));
 
@@ -134,6 +136,7 @@ const ActivitesManagement = lazy(() => import("./Pages/dashboards/admin/Activite
 const EvenementsManagement = lazy(() => import("./Pages/dashboards/admin/EvenementsManagement"));
 const AnnoncesManagement = lazy(() => import("./Pages/dashboards/admin/AnnoncesManagement"));
 const GuidesManagement = lazy(() => import("./Pages/dashboards/admin/GuidesTouristiquesManagement"));
+const RestaurantsManagement = lazy(() => import("./Pages/dashboards/admin/RestaurantsManagement"));
 
 // Composant de chargement pour le Suspense (inline spinner pour éviter la dépendance circulaire)
 const LoadingFallback = () => (
@@ -303,20 +306,50 @@ function App() {
 
                   {/* Routes publiques avec navbar et footer */}
                   <Route element={<PublicLayout />}>
-                    <Route path={ROUTES.HOME} element={
-                      <Home onOpenBooking={() => {}} />
-                    } />
+                    <Route path={ROUTES.HOME} element={<Home onOpenBooking={() => {}} />} />
                     
-                    {/* Routes des services */}
+                    {/* Routes des services - Utilisation des chemins simplifiés root-level */}
                     <Route path={ROUTES.SERVICES} element={<Services />} />
-                    <Route path={ROUTES.TOURISM} element={<Tourisme />} />
-                    <Route path={ROUTES.CARS} element={<Voitures />} />
-                  <Route path={ROUTES.APARTMENTS} element={<Appartements />} />
-                  <Route path={ROUTES.VILLAS} element={<Villas />} />
-                  <Route path={ROUTES.HOTELS} element={<Hotels />} />
-                  <Route path={ROUTES.GUIDES} element={<Guides />} />
-                  <Route path={ROUTES.ACTIVITIES} element={<Activites />} />
-                  <Route path={ROUTES.EVENTS} element={<Evenements />} />
+
+                    <Route path={ROUTES.APARTMENTS}>
+                      <Route index element={<Appartements />} />
+                      <Route path=":id" element={<AppartementDetails />} />
+                      <Route path=":id/reserver" element={<ServiceReservation />} />
+                    </Route>
+
+                    <Route path={ROUTES.VILLAS}>
+                      <Route index element={<Villas />} />
+                      <Route path=":id" element={<VillaDetails />} />
+                      <Route path=":id/reserver" element={<ServiceReservation />} />
+                    </Route>
+
+                    <Route path={ROUTES.HOTELS}>
+                      <Route index element={<Hotels />} />
+                      <Route path=":id" element={<HotelDetails />} />
+                      <Route path=":id/reserver" element={<ServiceReservation />} />
+                    </Route>
+
+                    <Route path={ROUTES.CARS}>
+                      <Route index element={<Voitures />} />
+                      <Route path=":id" element={<VoitureDetails />} />
+                      <Route path=":id/reserver" element={<ServiceReservation />} />
+                    </Route>
+
+                    <Route path={ROUTES.TOURISM}>
+                      <Route index element={<Tourisme />} />
+                      <Route path=":id" element={<TourismeDetails />} />
+                      <Route path=":id/reserver" element={<ServiceReservation />} />
+                    </Route>
+
+                    <Route path={ROUTES.RESTAURANTS}>
+                      <Route index element={<Restaurants />} />
+                      <Route path=":id" element={<RestaurantDetails />} />
+                      <Route path=":id/reserver" element={<ServiceReservation />} />
+                    </Route>
+
+                    <Route path={ROUTES.GUIDES} element={<Guides />} />
+                    <Route path={ROUTES.ACTIVITIES} element={<Activites />} />
+                    <Route path={ROUTES.EVENTS} element={<Evenements />} />
                   
                   {/* Autres pages publiques */}
                   <Route path={ROUTES.REAL_ESTATE} element={<Immobilier />} />
@@ -324,40 +357,8 @@ function App() {
                   <Route path={ROUTES.ABOUT} element={<Apropos />} />
                   <Route path={ROUTES.CONTACT} element={<Contact />} />
                   <Route path={ROUTES.SEARCH} element={<Recherche />} />
-
-                    {/* Routes pour les propriétés */}
-                  <Route path="/appartements">
-                    <Route index element={<Appartements />} />
-                    <Route path=":id" element={<AppartementDetails />} />
-                    <Route path=":id/reserver" element={<ServiceReservation />} />
-                  </Route>
-  
-  <Route path="/villas">
-    <Route index element={<Villas />} />
-    <Route path=":id" element={<VillaDetails />} />
-    <Route path=":id/reserver" element={<ServiceReservation />} />
-  </Route>
-  
-  <Route path="/hotels">
-    <Route index element={<Hotels />} />
-    <Route path=":id" element={<HotelDetails />} />
-    <Route path=":id/reserver" element={<ServiceReservation />} />
-  </Route>
-  
-  <Route path="/voitures">
-    <Route index element={<Voitures />} />
-    <Route path=":id" element={<VoitureDetails />} />
-    <Route path=":id/reserver" element={<ServiceReservation />} />
-  </Route>
-  
-  <Route path="/tourisme">
-    <Route index element={<Tourisme />} />
-    <Route path=":id" element={<TourismeDetails />} />
-    <Route path=":id/reserver" element={<ServiceReservation />} />
-  </Route>
                   
                   <Route path="/ajouter-propriete" element={<AddProperty />} />
-
 
                   {/* Routes de paiement */}
                   <Route path=":type/:id/reserver" element={<ServiceReservation />} />
@@ -438,6 +439,7 @@ function App() {
                   } />
                   <Route path="guides" element={<GuidesManagement />} />
                   <Route path="activites" element={<ActivitesManagement />} />
+                  <Route path="restaurants" element={<RestaurantsManagement />} />
                   <Route path="messages" element={<MessagesManagement />} />
                   <Route path="parametres" element={<AdminSettings />} />
                   

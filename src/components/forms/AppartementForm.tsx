@@ -40,7 +40,7 @@ const AppartementForm: React.FC<AppartementFormProps> = ({ appartement, onClose,
 
     setUploadingImages(true);
     try {
-      const uploadedUrls = await uploadMultipleImages(Array.from(files), 'appartements');
+      const uploadedUrls = await uploadMultipleImages(Array.from(files), 'appartements_marocsoleil');
       setImages([...images, ...uploadedUrls]);
       toast.success(`${uploadedUrls.length} photo(s) ajoutée(s)`);
     } catch (error) {

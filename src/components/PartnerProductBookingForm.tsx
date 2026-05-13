@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { CardElement, useStripe, useElements } from '@stripe/react-stripe-js';
 import { supabase } from '../lib/supabase';
 import toast from 'react-hot-toast';
-import { X, Calendar, Users, MapPin, CreditCard, User, Mail, Phone, Loader } from 'lucide-react';
+import { X, Calendar, Users, MapPin, CreditCard, User, Mail, Phone, Loader, Clock } from 'lucide-react';
 
 interface PartnerProduct {
   id: string;
@@ -48,12 +48,16 @@ const PartnerProductBookingForm: React.FC<PartnerProductBookingFormProps> = ({
     dropoffLocation: product.city,
     // Pour circuits
     numberOfPeople: 1,
-    startDate: ''
+    startDate: '',
+    // Pour restaurants
+    reservationDate: '',
+    reservationTime: '',
   });
 
   const isAccommodation = ['appartement', 'villa', 'hotel', 'riad'].includes(product.product_type);
   const isCar = product.product_type === 'voiture';
   const isCircuit = product.product_type === 'circuit';
+  const isRestaurant = product.product_type === 'restaurant';
 
   // Calcul du nombre de nuits/jours
   const calculateNights = () => {
@@ -81,6 +85,8 @@ const PartnerProductBookingForm: React.FC<PartnerProductBookingFormProps> = ({
       const days = calculateDays();
       return product.price * days;
     } else if (isCircuit) {
+      return product.price * formData.numberOfPeople;
+    } else if (isRestaurant) {
       return product.price * formData.numberOfPeople;
     }
     return product.price;
@@ -116,6 +122,11 @@ const PartnerProductBookingForm: React.FC<PartnerProductBookingFormProps> = ({
     } else if (isCircuit) {
       if (!formData.startDate) {
         toast.error('Veuillez sélectionner la date de départ');
+        return false;
+      }
+    } else if (isRestaurant) {
+      if (!formData.reservationDate || !formData.reservationTime) {
+        toast.error('Veuillez sélectionner la date et l\'heure de réservation');
         return false;
       }
     }
@@ -162,6 +173,10 @@ const PartnerProductBookingForm: React.FC<PartnerProductBookingFormProps> = ({
         bookingData.dropoff_location = formData.dropoffLocation;
       } else if (isCircuit) {
         bookingData.start_date = formData.startDate;
+        bookingData.number_of_guests = formData.numberOfPeople;
+      } else if (isRestaurant) {
+        bookingData.start_date = formData.reservationDate;
+        bookingData.reservation_time = formData.reservationTime;
         bookingData.number_of_guests = formData.numberOfPeople;
       }
 
@@ -469,6 +484,56 @@ const PartnerProductBookingForm: React.FC<PartnerProductBookingFormProps> = ({
                 </>
               )}
 
+              {isRestaurant && (
+                <>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        <Calendar className="w-4 h-4 inline mr-2" />
+                        Date *
+                      </label>
+                      <input
+                        type="date"
+                        name="reservationDate"
+                        value={formData.reservationDate}
+                        onChange={handleInputChange}
+                        min={new Date().toISOString().split('T')[0]}
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        required
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        <Clock className="w-4 h-4 inline mr-2" />
+                        Heure *
+                      </label>
+                      <input
+                        type="time"
+                        name="reservationTime"
+                        value={formData.reservationTime}
+                        onChange={handleInputChange}
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        required
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      <Users className="w-4 h-4 inline mr-2" />
+                      Nombre de personnes
+                    </label>
+                    <input
+                      type="number"
+                      name="numberOfPeople"
+                      value={formData.numberOfPeople}
+                      onChange={handleInputChange}
+                      min="1"
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    />
+                  </div>
+                </>
+              )}
+
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Demandes spéciales (optionnel)
@@ -517,6 +582,12 @@ const PartnerProductBookingForm: React.FC<PartnerProductBookingFormProps> = ({
                   </div>
                 )}
                 {isCircuit && (
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Nombre de personnes:</span>
+                    <span className="font-medium">{formData.numberOfPeople}</span>
+                  </div>
+                )}
+                {isRestaurant && (
                   <div className="flex justify-between">
                     <span className="text-gray-600">Nombre de personnes:</span>
                     <span className="font-medium">{formData.numberOfPeople}</span>

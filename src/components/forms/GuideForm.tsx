@@ -36,7 +36,7 @@ const GuideForm: React.FC<GuideFormProps> = ({ guide, onClose, onSuccess }) => {
 
     setUploadingImages(true);
     try {
-      const uploadedUrls = await uploadMultipleImages(Array.from(files), 'guides');
+      const uploadedUrls = await uploadMultipleImages(Array.from(files), 'guides_marocsoleil');
       setImages([...images, ...uploadedUrls]);
       toast.success(`${uploadedUrls.length} photo(s) ajoutée(s)`);
     } catch (error) {

@@ -4,8 +4,9 @@ import { v4 as uuidv4 } from 'uuid';
 import { supabase } from '../../../lib/supabase';
 import { useAuth } from '../../../contexts/AuthContext';
 import toast from 'react-hot-toast';
+import { Plus, X, Upload, Utensils } from 'lucide-react';
 
-type ProductType = 'appartement' | 'villa' | 'hotel' | 'voiture' | 'circuit';
+type ProductType = 'appartement' | 'villa' | 'hotel' | 'voiture' | 'circuit' | 'restaurant';
 type PriceType = 'per_night' | 'per_day' | 'per_person';
 
 interface Feature { id: string; name: string; value: string; }
@@ -52,7 +53,9 @@ const ProductForm: React.FC<ProductFormProps> = ({ onClose = () => {}, onCreate,
     main_image: ''
   });
   const [features, setFeatures] = useState<Feature[]>([createEmptyFeature()]);
+  const [menu, setMenu] = useState<any[]>([]);
   const [imageInput, setImageInput] = useState<string>('');
+  const [uploadingImage, setUploadingImage] = useState(false);
 
   useEffect(() => {
     if (editingProduct) {
@@ -64,8 +67,11 @@ const ProductForm: React.FC<ProductFormProps> = ({ onClose = () => {}, onCreate,
         features: parseFeatures(p?.features),
         amenities: p?.amenities ?? [],
         images: p?.images ?? [],
-        main_image: p?.main_image ?? p?.image ?? ''
+        main_image: p?.main_image ?? p?.image ?? '',
+        cuisine_type: p?.cuisine_type || '',
+        price_range: p?.price_range || '$$',
       }));
+      setMenu(p?.menu || []);
       const parsed = parseFeatures(p?.features);
       setFeatures(parsed.length ? parsed : [createEmptyFeature()]);
     } else {
@@ -81,21 +87,30 @@ const ProductForm: React.FC<ProductFormProps> = ({ onClose = () => {}, onCreate,
         features: [],
         amenities: [],
         images: [],
-        main_image: ''
+        main_image: '',
+        cuisine_type: '',
+        price_range: '$$',
       });
+      setMenu([]);
       setFeatures([createEmptyFeature()]);
       setImageInput('');
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [editingProduct]);
+
+  const addMenuItem = () => setMenu(prev => [...prev, { name: '', description: '', price: 0 }]);
+  const removeMenuItem = (index: number) => setMenu(prev => prev.filter((_, i) => i !== index));
+  const updateMenuItem = (index: number, key: string, value: any) => {
+    setMenu(prev => prev.map((item, i) => i === index ? { ...item, [key]: value } : item));
+  };
 
   const buildProductPayload = useMemo(() => {
     return (overrides: Record<string, any> = {}) => ({
       ...formData,
       ...overrides,
       features: features.map(f => ({ name: f.name, value: f.value })),
+      menu: menu,
     });
-  }, [formData, features]);
+  }, [formData, features, menu]);
 
   const addFeature = () => setFeatures(prev => [...prev, createEmptyFeature()]);
   const removeFeature = (id: string) => setFeatures(prev => prev.filter(f => f.id !== id));
@@ -109,6 +124,58 @@ const ProductForm: React.FC<ProductFormProps> = ({ onClose = () => {}, onCreate,
       if (current.has(amenity)) current.delete(amenity); else current.add(amenity);
       return { ...prev, amenities: Array.from(current) };
     });
+  };
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>, isMain: boolean = false) => {
+    const file = e.target.files?.[0];
+    if (!file || !user) return;
+
+    if (!file.type.startsWith('image/')) {
+      toast.error('Veuillez sélectionner une image');
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('L\'image ne doit pas dépasser 5MB');
+      return;
+    }
+
+    try {
+      setUploadingImage(true);
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${user.id}/${Date.now()}.${fileExt}`;
+
+      const bucket = formData.product_type === 'restaurant' ? 'restaurants_marocsoleil' : 'services_marocsoleil';
+      const { error } = await supabase.storage
+        .from(bucket)
+        .upload(fileName, file);
+
+      if (error) throw error;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from(bucket)
+        .getPublicUrl(fileName);
+
+      if (isMain) {
+        setFormData(prev => ({ 
+          ...prev, 
+          main_image: publicUrl,
+          images: prev.images.includes(publicUrl) ? prev.images : [publicUrl, ...prev.images]
+        }));
+        toast.success('Image principale ajoutée');
+      } else {
+        setFormData(prev => ({
+          ...prev,
+          images: [...(prev.images || []), publicUrl]
+        }));
+        toast.success('Image ajoutée à la galerie');
+      }
+    } catch (error: any) {
+      console.error('Erreur upload:', error);
+      toast.error('Erreur lors de l\'upload de l\'image');
+    } finally {
+      setUploadingImage(false);
+    }
   };
 
   const addImageUrl = () => {
@@ -136,57 +203,43 @@ const ProductForm: React.FC<ProductFormProps> = ({ onClose = () => {}, onCreate,
     try {
       if (!user) throw new Error('Utilisateur non authentifié');
 
-      const missingColumnRegex = /Could not find the '([^']+)' column of 'partner_products' in the schema cache/i;
       let payload: Record<string, any> = buildProductPayload({
          partner_id: user.id,
          updated_at: new Date().toISOString()
        });
 
+      const isRestaurant = formData.product_type === 'restaurant';
+      const tableName = isRestaurant 
+        ? 'restaurants_marocsoleil' 
+        : 'partner_products_marocsoleil';
+
+      if (isRestaurant) {
+        // Nettoyer le payload pour le schéma restaurant
+        delete payload.price;
+        delete payload.product_type;
+        delete payload.price_type;
+        delete payload.features;
+        delete payload.amenities;
+      }
+
       const performUpsert = async (p: any) => {
         if (editingProduct && editingProduct.id) {
           return supabase
-            .from('partner_products_marocsoleil')
+            .from(tableName)
             .update(p)
             .eq('id', editingProduct.id)
             .eq('partner_id', user.id);
         }
         return supabase
-          .from('partner_products_marocsoleil')
+          .from(tableName)
           .insert([{ ...p, created_at: new Date().toISOString() }])
           .select()
           .single();
       };
 
-      let result: any = null;
-      const maxAttempts = 6;
-      for (let attempt = 1; attempt <= maxAttempts; attempt++) {
-        try {
-          result = await performUpsert(payload);
-        } catch (err: any) {
-          const msg = (err?.message || err?.error?.message || '').toString();
-          const m = msg.match(missingColumnRegex);
-          if (m && m[1]) {
-            delete payload[m[1]];
-            console.warn('[ProductForm] missing column removed from payload:', m[1]);
-            continue;
-          }
-          throw err;
-        }
+      const result = await performUpsert(payload);
 
-        if (result?.error) {
-          const msg = (result.error?.message || '').toString();
-          const m = msg.match(missingColumnRegex);
-          if (m && m[1]) {
-            delete payload[m[1]];
-            console.warn('[ProductForm] missing column in result removed from payload:', m[1]);
-            continue;
-          }
-          throw result.error;
-        }
-        break;
-      }
-
-      if (!result || result?.error) throw result?.error || new Error('Erreur lors de la sauvegarde du produit');
+      if (result?.error) throw result.error;
 
       toast.success(editingProduct ? 'Produit mis à jour' : 'Produit créé');
       onCreate && onCreate();
@@ -253,8 +306,73 @@ const ProductForm: React.FC<ProductFormProps> = ({ onClose = () => {}, onCreate,
                 <option value="hotel">Hôtel</option>
                 <option value="voiture">Location de voiture</option>
                 <option value="circuit">Tourisme / Circuit</option>
+                <option value="restaurant">Restaurant / Gastronomie</option>
               </select>
             </div>
+
+            {formData.product_type === 'restaurant' && (
+              <div className="col-span-1 md:col-span-2 bg-gray-50 p-6 rounded-2xl border border-gray-100">
+                <div className="flex justify-between items-center mb-6">
+                  <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+                    <Utensils className="h-5 w-5 text-emerald-600" />
+                    Gestion du Menu
+                  </h3>
+                  <button
+                    type="button"
+                    onClick={addMenuItem}
+                    className="text-sm bg-emerald-600 text-white px-4 py-2 rounded-xl font-bold hover:bg-emerald-700 transition-all active:scale-95 flex items-center gap-2"
+                  >
+                    <span>+</span> Ajouter un plat
+                  </button>
+                </div>
+
+                <div className="space-y-4">
+                  {menu.map((item, index) => (
+                    <div key={index} className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm relative group">
+                      <button
+                        type="button"
+                        onClick={() => removeMenuItem(index)}
+                        className="absolute -top-2 -right-2 bg-red-100 text-red-600 p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-200"
+                      >
+                        <X className="h-4 w-4" />
+                      </button>
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                        <div className="lg:col-span-2">
+                          <input
+                            placeholder="Nom du plat"
+                            value={item.name}
+                            onChange={(e) => updateMenuItem(index, 'name', e.target.value)}
+                            className="w-full px-3 py-2 rounded-lg border border-gray-300 text-sm focus:ring-1 focus:ring-emerald-500"
+                          />
+                        </div>
+                        <div>
+                          <input
+                            type="number"
+                            placeholder="Prix (MAD)"
+                            value={item.price}
+                            onChange={(e) => updateMenuItem(index, 'price', Number(e.target.value))}
+                            className="w-full px-3 py-2 rounded-lg border border-gray-300 text-sm focus:ring-1 focus:ring-emerald-500"
+                          />
+                        </div>
+                        <div className="lg:col-span-4">
+                          <textarea
+                            placeholder="Description du plat (ingrédients, etc.)"
+                            value={item.description}
+                            onChange={(e) => updateMenuItem(index, 'description', e.target.value)}
+                            className="w-full px-3 py-2 rounded-lg border border-gray-300 text-sm focus:ring-1 focus:ring-emerald-500 min-h-[60px]"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                  {menu.length === 0 && (
+                    <div className="text-center py-8 text-gray-400 italic text-sm">
+                      Aucun plat ajouté au menu pour le moment.
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
 
             <div>
               <label className="block text-sm font-medium text-gray-700">Type de prix *</label>
@@ -374,74 +492,80 @@ const ProductForm: React.FC<ProductFormProps> = ({ onClose = () => {}, onCreate,
           <div className="mt-6">
             <h4 className="text-sm font-medium text-gray-700 mb-2">Images</h4>
 
-            {/* Image URL Input */}
-            <div className="flex gap-2 mt-2">
+            {/* Main Image Upload */}
+            <div className="mb-4">
+              <label className="block text-xs font-medium text-gray-500 mb-1">Image principale *</label>
+              <div className="flex items-center gap-4">
+                {formData.main_image ? (
+                  <div className="relative w-32 h-32 border rounded-lg overflow-hidden group">
+                    <img src={formData.main_image} alt="Main" className="w-full h-full object-cover" />
+                    <button 
+                      type="button" 
+                      onClick={() => setFormData(prev => ({ ...prev, main_image: '' }))}
+                      className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+                ) : (
+                  <label className="w-32 h-32 border-2 border-dashed border-gray-300 rounded-lg flex flex-col items-center justify-center cursor-pointer hover:bg-gray-50">
+                    <Upload className="w-8 h-8 text-gray-400" />
+                    <span className="text-[10px] text-gray-500 mt-1">Uploader</span>
+                    <input type="file" className="hidden" accept="image/*" onChange={(e) => handleImageUpload(e, true)} />
+                  </label>
+                )}
+                <div className="text-xs text-gray-500">
+                  C'est l'image qui sera affichée en premier.
+                </div>
+              </div>
+            </div>
+
+            {/* Gallery Upload */}
+            <div className="mb-4">
+              <label className="block text-xs font-medium text-gray-500 mb-2">Galerie d'images</label>
+              <div className="flex flex-wrap gap-3">
+                {(formData.images || []).map((img: string, index: number) => (
+                  <div key={img} className="relative w-24 h-24 border rounded-lg overflow-hidden group">
+                    <img src={img} alt={`Gallery ${index}`} className="w-full h-full object-cover" />
+                    <button 
+                      type="button" 
+                      onClick={() => removeImage(img)}
+                      className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                    >
+                       <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                    </button>
+                  </div>
+                ))}
+                
+                  <label className="w-24 h-24 border-2 border-dashed border-gray-300 rounded-lg flex flex-col items-center justify-center cursor-pointer hover:bg-gray-50">
+                  {uploadingImage ? (
+                    <div className="w-5 h-5 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin"></div>
+                  ) : (
+                    <>
+                      <Plus className="w-6 h-6 text-gray-400" />
+                      <span className="text-[10px] text-gray-500 mt-1">Ajouter</span>
+                    </>
+                  )}
+                  <input type="file" className="hidden" accept="image/*" onChange={(e) => handleImageUpload(e, false)} disabled={uploadingImage} />
+                </label>
+              </div>
+            </div>
+
+            {/* Image URL Input (Fallback) */}
+            <div className="flex gap-2">
               <input
-                placeholder="https://example.com/image.jpg"
+                placeholder="Ou collez l'URL d'une image..."
                 value={imageInput}
                 onChange={(e) => setImageInput(e.target.value)}
-                className="px-3 py-2 rounded border border-gray-300 flex-1 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                className="px-3 py-2 text-sm rounded border border-gray-300 flex-1 focus:ring-2 focus:ring-emerald-500"
               />
               <button
                 type="button"
                 onClick={addImageUrl}
-                className="px-4 py-2 bg-emerald-600 text-white rounded hover:bg-emerald-700"
+                className="px-4 py-2 bg-gray-100 text-gray-700 text-sm rounded hover:bg-gray-200"
               >
-                Ajouter
+                Ajouter URL
               </button>
-            </div>
-            <p className="text-xs text-gray-500 mt-1">
-              Ajoutez l'URL d'une image hébergée sur un service comme Imgur, Cloudinary, etc.
-            </p>
-
-            {/* Image Preview */}
-            <div className="mt-4">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Image principale (la première sera utilisée par défaut)
-              </label>
-              <div className="flex flex-wrap gap-3">
-                {(formData.images || []).map((img: string, index: number) => (
-                  <div key={img} className="relative group">
-                    <div className="w-32 h-32 border rounded overflow-hidden">
-                      <img
-                        src={img}
-                        alt={`Preview ${index + 1}`}
-                        className="w-full h-full object-cover"
-                        onError={(e) => {
-                          (e.target as HTMLImageElement).src = 'https://via.placeholder.com/150?text=Image+Error';
-                        }}
-                      />
-                    </div>
-                    <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-40 transition-opacity flex items-center justify-center">
-                      <div className="opacity-0 group-hover:opacity-100 transition-opacity">
-                        {formData.main_image === img ? (
-                          <span className="bg-emerald-500 text-white text-xs px-2 py-1 rounded">
-                            Principale
-                          </span>
-                        ) : (
-                          <button
-                            type="button"
-                            onClick={() => setFormData(prev => ({ ...prev, main_image: img }))}
-                            className="bg-white text-emerald-600 text-xs px-2 py-1 rounded hover:bg-emerald-50"
-                          >
-                            Définir comme principale
-                          </button>
-                        )}
-                      </div>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => removeImage(img)}
-                      className="absolute top-1 right-1 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
-                    >
-                      ×
-                    </button>
-                  </div>
-                ))}
-              </div>
-              {formData.images?.length === 0 && (
-                <p className="text-gray-400 text-sm mt-2">Aucune image ajoutée</p>
-              )}
             </div>
           </div>
 

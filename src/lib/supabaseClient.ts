@@ -41,9 +41,10 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
     detectSessionInUrl: true,
     flowType: 'pkce',
     storage: localStorageAdapter,
-    storageKey: 'marocsoleil-supabase-token',
+    storageKey: 'marocsoleil-supabase-token-v2', // Changement de clé pour débloquer les verrous (locks) corrompus
     debug: import.meta.env.DEV,
   },
+
   global: {
     headers: {
       'x-application-name': 'MarocSoleil',

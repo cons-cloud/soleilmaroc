@@ -25,7 +25,7 @@ const GuidesTouristiquesManagement: React.FC = () => {
         {
           event: '*',
           schema: 'public',
-          table: 'guides_touristiques'
+          table: 'guides_touristiques_marocsoleil'
         },
         () => {
           loadItems();
@@ -41,7 +41,7 @@ const GuidesTouristiquesManagement: React.FC = () => {
   const loadItems = async () => {
     try {
       const { data, error } = await supabase
-        .from('guides_touristiques')
+        .from('guides_touristiques_marocsoleil')
         .select('*')
         .order('created_at', { ascending: false });
       if (error) throw error;
@@ -72,7 +72,7 @@ const GuidesTouristiquesManagement: React.FC = () => {
   const handleDeleteConfirm = async () => {
     if (!guideToDelete) return;
     try {
-      const { error } = await supabase.from('guides_touristiques').delete().eq('id', guideToDelete.id);
+      const { error } = await supabase.from('guides_touristiques_marocsoleil').delete().eq('id', guideToDelete.id);
       if (error) throw error;
       toast.success('Guide supprimé');
       setShowConfirm(false);

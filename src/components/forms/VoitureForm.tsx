@@ -41,7 +41,7 @@ const VoitureForm: React.FC<VoitureFormProps> = ({ voiture, onClose, onSuccess }
 
     setUploadingImages(true);
     try {
-      const uploadedUrls = await uploadMultipleImages(Array.from(files), 'voitures');
+      const uploadedUrls = await uploadMultipleImages(Array.from(files), 'voitures_marocsoleil');
       setImages([...images, ...uploadedUrls]);
       toast.success(`${uploadedUrls.length} photo(s) ajoutée(s)`);
     } catch (error) {

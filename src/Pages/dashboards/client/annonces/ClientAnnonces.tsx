@@ -18,6 +18,26 @@ const ClientAnnonces: React.FC = () => {
   useEffect(() => {
     loadAnnonces();
     loadFavorites();
+
+    // S'abonner aux changements en temps réel
+    const channel = supabase
+      .channel('client_annonces_changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'annonces_marocsoleil'
+        },
+        () => {
+          loadAnnonces();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [filters]);
 
   const loadAnnonces = async () => {

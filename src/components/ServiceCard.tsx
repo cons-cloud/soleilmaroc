@@ -67,6 +67,21 @@ const getAmenityIcon = (amenity: string) => {
   return null;
 };
 
+const getServicePath = (type?: ServiceType | string) => {
+  switch (type) {
+    case 'hotels': return 'hotels';
+    case 'apartments': return 'appartements';
+    case 'villas': return 'villas';
+    case 'car_rentals': return 'voitures';
+    case 'circuit_touristiques': return 'tourisme';
+    case 'restaurants': return 'services/restaurants';
+    case 'activites_touristiques': return 'activites';
+    case 'guides_touristiques': return 'guides';
+    case 'evenements': return 'evenements';
+    default: return type || 'hotels';
+  }
+};
+
 const ImageSlider = ({ 
   images = [], 
   title,
@@ -221,7 +236,7 @@ const ServiceCard: React.FC<ServiceCardProps> = ({
     }));
   };
 
-  const servicePath = type || 'hotels';
+  const servicePath = getServicePath(type);
   const serviceIcon = getServiceIcon(type || 'hotels');
   const displayPriceValue = price_per_night || price;
   const displayPrice = displayPriceValue ? `${displayPriceValue} MAD` : 'Sur demande';

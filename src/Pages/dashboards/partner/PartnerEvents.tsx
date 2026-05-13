@@ -87,7 +87,7 @@ const PartnerEvents = () => {
           {
             event: '*',
             schema: 'public',
-            table: 'event_registrations',
+            table: 'event_registrations_marocsoleil',
             filter: `partner_id=eq.${user.id}`
           },
           () => {
@@ -140,7 +140,7 @@ const PartnerEvents = () => {
   const loadRegistrations = async () => {
     try {
       const { data, error } = await supabase
-        .from('event_registrations')
+        .from('event_registrations_marocsoleil')
         .select('*')
         .eq('partner_id', user?.id)
         .order('created_at', { ascending: false });

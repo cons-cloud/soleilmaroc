@@ -7,7 +7,7 @@ import toast from 'react-hot-toast';
 import { Calendar, Users, MapPin, Clock, CreditCard, User, Mail, Phone } from 'lucide-react';
 import AuthGuard from './AuthGuard';
 
-type ServiceType = 'appartement' | 'hotel' | 'villa' | 'voiture' | 'circuit';
+type ServiceType = 'appartement' | 'hotel' | 'villa' | 'voiture' | 'circuit' | 'restaurant';
 
 interface Service {
   id: string;
@@ -54,7 +54,10 @@ const UniversalBookingForm: React.FC<UniversalBookingFormProps> = ({ serviceType
     // Pour circuits
     numberOfPeople: 1,
     customDuration: service.duration_days || 1,
-    startDate: ''
+    startDate: '',
+    // Pour restaurants
+    reservationDate: '',
+    reservationTime: '',
   });
 
   // Vérifier l'authentification et pré-remplir les données
@@ -121,6 +124,9 @@ const UniversalBookingForm: React.FC<UniversalBookingFormProps> = ({ serviceType
       case 'circuit':
         const pricePerPerson = service.price_per_person || service.price || 0;
         return pricePerPerson * formData.numberOfPeople;
+      case 'restaurant':
+        const restaurantPrice = service.price_per_person || service.price || 0;
+        return restaurantPrice * formData.numberOfPeople;
       default:
         return 0;
     }
@@ -183,6 +189,17 @@ const UniversalBookingForm: React.FC<UniversalBookingFormProps> = ({ serviceType
         }
         if (service.max_participants && formData.numberOfPeople > service.max_participants) {
           toast.error(`Le nombre maximum de participants est ${service.max_participants}`);
+          return false;
+        }
+        break;
+
+      case 'restaurant':
+        if (!formData.reservationDate || !formData.reservationTime) {
+          toast.error('Veuillez sélectionner la date et l\'heure de réservation');
+          return false;
+        }
+        if (formData.numberOfPeople < 1) {
+          toast.error('Le nombre de personnes doit être au moins 1');
           return false;
         }
         break;
@@ -252,6 +269,12 @@ const UniversalBookingForm: React.FC<UniversalBookingFormProps> = ({ serviceType
           bookingData.custom_duration = formData.customDuration;
           bookingData.circuit_id = service.id;
           bookingData.circuit_title = service.title;
+          break;
+
+        case 'restaurant':
+          bookingData.start_date = formData.reservationDate;
+          bookingData.reservation_time = formData.reservationTime;
+          bookingData.number_of_people = formData.numberOfPeople;
           break;
       }
 
@@ -572,6 +595,56 @@ const UniversalBookingForm: React.FC<UniversalBookingFormProps> = ({ serviceType
                 value={formData.startDate}
                 onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
                 min={new Date().toISOString().split('T')[0]}
+                className="w-full px-3 py-1.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                required
+              />
+            </div>
+          </>
+        );
+
+      case 'restaurant':
+        return (
+          <>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <Calendar className="w-4 h-4 inline mr-1" />
+                  Date *
+                </label>
+                <input
+                  type="date"
+                  value={formData.reservationDate}
+                  onChange={(e) => setFormData({ ...formData, reservationDate: e.target.value })}
+                  min={new Date().toISOString().split('T')[0]}
+                  className="w-full px-3 py-1.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <Clock className="w-4 h-4 inline mr-1" />
+                  Heure *
+                </label>
+                <input
+                  type="time"
+                  value={formData.reservationTime}
+                  onChange={(e) => setFormData({ ...formData, reservationTime: e.target.value })}
+                  className="w-full px-3 py-1.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  required
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                <Users className="w-4 h-4 inline mr-1" />
+                Nombre de personnes *
+              </label>
+              <input
+                type="number"
+                value={formData.numberOfPeople}
+                onChange={(e) => setFormData({ ...formData, numberOfPeople: parseInt(e.target.value) })}
+                min="1"
                 className="w-full px-3 py-1.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 required
               />

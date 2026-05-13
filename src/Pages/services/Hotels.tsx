@@ -170,7 +170,7 @@ const Hotels: React.FC = () => {
                   id={hotel.id}
                   title={hotel.name}
                   description={hotel.description || ''}
-                  price={hotel.price_per_night}
+                  price={hotel.price_per_night || 0}
                   location={`${hotel.city}${hotel.region ? `, ${hotel.region}` : ''}`}
                   rating={hotel.rating || 0}
                   images={Array.isArray(hotel.images) ? hotel.images : []}
@@ -207,7 +207,7 @@ const Hotels: React.FC = () => {
             id: selectedHotel.id,
             type: 'hebergement' as BookingServiceType,
             title: selectedHotel.name,
-            price: selectedHotel.price_per_night,
+            price: selectedHotel.price_per_night || 0,
             image: Array.isArray(selectedHotel.images) && selectedHotel.images.length > 0 
               ? selectedHotel.images[0] 
               : undefined,

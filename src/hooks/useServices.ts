@@ -2,13 +2,28 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '../lib/supabase';
 import { useRealtimeSubscription } from './useRealtimeSubscription';
 
-export type ServiceType = 'hotels' | 'apartments' | 'villas' | 'car_rentals' | 'circuit_touristiques';
+export type ServiceType = 
+  | 'hotels' 
+  | 'apartments' 
+  | 'villas' 
+  | 'car_rentals' 
+  | 'circuit_touristiques' 
+  | 'restaurants_marocsoleil'
+  | 'hotels_marocsoleil'
+  | 'appartements_marocsoleil'
+  | 'villas_marocsoleil'
+  | 'voitures_marocsoleil'
+  | 'circuits_marocsoleil'
+  | 'partner_products_marocsoleil'
+  | 'partner_products';
 
 export interface Service {
   id: string;
   name: string;
+  title?: string;
   description: string;
-  price_per_night: number;
+  price_per_night?: number;
+  price?: number;
   city: string;
   region?: string;
   address: string;
@@ -19,26 +34,27 @@ export interface Service {
   available: boolean;
   featured: boolean;
   images: string[];
+  main_image?: string;
+  image?: string;
   created_at: string;
   updated_at: string;
   user_id: string;
+  partner_id?: string;
   type: ServiceType;
   brand?: string;
   model?: string;
   year?: number;
   duration_days?: number;
   max_participants?: number;
+  cuisine_type?: string;
+  menu?: any[];
+  price_range?: string;
 }
 
-const SELECTED_COLUMNS = `
-  id, name, description, price_per_night, city, region, address,
-  rating, stars, amenities, contact_phone, available, featured,
-  images, image, created_at, updated_at, user_id,
-  brand, model, year, duration_days, max_participants
-`;
 
 const normalizeServiceData = (data: any, serviceType: ServiceType): Service => ({
   ...data,
+  name: data.name || data.title || '',
   type: serviceType,
   region: data.region || undefined,
   rating: data.rating || undefined,
@@ -50,23 +66,33 @@ const normalizeServiceData = (data: any, serviceType: ServiceType): Service => (
     ? [data.images]
     : data.image
     ? [data.image]
+    : data.main_image
+    ? [data.main_image]
     : [],
   brand: data.brand || undefined,
   model: data.model || undefined,
   year: data.year || undefined,
   duration_days: data.duration_days || undefined,
   max_participants: data.max_participants || undefined,
+  user_id: data.user_id || data.partner_id || '',
 });
 
 async function fetchServicesQuery(
   serviceType: ServiceType,
   options: { featured?: boolean; limit?: number; userId?: string; availableOnly?: boolean }
 ): Promise<Service[]> {
-  let query = supabase.from(serviceType).select(SELECTED_COLUMNS);
+  let query = supabase.from(serviceType).select('*');
 
   if (options.availableOnly) query = query.eq('available', true);
   if (options.featured) query = query.eq('featured', true);
-  if (options.userId) query = query.eq('user_id', options.userId);
+  if (options.userId) {
+    // Some tables use user_id, some use partner_id
+    if (serviceType === 'restaurants_marocsoleil' || serviceType === 'partner_products_marocsoleil') {
+      query = query.eq('partner_id', options.userId);
+    } else {
+      query = query.eq('user_id', options.userId);
+    }
+  }
   if (options.limit) query = query.limit(options.limit);
 
   const { data, error } = await query;

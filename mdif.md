@@ -1,0 +1,4 @@
+fais de meme pour les bucket et que tout soit syncro et fonctionnel en temps reel en temps reel
+
+
+j'ai des modifications a faire, je t'explique, mon projet actuel partage la base de données avec d'autre projet donc quand modifie quelque chose dans le dashboard de mon projet actuel  ça se modifie aussi dans les dashboard des autres projet, donc je veux garder la meme base de données mais je veux que les tables doulée et tu renonme pour ce projet par exemple tu double la table circuits_touristiques et tu renome le doubon par circuits_touristiques_marocsoleil pour mon projet comme ça mon projet actuel utilise ces nouvelles tables . fais ça pour toutes les tables du projet tout syncro et fonctionnel en temps reel. . fait tout depuis le terminal connecte toi a supabase voila postgresql://postgres.tywnsgsufwxienpgbosm:[YOUR-PASSWORD]@aws-1-eu-north-1.pooler.supabase.com:6543/postgres YOUR-PASSWORD est "Maroc2030@"

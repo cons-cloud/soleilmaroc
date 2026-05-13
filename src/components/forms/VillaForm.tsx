@@ -39,7 +39,7 @@ const VillaForm: React.FC<VillaFormProps> = ({ villa, onClose, onSuccess }) => {
 
     setUploadingImages(true);
     try {
-      const uploadedUrls = await uploadMultipleImages(Array.from(files), 'villas');
+      const uploadedUrls = await uploadMultipleImages(Array.from(files), 'villas_marocsoleil');
       setImages([...images, ...uploadedUrls]);
       toast.success(`${uploadedUrls.length} photo(s) ajoutée(s)`);
     } catch (error) {

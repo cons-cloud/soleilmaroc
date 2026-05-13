@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { supabase } from '../../lib/supabase';
+import { supabaseAdmin } from '../../lib/supabaseAdmin';
 import { X, Loader, User, Mail, Phone, MapPin } from 'lucide-react';
 import toast from 'react-hot-toast';
 
@@ -16,7 +16,7 @@ const UserForm: React.FC<UserFormProps> = ({ onClose, onSuccess }) => {
     full_name: '',
     phone: '',
     city: '',
-    role: 'user',
+    role: 'client', // Default changed to client for consistency
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -24,31 +24,33 @@ const UserForm: React.FC<UserFormProps> = ({ onClose, onSuccess }) => {
     setLoading(true);
 
     try {
-      // Créer l'utilisateur avec Supabase Auth
-      const { error: authError } = await supabase.auth.signUp({
+      // Créer l'utilisateur avec Supabase Admin API
+      // Cela évite de déconnecter l'admin actuel et confirme l'email automatiquement
+      const { error: authError } = await supabaseAdmin.auth.admin.createUser({
         email: formData.email,
         password: formData.password,
-        options: {
-          data: {
-            full_name: formData.full_name,
-            phone: formData.phone,
-            city: formData.city,
-            role: formData.role,
-          },
+        email_confirm: true,
+        user_metadata: {
+          full_name: formData.full_name,
+          phone: formData.phone,
+          city: formData.city,
+          role: formData.role,
         },
       });
 
       if (authError) throw authError;
 
-      toast.success('Utilisateur créé avec succès');
+      toast.success(`Utilisateur ${formData.full_name} créé avec succès`);
       onSuccess();
       onClose();
     } catch (error: any) {
+      console.error('Erreur création utilisateur:', error);
       toast.error(error.message || 'Erreur lors de la création');
     } finally {
       setLoading(false);
     }
   };
+
 
   return (
     <div className="fixed inset-0 bg-white/30 backdrop-blur-sm flex items-center justify-center p-4 z-50">

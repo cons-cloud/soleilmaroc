@@ -47,11 +47,11 @@ const PartnerEarningsManagement: React.FC = () => {
     try {
       setLoading(true);
       const { data, error } = await supabase
-        .from('partner_earnings')
+        .from('partner_earnings_marocsoleil')
         .select(`
           *,
-          partner:profiles!partner_id(company_name, email, phone),
-          booking:bookings!booking_id(service_title, client_name, start_date)
+          partner:profiles_marocsoleil!partner_id(company_name, email, phone),
+          booking:bookings_marocsoleil!booking_id(service_title, client_name, start_date)
         `)
         .order('created_at', { ascending: false });
 
