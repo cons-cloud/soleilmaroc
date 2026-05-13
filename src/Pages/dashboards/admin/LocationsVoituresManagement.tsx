@@ -6,6 +6,7 @@ import { Plus, Edit, Trash2, Search } from 'lucide-react';
 import ImageWithFallback from '../../../components/common/ImageWithFallback';
 import toast from 'react-hot-toast';
 import VoitureForm from '../../../components/forms/VoitureForm';
+import { deleteImage } from '../../../lib/storage';
 
 interface Voiture {
   id: string;
@@ -121,10 +122,21 @@ const LocationsVoituresManagement: FC = () => {
 
   // Gérer la suppression d'une voiture
   const handleDelete = useCallback(async (id: string): Promise<void> => {
-    if (!id) return;
+    if (!id || !voitureToDelete) return;
 
     try {
       setLoading(true);
+
+      // Nettoyer les images dans le storage
+      if (voitureToDelete.images && voitureToDelete.images.length > 0) {
+        const deletePromises = voitureToDelete.images.map((url: string) => 
+          deleteImage(url, 'voitures_marocsoleil').catch(err => 
+            console.warn('Could not delete image:', url, err)
+          )
+        );
+        await Promise.all(deletePromises);
+      }
+
       const { error } = await supabase
         .from('locations_voitures_marocsoleil')
         .delete()
@@ -142,7 +154,7 @@ const LocationsVoituresManagement: FC = () => {
       setVoitureToDelete(null);
       setShowConfirm(false);
     }
-  }, [loadVoitures]);
+  }, [loadVoitures, voitureToDelete]);
 
   // Gérer le clic sur le bouton de suppression
   const handleDeleteClick = useCallback((voiture: Voiture) => {

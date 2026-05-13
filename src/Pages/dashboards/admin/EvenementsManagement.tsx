@@ -5,6 +5,7 @@ import ImageWithFallback from '../../../components/common/ImageWithFallback';
 import toast from 'react-hot-toast';
 import EvenementForm from '../../../components/forms/EvenementForm';
 import ConfirmDialog from '../../../components/modals/ConfirmDialog';
+import { deleteImage } from '../../../lib/storage';
 
 const EvenementsManagement: React.FC = () => {
   const [items, setItems] = useState<any[]>([]);
@@ -86,6 +87,16 @@ const EvenementsManagement: React.FC = () => {
   const handleDeleteConfirm = async () => {
     if (!evenementToDelete) return;
     try {
+      // Nettoyer les images dans le storage
+      if (evenementToDelete.images && evenementToDelete.images.length > 0) {
+        const deletePromises = evenementToDelete.images.map((url: string) => 
+          deleteImage(url, 'evenements_marocsoleil').catch(err => 
+            console.warn('Could not delete image:', url, err)
+          )
+        );
+        await Promise.all(deletePromises);
+      }
+
       const { error } = await supabase.from('evenements_marocsoleil').delete().eq('id', evenementToDelete.id);
       if (error) throw error;
       toast.success('Événement supprimé');

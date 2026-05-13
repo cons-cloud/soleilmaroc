@@ -45,7 +45,7 @@ const AnnonceForm: React.FC<AnnonceFormProps> = ({ annonce, onClose, onSuccess }
 
   const handleDeleteImage = async (imageUrl: string, index: number) => {
     try {
-      await deleteImage(imageUrl);
+      await deleteImage(imageUrl, 'annonces_marocsoleil');
       setImages(images.filter((_, i) => i !== index));
       toast.success('Photo supprimée');
     } catch (error) {
@@ -58,10 +58,15 @@ const AnnonceForm: React.FC<AnnonceFormProps> = ({ annonce, onClose, onSuccess }
     setLoading(true);
 
     try {
+      const { data: { user } } = await supabase.auth.getUser();
+      const userId = user?.id;
       const dataToSave = {
+        user_id: userId,
+        created_by: userId,
+        partner_id: userId,
         ...formData,
         images,
-        price: formData.price ? parseFloat(formData.price as any) : null,
+        price: formData.price ? formData.price ? parseFloat(formData.price as any) : null : null
       };
 
       if (annonce?.id) {

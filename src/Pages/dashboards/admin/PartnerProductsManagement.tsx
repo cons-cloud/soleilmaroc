@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../../../lib/supabase';
 import toast from 'react-hot-toast';
+import { deleteImage } from '../../../lib/storage';
 import {
   Package,
   Eye,
@@ -104,6 +105,32 @@ const PartnerProductsManagement: React.FC = () => {
     if (!confirm('Êtes-vous sûr de vouloir supprimer ce produit ?')) return;
 
     try {
+      // Rechercher le produit pour avoir ses images
+      const { data: product } = await supabase
+        .from('partner_products_marocsoleil')
+        .select('images, main_image, product_type')
+        .eq('id', productId)
+        .single();
+      
+      // Nettoyer les images dans le storage
+      const imagesToDelete = [...(product?.images || [])];
+      if (product?.main_image) imagesToDelete.push(product.main_image);
+      
+      if (imagesToDelete.length > 0 && product) {
+        const bucket = (product.product_type === 'hotel') ? 'hotels_marocsoleil' : 
+                      (product.product_type === 'appartement') ? 'appartements_marocsoleil' :
+                      (product.product_type === 'villa') ? 'villas_marocsoleil' :
+                      (product.product_type === 'voiture') ? 'voitures_marocsoleil' :
+                      (product.product_type === 'circuit') ? 'circuits_marocsoleil' : 'services_marocsoleil';
+
+        const deletePromises = [...new Set(imagesToDelete)].map((url: string) => 
+          deleteImage(url, bucket).catch(err => 
+            console.warn('Could not delete image:', url, err)
+          )
+        );
+        await Promise.all(deletePromises);
+      }
+
       const { error } = await supabase
         .from('partner_products_marocsoleil')
         .delete()

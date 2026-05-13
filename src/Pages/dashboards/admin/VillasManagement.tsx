@@ -4,6 +4,7 @@ import { Home, Plus, Edit, Trash2, MapPin } from 'lucide-react';
 import toast from 'react-hot-toast';
 import VillaForm from '../../../components/forms/VillaForm';
 import ConfirmDialog from '../../../components/modals/ConfirmDialog';
+import { deleteImage } from '../../../lib/storage';
 
 const VillasManagement: React.FC = () => {
   const [villas, setVillas] = useState<any[]>([]);
@@ -72,6 +73,16 @@ const VillasManagement: React.FC = () => {
   const handleDeleteConfirm = async () => {
     if (!villaToDelete) return;
     try {
+      // Nettoyer les images dans le storage
+      if (villaToDelete.images && villaToDelete.images.length > 0) {
+        const deletePromises = villaToDelete.images.map((url: string) => 
+          deleteImage(url, 'villas_marocsoleil').catch(err => 
+            console.warn('Could not delete image:', url, err)
+          )
+        );
+        await Promise.all(deletePromises);
+      }
+
       const { error } = await supabase.from('villas_marocsoleil').delete().eq('id', villaToDelete.id);
       if (error) throw error;
       toast.success('Villa supprimée');

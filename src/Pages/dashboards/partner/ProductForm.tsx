@@ -6,7 +6,7 @@ import { useAuth } from '../../../contexts/AuthContext';
 import toast from 'react-hot-toast';
 import { Plus, X, Upload, Utensils } from 'lucide-react';
 
-type ProductType = 'appartement' | 'villa' | 'hotel' | 'voiture' | 'circuit' | 'restaurant';
+type ProductType = 'appartement' | 'villa' | 'hotel' | 'voiture' | 'circuit' | 'restaurant' | 'evenement';
 type PriceType = 'per_night' | 'per_day' | 'per_person';
 
 interface Feature { id: string; name: string; value: string; }
@@ -145,7 +145,16 @@ const ProductForm: React.FC<ProductFormProps> = ({ onClose = () => {}, onCreate,
       const fileExt = file.name.split('.').pop();
       const fileName = `${user.id}/${Date.now()}.${fileExt}`;
 
-      const bucket = formData.product_type === 'restaurant' ? 'restaurants_marocsoleil' : 'services_marocsoleil';
+      const bucketMap: Record<string, string> = {
+        'restaurant': 'restaurants_marocsoleil',
+        'hotel': 'hotels_marocsoleil',
+        'villa': 'villas_marocsoleil',
+        'appartement': 'appartements_marocsoleil',
+        'voiture': 'voitures_marocsoleil',
+        'circuit': 'circuits_marocsoleil',
+        'evenement': 'evenements_marocsoleil'
+      };
+      const bucket = bucketMap[formData.product_type] || 'services_marocsoleil';
       const { error } = await supabase.storage
         .from(bucket)
         .upload(fileName, file);
@@ -203,23 +212,69 @@ const ProductForm: React.FC<ProductFormProps> = ({ onClose = () => {}, onCreate,
     try {
       if (!user) throw new Error('Utilisateur non authentifié');
 
-      let payload: Record<string, any> = buildProductPayload({
-         partner_id: user.id,
-         updated_at: new Date().toISOString()
-       });
+      // Mapping des types de produits aux tables spécifiques
+      const tableMapping: Record<string, string> = {
+        'appartement': 'appartements_marocsoleil',
+        'villa': 'villas_marocsoleil',
+        'hotel': 'hotels_marocsoleil',
+        'voiture': 'locations_voitures_marocsoleil',
+        'circuit': 'circuits_touristiques_marocsoleil',
+        'restaurant': 'restaurants_marocsoleil',
+        'evenement': 'evenements_marocsoleil'
+      };
 
-      const isRestaurant = formData.product_type === 'restaurant';
-      const tableName = isRestaurant 
-        ? 'restaurants_marocsoleil' 
-        : 'partner_products_marocsoleil';
+      const tableName = tableMapping[formData.product_type] || 'partner_products_marocsoleil';
 
-      if (isRestaurant) {
-        // Nettoyer le payload pour le schéma restaurant
-        delete payload.price;
-        delete payload.product_type;
-        delete payload.price_type;
-        delete payload.features;
-        delete payload.amenities;
+
+      let payload = buildProductPayload({
+        updated_at: new Date().toISOString()
+      });
+
+      // Préparer le payload final et le nettoyer selon la table
+      let finalPayload: Record<string, any> = {
+        title: formData.title || formData.name,
+        description: formData.description,
+        city: formData.city,
+        address: formData.address,
+        images: formData.images,
+        available: formData.available,
+        featured: formData.featured,
+        updated_at: new Date().toISOString(),
+        user_id: user.id,
+        partner_id: user.id,
+        created_by: user.id
+      };
+
+      // Mapper le prix selon la table
+      if (tableName === 'locations_voitures_marocsoleil') {
+        finalPayload.price_per_day = formData.price;
+        finalPayload.marque = formData.title;
+        finalPayload.disponible = formData.available;
+        finalPayload.en_vedette = formData.featured;
+      } else if (tableName === 'hotels_marocsoleil' || tableName === 'villas_marocsoleil' || tableName === 'appartements_marocsoleil') {
+        finalPayload.price_per_night = formData.price;
+        finalPayload.amenities = formData.amenities;
+      } else if (tableName === 'circuits_touristiques_marocsoleil') {
+        finalPayload.price_per_person = formData.price;
+      } else if (tableName === 'evenements_marocsoleil') {
+        finalPayload.price = formData.price;
+        finalPayload.location = formData.city;
+      } else if (tableName === 'restaurants_marocsoleil') {
+        finalPayload.cuisine_type = formData.cuisine_type;
+        finalPayload.price_range = formData.price_range;
+        finalPayload.menu = menu;
+      } else if (tableName === 'annonces_marocsoleil') {
+        finalPayload.price = formData.price;
+        finalPayload.category = formData.category;
+      } else {
+        // Fallback pour partner_products_marocsoleil ou autre
+        finalPayload = { ...payload, user_id: user.id, partner_id: user.id, created_by: user.id };
+      }
+
+      // S'assurer que 'title' est présent si la table l'utilise, 'name' sinon
+      if (tableName === 'hotels_marocsoleil' || tableName === 'restaurants_marocsoleil') {
+        finalPayload.name = formData.title;
+        delete finalPayload.title;
       }
 
       const performUpsert = async (p: any) => {
@@ -227,8 +282,7 @@ const ProductForm: React.FC<ProductFormProps> = ({ onClose = () => {}, onCreate,
           return supabase
             .from(tableName)
             .update(p)
-            .eq('id', editingProduct.id)
-            .eq('partner_id', user.id);
+            .eq('id', editingProduct.id);
         }
         return supabase
           .from(tableName)
@@ -237,7 +291,7 @@ const ProductForm: React.FC<ProductFormProps> = ({ onClose = () => {}, onCreate,
           .single();
       };
 
-      const result = await performUpsert(payload);
+      const result = await performUpsert(finalPayload);
 
       if (result?.error) throw result.error;
 
@@ -307,6 +361,7 @@ const ProductForm: React.FC<ProductFormProps> = ({ onClose = () => {}, onCreate,
                 <option value="voiture">Location de voiture</option>
                 <option value="circuit">Tourisme / Circuit</option>
                 <option value="restaurant">Restaurant / Gastronomie</option>
+                <option value="evenement">Événement</option>
               </select>
             </div>
 
@@ -354,6 +409,14 @@ const ProductForm: React.FC<ProductFormProps> = ({ onClose = () => {}, onCreate,
                             className="w-full px-3 py-2 rounded-lg border border-gray-300 text-sm focus:ring-1 focus:ring-emerald-500"
                           />
                         </div>
+                        <div>
+                          <input
+                            placeholder="URL photo du plat (optionnel)"
+                            value={item.photo || ''}
+                            onChange={(e) => updateMenuItem(index, 'photo', e.target.value)}
+                            className="w-full px-3 py-2 rounded-lg border border-gray-300 text-sm focus:ring-1 focus:ring-emerald-500"
+                          />
+                        </div>
                         <div className="lg:col-span-4">
                           <textarea
                             placeholder="Description du plat (ingrédients, etc.)"
@@ -374,18 +437,47 @@ const ProductForm: React.FC<ProductFormProps> = ({ onClose = () => {}, onCreate,
               </div>
             )}
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Type de prix *</label>
-              <select
-                value={formData.price_type}
-                onChange={(e) => setFormData(prev => ({ ...prev, price_type: e.target.value }))}
-                className="mt-1 block w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
-              >
-                <option value="per_night">Par nuit</option>
-                <option value="per_day">Par jour</option>
-                <option value="per_person">Par personne</option>
-              </select>
-            </div>
+            {['appartement', 'villa', 'hotel', 'voiture', 'circuit'].includes(formData.product_type) && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Type de prix *</label>
+                <select
+                  value={formData.price_type}
+                  onChange={(e) => setFormData(prev => ({ ...prev, price_type: e.target.value }))}
+                  className="mt-1 block w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                >
+                  <option value="per_night">Par nuit</option>
+                  <option value="per_day">Par jour</option>
+                  <option value="per_person">Par personne</option>
+                </select>
+              </div>
+            )}
+            
+            {formData.product_type === 'restaurant' && (
+              <>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Type de Cuisine</label>
+                  <input
+                    value={formData.cuisine_type ?? ''}
+                    onChange={(e) => setFormData(prev => ({ ...prev, cuisine_type: e.target.value }))}
+                    placeholder="Ex: Marocaine, Italienne..."
+                    className="mt-1 block w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Gamme de Prix</label>
+                  <select
+                    value={formData.price_range ?? '$$'}
+                    onChange={(e) => setFormData(prev => ({ ...prev, price_range: e.target.value }))}
+                    className="mt-1 block w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                  >
+                    <option value="$">Économique ($)</option>
+                    <option value="$$">Moyen ($$)</option>
+                    <option value="$$$">Haut de gamme ($$$)</option>
+                    <option value="$$$$">Luxe ($$$$)</option>
+                  </select>
+                </div>
+              </>
+            )}
 
             <div>
               <label className="block text-sm font-medium text-gray-700">Ville *</label>
@@ -471,22 +563,40 @@ const ProductForm: React.FC<ProductFormProps> = ({ onClose = () => {}, onCreate,
           </div>
 
           {/* Amenities Section */}
-          <div className="mt-6">
-            <h4 className="text-sm font-medium text-gray-700 mb-2">Équipements</h4>
-            <div className="mt-2 grid grid-cols-2 sm:grid-cols-4 gap-3">
-              {amenitiesList.map(a => (
-                <label key={a} className="inline-flex items-center gap-2 text-sm p-2 border rounded hover:bg-gray-50">
-                  <input
-                    type="checkbox"
-                    checked={(formData.amenities || []).includes(a)}
-                    onChange={() => toggleAmenity(a)}
-                    className="rounded text-emerald-600 focus:ring-emerald-500"
-                  />
-                  <span className="capitalize">{a.replace(/_/g, ' ')}</span>
-                </label>
-              ))}
+          {['appartement', 'villa', 'hotel'].includes(formData.product_type) && (
+            <div className="mt-6">
+              <h4 className="text-sm font-medium text-gray-700 mb-2">Équipements du Logement</h4>
+              <div className="mt-2 grid grid-cols-2 sm:grid-cols-4 gap-3">
+                {amenitiesList.map(a => (
+                  <label key={a} className="inline-flex items-center gap-2 text-sm p-2 border rounded hover:bg-gray-50">
+                    <input
+                      type="checkbox"
+                      checked={(formData.amenities || []).includes(a)}
+                      onChange={() => toggleAmenity(a)}
+                      className="rounded text-emerald-600 focus:ring-emerald-500"
+                    />
+                    <span className="capitalize">{a.replace(/_/g, ' ')}</span>
+                  </label>
+                ))}
+              </div>
             </div>
-          </div>
+          )}
+
+          {formData.product_type === 'voiture' && (
+            <div className="mt-6">
+              <h4 className="text-sm font-medium text-gray-700 mb-2">Options du Véhicule</h4>
+              <div className="mt-2 grid grid-cols-2 gap-4">
+                <label className="inline-flex items-center gap-2 text-sm p-2 border rounded">
+                  <span className="capitalize">Sièges</span>
+                  <input type="number" value={formData.places || 4} onChange={(e) => setFormData(prev => ({ ...prev, places: Number(e.target.value) }))} className="ml-2 w-16 p-1 border rounded" />
+                </label>
+                <label className="inline-flex items-center gap-2 text-sm p-2 border rounded">
+                  <span className="capitalize">Portes</span>
+                  <input type="number" value={formData.portes || 4} onChange={(e) => setFormData(prev => ({ ...prev, portes: Number(e.target.value) }))} className="ml-2 w-16 p-1 border rounded" />
+                </label>
+              </div>
+            </div>
+          )}
 
           {/* Images Section */}
           <div className="mt-6">

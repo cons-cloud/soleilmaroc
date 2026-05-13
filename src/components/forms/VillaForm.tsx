@@ -64,15 +64,20 @@ const handleSubmit = async (e: React.FormEvent) => {
   setLoading(true);
 
   try {
-    const dataToSave = {
+    const { data: { user } } = await supabase.auth.getUser();
+      const userId = user?.id;
+      const dataToSave = {
+        user_id: userId,
+        created_by: userId,
+        partner_id: userId,
       title: formData.title,
       description: formData.description,
-      price_per_night: parseFloat(formData.price_per_night as any),
+      price_per_night: formData.price_per_night ? parseFloat(formData.price_per_night as any) : null,
       city: formData.city,
       region: formData.region,
       address: formData.address,
-      bedrooms: formData.bedrooms ? parseInt(formData.bedrooms as any) : null,
-      bathrooms: formData.bathrooms ? parseInt(formData.bathrooms as any) : null,
+      bedrooms: formData.bedrooms ? formData.bedrooms ? parseInt(formData.bedrooms as any) : null : null,
+      bathrooms: formData.bathrooms ? formData.bathrooms ? parseInt(formData.bathrooms as any) : null : null,
       images: images,
       // Ajoutez uniquement les champs qui existent dans votre table
     };

@@ -256,11 +256,18 @@ const Home: React.FC<HomeProps> = ({ onOpenBooking }) => {
                   className="bg-yellow-50 rounded-xl overflow-hidden shadow-lg hover:shadow-xl transition-shadow"
                   whileHover={{ y: -5 }}
                 >
-                  <div className="h-48 overflow-hidden">
+                  <div className="h-48 overflow-hidden bg-gray-100">
                     <img 
-                      src={event.image || '/assets/events/T0.jpeg'} 
+                      src={
+                        event.image ||
+                        (Array.isArray((event as any).images) && (event as any).images.length > 0
+                          ? (event as any).images[0]
+                          : null) ||
+                        '/assets/events/T0.jpeg'
+                      } 
                       alt={event.title}
                       className="w-full h-full object-cover hover:scale-105 transition-transform duration-500"
+                      onError={(e) => { (e.target as HTMLImageElement).src = '/assets/events/T0.jpeg'; }}
                     />
                   </div>
                   <div className="p-6">

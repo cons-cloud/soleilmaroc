@@ -63,7 +63,7 @@ const Footer = () => {
     try {
       setIsSubscribing(true);
       const { error } = await supabase
-        .from('newsletter_subscriptions')
+        .from('newsletter_subscriptions_marocsoleil')
         .insert({
           email: email,
           subscribed_at: new Date().toISOString(),

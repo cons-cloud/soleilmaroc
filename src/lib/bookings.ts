@@ -25,7 +25,7 @@ export async function createBooking(opts: {
 
 export async function fetchPartnerBookings() {
   const { data, error } = await supabase
-    .from('partner_bookings_view')
+    .from('partner_bookings_view_marocsoleil')
     .select('*')
     .order('created_at', { ascending: false });
   return { data, error };

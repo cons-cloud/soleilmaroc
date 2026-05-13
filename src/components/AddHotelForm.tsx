@@ -100,14 +100,14 @@ const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
       const filePath = `hotels/${fileName}`;
 
       const { error: uploadError } = await supabase.storage
-        .from('hotel-images')
+        .from('hotels_marocsoleil')
         .upload(filePath, file);
 
       if (uploadError) throw uploadError;
 
       // Obtenir l'URL publique
       const { data: { publicUrl } } = supabase.storage
-        .from('hotel-images')
+        .from('hotels_marocsoleil')
         .getPublicUrl(filePath);
 
       uploadedImageUrls.push(publicUrl);

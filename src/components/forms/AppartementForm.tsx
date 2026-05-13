@@ -65,14 +65,19 @@ const AppartementForm: React.FC<AppartementFormProps> = ({ appartement, onClose,
     setLoading(true);
 
     try {
+      const { data: { user } } = await supabase.auth.getUser();
+      const userId = user?.id;
       const dataToSave = {
+        user_id: userId,
+        created_by: userId,
+        partner_id: userId,
         ...formData,
         images,
-        price_per_night: parseFloat(formData.price_per_night as any),
-        bedrooms: parseInt(formData.bedrooms as any),
-        bathrooms: parseInt(formData.bathrooms as any),
+        price_per_night: formData.price_per_night ? parseFloat(formData.price_per_night as any) : null,
+        bedrooms: formData.bedrooms ? parseInt(formData.bedrooms as any) : null,
+        bathrooms: formData.bathrooms ? parseInt(formData.bathrooms as any) : null,
         
-        floor: formData.floor ? parseInt(formData.floor as any) : null,
+        floor: formData.floor ? formData.floor ? parseInt(formData.floor as any) : null : null,
       };
 
       if (appartement?.id) {

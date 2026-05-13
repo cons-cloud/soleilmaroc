@@ -61,7 +61,7 @@ const RestaurantCard: React.FC<RestaurantCardProps> = ({
 
         <div className="flex items-center justify-between mt-auto pt-4 border-t border-gray-50">
           <Link 
-            to={`/services/restaurants/${id}`}
+            to={`/restaurants/${id}`}
             className="text-emerald-600 font-semibold text-sm hover:text-emerald-700 transition-colors"
           >
             Voir le menu

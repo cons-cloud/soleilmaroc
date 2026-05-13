@@ -34,16 +34,15 @@ const Immobilier = () => {
   const [priceRange, setPriceRange] = useState<string>('all');
 
   useEffect(() => {
-    loadBiens();
+    loadProperties();
   }, []);
 
-  const loadBiens = async () => {
+  const loadProperties = async () => {
     try {
       setIsLoading(true);
       const { data, error } = await supabase
-        .from('immobilier')
+        .from('immobilier_marocsoleil')
         .select('*')
-        .eq('available', true)
         .order('created_at', { ascending: false });
 
       if (error) throw error;

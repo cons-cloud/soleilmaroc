@@ -4,6 +4,7 @@ import { Megaphone, Plus, Edit, Trash2, MapPin } from 'lucide-react';
 import toast from 'react-hot-toast';
 import AnnonceForm from '../../../components/forms/AnnonceForm';
 import ConfirmDialog from '../../../components/modals/ConfirmDialog';
+import { deleteImage } from '../../../lib/storage';
 
 const AnnoncesManagement: React.FC = () => {
   const [items, setItems] = useState<any[]>([]);
@@ -128,6 +129,16 @@ const AnnoncesManagement: React.FC = () => {
         return;
       }
       
+      // Nettoyer les images dans le storage
+      if (annonceToDelete.images && annonceToDelete.images.length > 0) {
+        const deletePromises = annonceToDelete.images.map((url: string) => 
+          deleteImage(url, 'annonces_marocsoleil').catch(err => 
+            console.warn('Could not delete image:', url, err)
+          )
+        );
+        await Promise.all(deletePromises);
+      }
+
       // Supprimer l'annonce avec les en-têtes d'authentification
       const { error: deleteError } = await supabase
         .from('annonces_marocsoleil')

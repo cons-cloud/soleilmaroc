@@ -77,11 +77,16 @@ const HotelForm: React.FC<HotelFormProps> = ({ hotel, onClose, onSuccess }) => {
     setLoading(true);
 
     try {
+      const { data: { user } } = await supabase.auth.getUser();
+      const userId = user?.id;
       const dataToSave = {
+        user_id: userId,
+        created_by: userId,
+        partner_id: userId,
         ...formData,
         images,
-        price_per_night: parseFloat(formData.price_per_night as any),
-        stars: parseInt(formData.stars as any),
+        price_per_night: formData.price_per_night ? parseFloat(formData.price_per_night as any) : null,
+        stars: formData.stars ? parseInt(formData.stars as any) : null,
       };
 
       if (hotel?.id) {

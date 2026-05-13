@@ -4,6 +4,7 @@ import { Activity, Plus, Edit, Trash2, MapPin } from 'lucide-react';
 import toast from 'react-hot-toast';
 import ActiviteForm from '../../../components/forms/ActiviteForm';
 import ConfirmDialog from '../../../components/modals/ConfirmDialog';
+import { deleteImage } from '../../../lib/storage';
 
 const ActivitesTouristiquesManagement: React.FC = () => {
   const [items, setItems] = useState<any[]>([]);
@@ -134,6 +135,16 @@ const ActivitesTouristiquesManagement: React.FC = () => {
   const handleDeleteConfirm = async () => {
     if (!activiteToDelete) return;
     try {
+      // Nettoyer les images dans le storage
+      if (activiteToDelete.images && activiteToDelete.images.length > 0) {
+        const deletePromises = activiteToDelete.images.map((url: string) => 
+          deleteImage(url, 'activites_marocsoleil').catch(err => 
+            console.warn('Could not delete image:', url, err)
+          )
+        );
+        await Promise.all(deletePromises);
+      }
+
       const { error } = await supabase.from('activites_touristiques_marocsoleil').delete().eq('id', activiteToDelete.id);
       if (error) throw error;
       toast.success('Activité supprimée');

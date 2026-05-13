@@ -33,23 +33,75 @@ const PartnerProducts: React.FC = () => {
   const [sortConfig, setSortConfig] = useState<{ key: keyof Product; direction: 'asc' | 'desc' } | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
-  // Charger les produits du partenaire
+  // Mapping type -> { table, ownerCol }
+  const SERVICE_TABLE_MAP: Record<string, { table: string; ownerCol: string }> = {
+    'appartement': { table: 'appartements_marocsoleil', ownerCol: 'user_id' },
+    'villa': { table: 'villas_marocsoleil', ownerCol: 'user_id' },
+    'hotel': { table: 'hotels_marocsoleil', ownerCol: 'user_id' },
+    'voiture': { table: 'locations_voitures_marocsoleil', ownerCol: 'user_id' },
+    'circuit': { table: 'circuits_touristiques_marocsoleil', ownerCol: 'user_id' },
+    'restaurant': { table: 'restaurants_marocsoleil', ownerCol: 'user_id' },
+    'evenement': { table: 'evenements_marocsoleil', ownerCol: 'user_id' },
+  };
+
+  // Helper: fetches data from a specific table for this partner
+  const fetchFromTable = async (
+    tableName: string,
+    ownerCol: string,
+    productType: string
+  ) => {
+    try {
+      const { data, error } = await supabase
+        .from(tableName)
+        .select('*')
+        .eq(ownerCol, user!.id);
+      if (error) {
+        console.warn(`[loadProducts] Erreur sur ${tableName}:`, error.message);
+        return [];
+      }
+      return (data || []).map((item: any) => ({
+        ...item,
+        product_type: productType,
+        title: item.title || item.name || item.marque || 'Sans titre',
+        price: item.price || item.price_per_night || item.price_per_day || item.price_per_person || 0,
+      }));
+    } catch {
+      return [];
+    }
+  };
+
+  // Charger tous les produits et services du partenaire
   const loadProducts = async () => {
     if (!user?.id) return;
     
     try {
       setLoading(true);
       
-      let query = supabase
+      // 1. Charger les produits génériques (partner_products_marocsoleil)
+      const { data: genericProducts } = await supabase
         .from('partner_products_marocsoleil')
         .select('*')
         .eq('partner_id', user.id);
-        
-      const { data, error } = await query;
+
+      const normalizedGeneric = (genericProducts || []).map(p => ({
+        ...p,
+        product_type: p.product_type || 'service',
+      }));
+
+      // 2. Charger chaque table spécifique en parallèle
+      const specificResults = await Promise.all(
+        Object.entries(SERVICE_TABLE_MAP).map(([type, { table, ownerCol }]) =>
+          fetchFromTable(table, ownerCol, type)
+        )
+      );
       
-      if (error) throw error;
+      // 3. Combiner tout
+      const combined = [
+        ...normalizedGeneric,
+        ...specificResults.flat(),
+      ];
       
-      setProducts(data || []);
+      setProducts(combined);
     } catch (error) {
       console.error('Erreur lors du chargement des produits:', error);
       toast.error('Erreur lors du chargement des produits');
@@ -62,28 +114,26 @@ const PartnerProducts: React.FC = () => {
     loadProducts();
   }, [user?.id]);
 
-  // S'abonner aux changements en temps réel
+  // S'abonner aux changements en temps réel sur TOUTES les tables
   useEffect(() => {
     if (!user?.id) return;
 
-    const channel = supabase
-      .channel('partner_products_changes')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'partner_products_marocsoleil',
-          filter: `partner_id=eq.${user.id}`
-        },
-        () => {
-          loadProducts();
-        }
-      )
+    const channels = Object.entries(SERVICE_TABLE_MAP).map(([type, { table }]) =>
+      supabase
+        .channel(`partner_${type}_changes`)
+        .on('postgres_changes', { event: '*', schema: 'public', table }, () => loadProducts())
+        .subscribe()
+    );
+
+    // Aussi écouter partner_products_marocsoleil
+    const genericChannel = supabase
+      .channel('partner_generic_changes')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'partner_products_marocsoleil' }, () => loadProducts())
       .subscribe();
 
     return () => {
-      supabase.removeChannel(channel);
+      channels.forEach(ch => supabase.removeChannel(ch));
+      supabase.removeChannel(genericChannel);
     };
   }, [user?.id]);
 
@@ -96,9 +146,15 @@ const PartnerProducts: React.FC = () => {
     try {
       setDeletingId(id);
       
+      // Déterminer la table cible
+      const product = products.find(p => p.id === id);
+      const pType = (product as any)?.product_type || 'service';
+      const mapping = SERVICE_TABLE_MAP[pType];
+      const tableName = mapping?.table || 'partner_products_marocsoleil';
+      
       // Supprimer les images du stockage
       const { data: productData } = await supabase
-        .from('partner_products_marocsoleil')
+        .from(tableName)
         .select('images')
         .eq('id', id)
         .single();
@@ -106,19 +162,28 @@ const PartnerProducts: React.FC = () => {
       if (productData?.images?.length) {
         const filesToDelete = productData.images.map((url: string) => {
           const path = url.split('/').pop();
-          return `products/${id}/${path}`;
+          return `${user?.id || 'deleted'}/${path}`;
         });
         
-        const { error: deleteError } = await supabase.storage
-          .from('maroc2030_marocsoleil')
+        const bucketMap: Record<string, string> = {
+          'restaurant': 'restaurants_marocsoleil',
+          'hotel': 'hotels_marocsoleil',
+          'villa': 'villas_marocsoleil',
+          'appartement': 'appartements_marocsoleil',
+          'voiture': 'voitures_marocsoleil',
+          'circuit': 'circuits_marocsoleil',
+          'evenement': 'evenements_marocsoleil'
+        };
+        const bucket = bucketMap[pType] || 'services_marocsoleil';
+        
+        await supabase.storage
+          .from(bucket)
           .remove(filesToDelete);
-          
-        if (deleteError) throw deleteError;
       }
       
       // Supprimer le produit de la base de données
       const { error } = await supabase
-        .from('partner_products_marocsoleil')
+        .from(tableName)
         .delete()
         .eq('id', id);
         

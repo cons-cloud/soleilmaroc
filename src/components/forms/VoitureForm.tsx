@@ -66,13 +66,18 @@ const VoitureForm: React.FC<VoitureFormProps> = ({ voiture, onClose, onSuccess }
     setLoading(true);
 
     try {
+      const { data: { user } } = await supabase.auth.getUser();
+      const userId = user?.id;
       const dataToSave = {
+        user_id: userId,
+        created_by: userId,
+        partner_id: userId,
         ...formData,
         images,
-        price_per_day: parseFloat(formData.price_per_day as any),
-        annee: parseInt(formData.annee as any),
-        places: parseInt(formData.places as any),
-        portes: parseInt(formData.portes as any),
+        price_per_day: formData.price_per_day ? parseFloat(formData.price_per_day as any) : null,
+        annee: formData.annee ? parseInt(formData.annee as any) : null,
+        places: formData.places ? parseInt(formData.places as any) : null,
+        portes: formData.portes ? parseInt(formData.portes as any) : null,
       };
 
       if (voiture?.id) {

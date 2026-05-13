@@ -110,7 +110,7 @@ const PartnerAnnonces: React.FC = () => {
                 </p>
                 <div className="flex justify-between items-center">
                   <span className="font-bold text-blue-600">
-                    {annonce.price ? `${annonce.price} €` : 'Prix sur demande'}
+                    {annonce.price ? `${annonce.price} MAD` : 'Prix sur demande'}
                   </span>
                   <div className="flex space-x-2">
                     <button

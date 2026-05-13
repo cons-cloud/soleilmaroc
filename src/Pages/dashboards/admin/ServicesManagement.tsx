@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from '../../../lib/supabase';
 import { Plus, Edit, Trash2, Search, Filter, Package } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { deleteImage } from '../../../lib/storage';
 
 interface Service {
   id: string;
@@ -77,6 +78,19 @@ const ServicesManagement: React.FC = () => {
     if (!confirm('Êtes-vous sûr de vouloir supprimer ce service ?')) return;
 
     try {
+      // Rechercher le service pour avoir ses images
+      const { data: service } = await supabase.from('services_marocsoleil').select('images').eq('id', id).single();
+      
+      // Nettoyer les images dans le storage
+      if (service?.images && service.images.length > 0) {
+        const deletePromises = service.images.map((url: string) => 
+          deleteImage(url, 'services_marocsoleil').catch(err => 
+            console.warn('Could not delete image:', url, err)
+          )
+        );
+        await Promise.all(deletePromises);
+      }
+
       const { error } = await supabase
         .from('services_marocsoleil')
         .delete()

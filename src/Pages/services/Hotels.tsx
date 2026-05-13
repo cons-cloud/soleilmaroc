@@ -24,7 +24,7 @@ const Hotels: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState<string>('');
   
   // Récupération des données avec le hook useServices
-  const { services, loading, error } = useServices('hotels');
+  const { services, loading, error } = useServices('hotels_marocsoleil');
   
   // Conversion des services en type Hotel
   const hotels = services as Hotel[];
@@ -79,8 +79,8 @@ const Hotels: React.FC = () => {
     return (
       <div className="min-h-screen">
         <ServiceHero 
-          title="Hôtels de charme"
-          subtitle="Découvrez nos hôtels soigneusement sélectionnés pour un séjour inoubliable"
+          title="Hôtels & Riads de charme"
+          subtitle="Découvrez nos hôtels et riads soigneusement sélectionnés pour un séjour inoubliable"
           images={[
             '/assets/hero/A.jpg',
             '/assets/hero/B.jpg',
@@ -90,7 +90,7 @@ const Hotels: React.FC = () => {
         <div className="container mx-auto px-4 py-12">
           <LoadingState 
             fullScreen={false}
-            text="Chargement des hôtels..."
+            text="Chargement des hôtels et riads..."
           />
         </div>
       </div>
@@ -119,8 +119,8 @@ const Hotels: React.FC = () => {
   return (
     <div className="min-h-screen bg-gray-50">
       <ServiceHero
-        title="Nos Hôtels"
-        subtitle="Découvrez notre sélection d'hôtels de charme pour un séjour inoubliable au Maroc"
+        title="Nos Hôtels & Riads"
+        subtitle="Découvrez notre sélection d'hôtels et riads de charme pour un séjour inoubliable au Maroc"
         images={[
           '/assets/hero/A.jpg',
           '/assets/hero/B.jpg',
@@ -182,7 +182,7 @@ const Hotels: React.FC = () => {
             </div>
           ) : (
             <div className="text-center py-12">
-              <p className="text-gray-500">Aucun hôtel trouvé pour votre recherche.</p>
+              <p className="text-gray-500">Aucun hôtel ou riad trouvé pour votre recherche.</p>
               {selectedCity && (
                 <button
                   onClick={() => {

@@ -3,19 +3,21 @@ import { supabase } from '../lib/supabase';
 import { useRealtimeSubscription } from './useRealtimeSubscription';
 
 export type ServiceType = 
+  | 'hotels_marocsoleil'
+  | 'appartements_marocsoleil'
+  | 'villas_marocsoleil'
+  | 'locations_voitures_marocsoleil'
+  | 'circuits_touristiques_marocsoleil'
+  | 'evenements_marocsoleil'
+  | 'restaurants_marocsoleil'
+  | 'annonces_marocsoleil'
+  | 'partner_products_marocsoleil'
+  // Legacy aliases
   | 'hotels' 
   | 'apartments' 
   | 'villas' 
   | 'car_rentals' 
-  | 'circuit_touristiques' 
-  | 'restaurants_marocsoleil'
-  | 'hotels_marocsoleil'
-  | 'appartements_marocsoleil'
-  | 'villas_marocsoleil'
-  | 'voitures_marocsoleil'
-  | 'circuits_marocsoleil'
-  | 'partner_products_marocsoleil'
-  | 'partner_products';
+  | 'circuit_touristiques';
 
 export interface Service {
   id: string;
@@ -86,12 +88,17 @@ async function fetchServicesQuery(
   if (options.availableOnly) query = query.eq('available', true);
   if (options.featured) query = query.eq('featured', true);
   if (options.userId) {
-    // Some tables use user_id, some use partner_id
-    if (serviceType === 'restaurants_marocsoleil' || serviceType === 'partner_products_marocsoleil') {
-      query = query.eq('partner_id', options.userId);
-    } else {
-      query = query.eq('user_id', options.userId);
-    }
+    // Determine which owner column to use
+    const partnerIdTables = [
+      'restaurants_marocsoleil', 
+      'partner_products_marocsoleil',
+      'locations_voitures_marocsoleil',
+      'circuits_touristiques_marocsoleil',
+      'evenements_marocsoleil'
+    ];
+    
+    const ownerColumn = partnerIdTables.includes(serviceType) ? 'partner_id' : 'user_id';
+    query = query.eq(ownerColumn, options.userId);
   }
   if (options.limit) query = query.limit(options.limit);
 

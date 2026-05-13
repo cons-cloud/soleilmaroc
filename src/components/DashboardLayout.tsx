@@ -56,7 +56,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, role }) => 
       admin: [
         { name: 'Utilisateurs', path: '/dashboard/admin/users', icon: Users },
         { name: 'Partenaires', path: '/dashboard/admin/partners', icon: UserCheck },
-        { name: 'Hôtels', path: '/dashboard/admin/hotels', icon: Hotel },
+        { name: 'Hôtels & Riads', path: '/dashboard/admin/hotels', icon: Hotel },
         { name: 'Appartements', path: '/dashboard/admin/appartements', icon: Building },
         { name: 'Villas', path: '/dashboard/admin/villas', icon: Home },
         { name: 'Voitures', path: '/dashboard/admin/voitures', icon: Car },

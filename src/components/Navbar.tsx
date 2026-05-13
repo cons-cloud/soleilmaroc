@@ -56,7 +56,7 @@ const Navbar: React.FC<NavbarProps> = () => {
     'Location de voitures': Car,
     'Appartements': Building2,
     'Villas': Home,
-    'Hôtels': Hotel,
+    'Hôtels & Riads': Hotel,
     'Restaurants': Utensils,
   };
 
@@ -65,12 +65,12 @@ const Navbar: React.FC<NavbarProps> = () => {
     'Location de voitures': 'from-purple-500 to-pink-500',
     'Appartements': 'from-orange-500 to-red-500',
     'Villas': 'from-green-500 to-emerald-500',
-    'Hôtels': 'from-indigo-500 to-green-500',
+    'Hôtels & Riads': 'from-indigo-500 to-green-500',
     'Restaurants': 'from-red-500 to-orange-500',
   };
 
   // Ordre fixe des sous‑menus pour desktop / mobile / tablette
-  const servicesOrder = ['Tourisme', 'Location de voitures', 'Appartements', 'Villas', 'Hôtels', 'Restaurants'];
+  const servicesOrder = ['Tourisme', 'Location de voitures', 'Appartements', 'Villas', 'Hôtels & Riads', 'Restaurants'];
   const orderSubmenu = (submenu?: Array<{ name: string; path: string }>) => {
     if (!submenu) return [];
     return submenu.slice().sort((a, b) => {
@@ -89,7 +89,7 @@ const Navbar: React.FC<NavbarProps> = () => {
         { name: 'Location de voitures', path: ROUTES.CARS },
         { name: 'Appartements', path: ROUTES.APARTMENTS },
         { name: 'Villas', path: ROUTES.VILLAS },
-        { name: 'Hôtels', path: ROUTES.HOTELS },
+        { name: 'Hôtels & Riads', path: ROUTES.HOTELS },
         { name: 'Restaurants', path: ROUTES.RESTAURANTS },
       ],
     },

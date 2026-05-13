@@ -4,6 +4,7 @@ import { UserCheck, Plus, Edit, Trash2, Star } from 'lucide-react';
 import toast from 'react-hot-toast';
 import GuideForm from '../../../components/forms/GuideForm';
 import ConfirmDialog from '../../../components/modals/ConfirmDialog';
+import { deleteImage } from '../../../lib/storage';
 
 const GuidesTouristiquesManagement: React.FC = () => {
   const [items, setItems] = useState<any[]>([]);
@@ -72,6 +73,16 @@ const GuidesTouristiquesManagement: React.FC = () => {
   const handleDeleteConfirm = async () => {
     if (!guideToDelete) return;
     try {
+      // Nettoyer les images dans le storage
+      if (guideToDelete.images && guideToDelete.images.length > 0) {
+        const deletePromises = guideToDelete.images.map((url: string) => 
+          deleteImage(url, 'guides_marocsoleil').catch(err => 
+            console.warn('Could not delete image:', url, err)
+          )
+        );
+        await Promise.all(deletePromises);
+      }
+
       const { error } = await supabase.from('guides_touristiques_marocsoleil').delete().eq('id', guideToDelete.id);
       if (error) throw error;
       toast.success('Guide supprimé');

@@ -113,14 +113,38 @@ const PartnerDashboard: React.FC = () => {
           if (statsError) {
             console.warn('Fonction RPC non disponible, calcul manuel des stats:', statsError);
             // Calculer manuellement les statistiques
-            // Charger d'abord les produits pour obtenir les IDs
-            const productsRes = await supabase.from('partner_products_marocsoleil').select('id, available').eq('partner_id', user?.id);
-            const productIds = (productsRes.data || []).map((p: any) => p.id);
+            const tables = [
+              'partner_products_marocsoleil',
+              'restaurants_marocsoleil',
+              'hotels_marocsoleil',
+              'villas_marocsoleil',
+              'appartements_marocsoleil',
+              'locations_voitures_marocsoleil',
+              'circuits_touristiques_marocsoleil',
+              'evenements_marocsoleil'
+            ];
+            
+            let allProductIds: string[] = [];
+            let totalActive = 0;
+            let totalCount = 0;
+
+            for (const table of tables) {
+              const { data: pData } = await supabase
+                .from(table)
+                .select('id, available, is_available')
+                .or(`user_id.eq.${user?.id},partner_id.eq.${user?.id}`);
+              
+              if (pData) {
+                totalCount += pData.length;
+                totalActive += pData.filter((p: any) => p.available !== false && p.is_available !== false).length;
+                allProductIds = [...allProductIds, ...pData.map((p: any) => p.id)];
+              }
+            }
             
             // Charger les réservations (via partner_id ou service_id)
             let bookingsQuery = supabase.from('bookings_marocsoleil').select('id, total_amount, status');
-            if (productIds.length > 0) {
-              bookingsQuery = bookingsQuery.or(`partner_id.eq.${user?.id},service_id.in.(${productIds.join(',')})`);
+            if (allProductIds.length > 0) {
+              bookingsQuery = bookingsQuery.or(`partner_id.eq.${user?.id},service_id.in.(${allProductIds.join(',')})`);
             } else {
               bookingsQuery = bookingsQuery.eq('partner_id', user?.id);
             }
@@ -133,8 +157,8 @@ const PartnerDashboard: React.FC = () => {
               paymentsRes = await supabase.from('payments_marocsoleil').select('amount, status').in('booking_id', bookingIds);
             }
             
-            const totalProducts = (productsRes.data || []).length;
-            const activeProducts = (productsRes.data || []).filter((p: any) => p.available).length;
+            const totalProducts = totalCount;
+            const activeProducts = totalActive;
             const totalBookings = (bookingsRes.data || []).length;
             const confirmedBookings = (bookingsRes.data || []).filter((b: any) => b.status === 'confirmed').length;
             const completedBookings = (bookingsRes.data || []).filter((b: any) => b.status === 'completed').length;

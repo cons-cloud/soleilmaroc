@@ -140,13 +140,13 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ property, type, onClose, on
         const filePath = `properties/${fileName}`;
 
         const { error: uploadError } = await supabase.storage
-          .from('property-images')
+          .from('immobilier_marocsoleil')
           .upload(filePath, file);
 
         if (uploadError) throw uploadError;
 
         const { data: { publicUrl } } = supabase.storage
-          .from('property-images')
+          .from('immobilier_marocsoleil')
           .getPublicUrl(filePath);
 
         uploadedUrls.push(publicUrl);

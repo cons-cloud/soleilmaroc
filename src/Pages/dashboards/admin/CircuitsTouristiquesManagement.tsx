@@ -4,6 +4,7 @@ import { Map, Plus, Edit, Trash2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import CircuitForm from '../../../components/forms/CircuitForm';
 import ConfirmDialog from '../../../components/modals/ConfirmDialog';
+import { deleteImage } from '../../../lib/storage';
 
 const CircuitsTouristiquesManagement: React.FC = () => {
   const [items, setItems] = useState<any[]>([]);
@@ -72,6 +73,16 @@ const CircuitsTouristiquesManagement: React.FC = () => {
   const handleDeleteConfirm = async () => {
     if (!circuitToDelete) return;
     try {
+      // Nettoyer les images dans le storage
+      if (circuitToDelete.images && circuitToDelete.images.length > 0) {
+        const deletePromises = circuitToDelete.images.map((url: string) => 
+          deleteImage(url, 'circuits_marocsoleil').catch(err => 
+            console.warn('Could not delete image:', url, err)
+          )
+        );
+        await Promise.all(deletePromises);
+      }
+
       const { error } = await supabase.from('circuits_touristiques_marocsoleil').delete().eq('id', circuitToDelete.id);
       if (error) throw error;
       toast.success('Circuit supprimé');

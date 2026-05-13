@@ -4,6 +4,7 @@ import { Building2, Plus, Edit, Trash2, MapPin } from 'lucide-react';
 import toast from 'react-hot-toast';
 import ImmobilierForm from '../../../components/forms/ImmobilierForm';
 import ConfirmDialog from '../../../components/modals/ConfirmDialog';
+import { deleteImage } from '../../../lib/storage';
 
 const ImmobilierManagement: React.FC = () => {
   const [items, setItems] = useState<any[]>([]);
@@ -72,6 +73,16 @@ const ImmobilierManagement: React.FC = () => {
   const handleDeleteConfirm = async () => {
     if (!itemToDelete) return;
     try {
+      // Nettoyer les images dans le storage
+      if (itemToDelete.images && itemToDelete.images.length > 0) {
+        const deletePromises = itemToDelete.images.map((url: string) => 
+          deleteImage(url, 'immobilier_marocsoleil').catch(err => 
+            console.warn('Could not delete image:', url, err)
+          )
+        );
+        await Promise.all(deletePromises);
+      }
+
       const { error } = await supabase.from('immobilier_marocsoleil').delete().eq('id', itemToDelete.id);
       if (error) throw error;
       toast.success('Bien immobilier supprimé');

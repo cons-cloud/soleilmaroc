@@ -4,6 +4,7 @@ import { Building, Plus, Edit, Trash2, MapPin } from 'lucide-react';
 import toast from 'react-hot-toast';
 import AppartementForm from '../../../components/forms/AppartementForm';
 import ConfirmDialog from '../../../components/modals/ConfirmDialog';
+import { deleteImage } from '../../../lib/storage';
 
 const AppartementsManagement: React.FC = () => {
   const [appartements, setAppartements] = useState<any[]>([]);
@@ -72,6 +73,16 @@ const AppartementsManagement: React.FC = () => {
   const handleDeleteConfirm = async () => {
     if (!appartementToDelete) return;
     try {
+      // Nettoyer les images dans le storage
+      if (appartementToDelete.images && appartementToDelete.images.length > 0) {
+        const deletePromises = appartementToDelete.images.map((url: string) => 
+          deleteImage(url, 'appartements_marocsoleil').catch(err => 
+            console.warn('Could not delete image:', url, err)
+          )
+        );
+        await Promise.all(deletePromises);
+      }
+
       const { error } = await supabase.from('appartements_marocsoleil').delete().eq('id', appartementToDelete.id);
       if (error) throw error;
       toast.success('Appartement supprimé');

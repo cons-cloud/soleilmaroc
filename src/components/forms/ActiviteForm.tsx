@@ -59,12 +59,17 @@ const ActiviteForm: React.FC<ActiviteFormProps> = ({ activite, onClose, onSucces
     setLoading(true);
 
     try {
+      const { data: { user } } = await supabase.auth.getUser();
+      const userId = user?.id;
       const dataToSave = {
+        user_id: userId,
+        created_by: userId,
+        partner_id: userId,
         ...formData,
         images,
-        price_per_person: parseFloat(formData.price_per_person as any),
-        duration_hours: parseFloat(formData.duration_hours as any),
-        max_participants: formData.max_participants ? parseInt(formData.max_participants as any) : null,
+        price_per_person: formData.price_per_person ? parseFloat(formData.price_per_person as any) : null,
+        duration_hours: formData.duration_hours ? parseFloat(formData.duration_hours as any) : null,
+        max_participants: formData.max_participants ? formData.max_participants ? parseInt(formData.max_participants as any) : null : null,
       };
 
       if (activite?.id) {

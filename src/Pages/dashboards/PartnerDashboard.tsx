@@ -55,7 +55,7 @@ const PartnerDashboard: React.FC = () => {
     queryFn: async () => {
       if (!user) return [];
       const { data, error } = await supabase
-        .from('products')
+        .from('partner_products_marocsoleil')
         .select('*')
         .eq('partner_id', user.id)
         .order('created_at', { ascending: false });
@@ -67,7 +67,7 @@ const PartnerDashboard: React.FC = () => {
 
   // REAL-TIME SYNC
   useRealtimeSubscription({
-    table: 'products',
+    table: 'partner_products_marocsoleil',
     callback: () => {
       queryClient.invalidateQueries({ queryKey: ['partner-products', user?.id] });
       queryClient.invalidateQueries({ queryKey: ['partner-stats', user?.id] });
@@ -98,7 +98,7 @@ const PartnerDashboard: React.FC = () => {
     
     try {
       const { error } = await supabase
-        .from('products')
+        .from('partner_products_marocsoleil')
         .delete()
         .eq('id', productId);
       

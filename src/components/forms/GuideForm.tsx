@@ -83,21 +83,26 @@ const GuideForm: React.FC<GuideFormProps> = ({ guide, onClose, onSuccess }) => {
     setLoading(true);
 
     try {
+      const { data: { user } } = await supabase.auth.getUser();
+      const userId = user?.id;
       const dataToSave = {
+        user_id: userId,
+        created_by: userId,
+        partner_id: userId,
         ...formData,
         images,
-        price_per_day: parseFloat(formData.price_per_day as any),
-        experience_years: parseInt(formData.experience_years as any),
+        price_per_day: formData.price_per_day ? parseFloat(formData.price_per_day as any) : null,
+        experience_years: formData.experience_years ? parseInt(formData.experience_years as any) : null,
       };
 
       if (guide?.id) {
-        const { error } = await supabase.from('guides_touristiques').update(dataToSave).eq('id', guide.id);
+        const { error } = await supabase.from('guides_touristiques_marocsoleil').update(dataToSave).eq('id', guide.id);
         if (error) throw error;
-        toast.success('Guide modifié');
+        toast.success('Guide modifiée');
       } else {
-        const { error } = await supabase.from('guides_touristiques').insert([dataToSave]);
+        const { error } = await supabase.from('guides_touristiques_marocsoleil').insert([dataToSave]);
         if (error) throw error;
-        toast.success('Guide créé');
+        toast.success('Guide créée');
       }
 
       onSuccess();

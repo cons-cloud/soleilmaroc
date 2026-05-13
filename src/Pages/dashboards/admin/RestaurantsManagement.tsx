@@ -5,19 +5,30 @@ import LoadingState from '../../../components/LoadingState';
 import { Link } from 'react-router-dom';
 import { supabase } from '../../../lib/supabase';
 import toast from 'react-hot-toast';
+import { deleteImage } from '../../../lib/storage';
 
 const RestaurantsManagement: React.FC = () => {
   const { services: restaurants, loading, refresh } = useServices('restaurants_marocsoleil');
   const [searchTerm, setSearchTerm] = useState('');
 
-  const handleDelete = async (id: string) => {
-    if (!window.confirm('Êtes-vous sûr de vouloir supprimer ce restaurant ?')) return;
+  const handleDelete = async (restaurant: any) => {
+    if (!window.confirm(`Êtes-vous sûr de vouloir supprimer le restaurant "${restaurant.name}" ?`)) return;
     
     try {
+      // Nettoyer les images dans le storage
+      if (restaurant.images && restaurant.images.length > 0) {
+        const deletePromises = restaurant.images.map((url: string) => 
+          deleteImage(url, 'restaurants_marocsoleil').catch(err => 
+            console.warn('Could not delete image:', url, err)
+          )
+        );
+        await Promise.all(deletePromises);
+      }
+
       const { error } = await supabase
         .from('restaurants_marocsoleil')
         .delete()
-        .eq('id', id);
+        .eq('id', restaurant.id);
 
       if (error) throw error;
       toast.success('Restaurant supprimé avec succès');
@@ -114,7 +125,7 @@ const RestaurantsManagement: React.FC = () => {
                   <td className="px-6 py-4 text-right">
                     <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                       <a 
-                        href={`/services/restaurants/${restaurant.id}`}
+                        href={`/restaurants/${restaurant.id}`}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="p-2 text-gray-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-all"
@@ -130,7 +141,7 @@ const RestaurantsManagement: React.FC = () => {
                         <Edit className="h-5 w-5" />
                       </Link>
                       <button
-                        onClick={() => handleDelete(restaurant.id)}
+                        onClick={() => handleDelete(restaurant)}
                         className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"
                         title="Supprimer"
                       >

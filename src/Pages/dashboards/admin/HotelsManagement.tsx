@@ -4,6 +4,7 @@ import { Hotel, Plus, Edit, Trash2, Star, MapPin, Phone, Search } from 'lucide-r
 import toast from 'react-hot-toast';
 import HotelForm from '../../../components/forms/HotelForm';
 import ConfirmDialog from '../../../components/modals/ConfirmDialog';
+import { deleteImage } from '../../../lib/storage';
 
 interface Hotel {
   id: string;
@@ -21,6 +22,8 @@ interface Hotel {
   featured: boolean;
   images: string[];
   rooms_count: number;
+  user_id?: string;
+  partner_id?: string;
   created_at: string;
 }
 
@@ -77,6 +80,8 @@ const HotelsManagement: React.FC = () => {
         featured,
         images,
         rooms_count,
+        user_id,
+        partner_id,
         created_at
       `)
       .order('created_at', { ascending: false });
@@ -102,6 +107,16 @@ const HotelsManagement: React.FC = () => {
     if (!hotelToDelete) return;
 
     try {
+      // Nettoyer les images dans le storage
+      if (hotelToDelete.images && hotelToDelete.images.length > 0) {
+        const deletePromises = hotelToDelete.images.map(url => 
+          deleteImage(url, 'hotels_marocsoleil').catch(err => 
+            console.warn('Could not delete image:', url, err)
+          )
+        );
+        await Promise.all(deletePromises);
+      }
+
       const { error } = await supabase.from('hotels_marocsoleil').delete().eq('id', hotelToDelete.id);
       if (error) throw error;
       toast.success('Hôtel supprimé');

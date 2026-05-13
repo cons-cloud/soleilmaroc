@@ -123,7 +123,12 @@ const CircuitForm: React.FC<CircuitFormProps> = ({ circuit, onClose, onSuccess }
   setLoading(true);
 
   try {
-    const dataToSave = {
+    const { data: { user } } = await supabase.auth.getUser();
+      const userId = user?.id;
+      const dataToSave = {
+        user_id: userId,
+        created_by: userId,
+        partner_id: userId,
       ...formData,
       images,
       duration_days: Number(formData.duration_days) || 1,

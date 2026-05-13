@@ -61,11 +61,18 @@ const EvenementForm: React.FC<EvenementFormProps> = ({ evenement, onClose, onSuc
     setLoading(true);
 
     try {
+      const { data: { user } } = await supabase.auth.getUser();
+      const userId = user?.id;
       const dataToSave = {
+        user_id: userId,
+        created_by: userId,
+        partner_id: userId,
         ...formData,
         images,
-        price: formData.price ? parseFloat(formData.price as any) : null,
-        max_attendees: formData.max_attendees ? parseInt(formData.max_attendees as any) : null,
+        event_date: formData.event_date ? formData.event_date : null,
+        event_time: formData.event_time ? formData.event_time : null,
+        price: formData.price ? formData.price ? parseFloat(formData.price as any) : null : null,
+        max_attendees: formData.max_attendees ? formData.max_attendees ? parseInt(formData.max_attendees as any) : null : null,
       };
 
       if (evenement?.id) {

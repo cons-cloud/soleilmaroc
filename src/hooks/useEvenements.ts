@@ -31,6 +31,14 @@ async function fetchEvents(): Promise<Event[]> {
       // Filtrer et trier en mémoire pour éviter les erreurs SQL 400 si les colonnes manquent
       mainEvents = (data || [])
         .filter(e => e.available !== false) // Par défaut true si manquant
+        .map(e => ({
+          ...e,
+          // Normalize: extract 1st image from images[] into the 'image' field used by the UI
+          image: e.image ||
+            (Array.isArray(e.images) && e.images.length > 0 ? e.images[0] : null) ||
+            e.main_image ||
+            '/assets/events/T0.jpeg',
+        }))
         .sort((a, b) => {
           const dateA = a.event_date || a.date || '';
           const dateB = b.event_date || b.date || '';

@@ -130,7 +130,12 @@ const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
       throw new Error('Le prix doit être un nombre positif');
     }
 
-    const dataToSave = {
+    const { data: { user } } = await supabase.auth.getUser();
+      const userId = user?.id;
+      const dataToSave = {
+        user_id: userId,
+        created_by: userId,
+        partner_id: userId,
       ...formData,
       price,
       // Conversion des autres champs numériques avec gestion des valeurs vides

@@ -259,7 +259,16 @@ const BookingsManagement: React.FC = () => {
           
           if (serviceIds.length > 0) {
             // Essayer différentes tables de services
-            const tables = ['hotels', 'villas', 'appartements', 'locations_voitures', 'circuits_touristiques', 'services'];
+            const tables = [
+              'hotels_marocsoleil', 
+              'villas_marocsoleil', 
+              'appartements_marocsoleil', 
+              'locations_voitures_marocsoleil', 
+              'circuits_touristiques_marocsoleil', 
+              'evenements_marocsoleil',
+              'restaurants_marocsoleil',
+              'annonces_marocsoleil'
+            ];
             
             for (const table of tables) {
               try {

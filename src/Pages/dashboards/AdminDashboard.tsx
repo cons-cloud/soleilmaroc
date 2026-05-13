@@ -522,7 +522,7 @@ const AdminDashboard: React.FC = () => {
                   onClick={() => navigate('/dashboard/admin/hotels/new')}
                   className="text-gray-700 block w-full px-4 py-2 text-left text-sm hover:bg-gray-100"
                 >
-                  Hôtel
+                  Hôtel & Riad
                 </button>
                 <button
                   onClick={() => navigate('/dashboard/admin/circuits/new')}

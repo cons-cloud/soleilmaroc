@@ -24,7 +24,7 @@ const Evenements = () => {
     try {
       setIsSubscribing(true);
       const { error } = await supabase
-        .from('newsletter_subscriptions')
+        .from('newsletter_subscriptions_marocsoleil')
         .insert({
           email: email,
           subscribed_at: new Date().toISOString(),
@@ -82,11 +82,19 @@ const Evenements = () => {
               className="bg-yellow-50 rounded-xl overflow-hidden shadow-lg hover:shadow-2xl transition-shadow duration-300"
               whileHover={{ y: -5 }}
             >
-              <div className="h-48 overflow-hidden">
+              <div className="h-48 overflow-hidden bg-gray-100">
                 <img 
-                  src={event.image} 
+                  src={
+                    event.image ||
+                    (Array.isArray((event as any).images) && (event as any).images.length > 0
+                      ? (event as any).images[0]
+                      : null) ||
+                    (event as any).main_image ||
+                    '/assets/events/T0.jpeg'
+                  } 
                   alt={event.title}
                   className="w-full h-full object-cover hover:scale-105 transition-transform duration-500"
+                  onError={(e) => { (e.target as HTMLImageElement).src = '/assets/events/T0.jpeg'; }}
                 />
               </div>
               <div className="p-6">
