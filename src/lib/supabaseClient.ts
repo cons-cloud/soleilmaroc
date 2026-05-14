@@ -41,7 +41,7 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
     detectSessionInUrl: true,
     flowType: 'pkce',
     storage: localStorageAdapter,
-    storageKey: 'marocsoleil-supabase-token-v2', // Changement de clé pour débloquer les verrous (locks) corrompus
+    storageKey: 'marocsoleil-supabase-token-v3', // v3 pour résoudre définitivement les problèmes de NavigatorLockAcquireTimeoutError
     debug: import.meta.env.DEV,
   },
 
@@ -57,9 +57,11 @@ supabase.auth.onAuthStateChange((event, session) => {
   console.log('Changement d\'état d\'authentification:', event);
   
   if (event === 'SIGNED_OUT') {
-    // Nettoyer le stockage local lors de la déconnexion
+    // Nettoyer tous les stocks possibles
+    localStorage.removeItem('marocsoleil-supabase-token-v3');
+    localStorage.removeItem('marocsoleil-supabase-token-v2');
     localStorage.removeItem('marocsoleil-supabase-token');
-    console.log('Utilisateur déconnecté');
+    console.log('Utilisateur déconnecté - Stockage nettoyé');
   } else if (event === 'TOKEN_REFRESHED') {
     console.log('Session rafraîchie avec succès');
   } else if (event === 'SIGNED_IN' && session) {
@@ -125,7 +127,9 @@ export const signOut = async () => {
     const { error } = await supabase.auth.signOut();
     if (error) throw error;
     
-    // Nettoyage supplémentaire si nécessaire
+    // Nettoyage complet
+    localStorage.removeItem('marocsoleil-supabase-token-v3');
+    localStorage.removeItem('marocsoleil-supabase-token-v2');
     localStorage.removeItem('marocsoleil-supabase-token');
     
     // Recharger la page pour un nettoyage complet

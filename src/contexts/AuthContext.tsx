@@ -83,9 +83,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   useEffect(() => {
+    // Failsafe: ensure loading is turned off even if Supabase hangs
+    const timeoutId = setTimeout(() => {
+      if (loading) {
+        console.warn('Auth initialization took too long, turning off loading state (failsafe)');
+        setLoading(false);
+      }
+    }, 5000);
+
     const initializeAuth = async () => {
-      const { data: { session: currentSession } } = await supabase.auth.getSession();
-      await handleAuthStateChange('INITIAL_SESSION', currentSession);
+      try {
+        const { data: { session: currentSession }, error: sessionError } = await supabase.auth.getSession();
+        if (sessionError) throw sessionError;
+        await handleAuthStateChange('INITIAL_SESSION', currentSession);
+      } catch (err) {
+        console.error('Error during auth initialization:', err);
+        setLoading(false);
+      }
     };
 
     initializeAuth();
@@ -93,6 +107,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const { data: { subscription } } = supabase.auth.onAuthStateChange(handleAuthStateChange);
 
     return () => {
+      clearTimeout(timeoutId);
       subscription.unsubscribe();
     };
   }, []);
@@ -343,6 +358,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setProfile(null);
       setSession(null);
       
+      localStorage.removeItem('marocsoleil-supabase-token-v3');
+      localStorage.removeItem('marocsoleil-supabase-token-v2');
+      localStorage.removeItem('marocsoleil-supabase-token');
       localStorage.removeItem('supabase.auth.token');
       
       console.log('Déconnexion réussie');
